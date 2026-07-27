@@ -20,8 +20,10 @@
   h3{font-size:1rem;margin:20px 0 8px}
   p.sub{color:var(--muted);margin:0 0 14px;font-size:.95rem}
   .ck-topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
-  .ck-lang button{border:1px solid var(--line);background:#fff;padding:6px 12px;border-radius:8px;cursor:pointer;font-weight:600;color:var(--muted)}
+  .ck-lang button, .authbtn{border:1px solid var(--line);background:#fff;padding:6px 12px;border-radius:8px;cursor:pointer;font-weight:600;color:var(--muted)}
   .ck-lang button.active{background:var(--green);color:#fff;border-color:var(--green)}
+  .authbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .authbar .who{font-size:.85rem;color:var(--muted)}
   .steps{display:flex;gap:6px;margin-bottom:16px;font-size:.8rem;color:var(--muted)}
   .steps span{padding:4px 10px;border-radius:20px;background:#f0f5f2}
   .steps span.on{background:var(--green);color:#fff}
@@ -35,7 +37,7 @@
   .ck-mode span{font-size:.9rem;color:var(--muted)}
   label{display:block;font-weight:600;margin:12px 0 4px;font-size:.95rem}
   .fieldnote{font-weight:400;color:var(--muted);font-size:.82rem}
-  input[type=number],input[type=text],select{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:9px;font-size:1rem;background:#fff}
+  input[type=number],input[type=text],input[type=email],input[type=password],select{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:9px;font-size:1rem;background:#fff}
   input:focus,select:focus{outline:none;border-color:var(--green)}
   .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
   @media(max-width:600px){.grid2{grid-template-columns:1fr}}
@@ -45,6 +47,7 @@
   .btn:hover{background:var(--green-d)}
   .btn.sec{background:#fff;color:var(--green-d);border:1px solid var(--green)}
   .btn.ghost{background:#fff;color:var(--muted);border:1px solid var(--line)}
+  .btn.sm{padding:8px 14px;font-size:.9rem}
   .btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
   .hidden{display:none!important}
   .total{text-align:center;padding:18px;background:var(--green-l);border-radius:var(--radius);margin-bottom:16px}
@@ -79,6 +82,16 @@
   .methnote{font-size:.82rem;color:var(--muted);background:#eef4fb;border:1px solid #cfe0f2;border-radius:10px;padding:10px 12px;margin-top:10px}
   .back{background:none;border:none;color:var(--green-d);cursor:pointer;font-weight:600;padding:0;margin-bottom:8px}
   .pill{display:inline-block;background:var(--green-l);color:var(--green-d);border-radius:20px;padding:2px 10px;font-size:.78rem;font-weight:700;margin-left:6px}
+  .modal-bg{position:fixed;inset:0;background:rgba(15,30,22,.55);display:flex;align-items:center;justify-content:center;z-index:100;padding:12px}
+  .modal{background:#fff;border-radius:var(--radius);max-width:400px;width:100%;padding:22px;box-shadow:0 10px 40px rgba(0,0,0,.2)}
+  .modal .tabbtns{display:flex;gap:6px;margin-bottom:14px}
+  .modal .tabbtns button{flex:1;border:1px solid var(--line);background:#fff;padding:8px;border-radius:8px;cursor:pointer;font-weight:600;color:var(--muted)}
+  .modal .tabbtns button.on{background:var(--green);color:#fff;border-color:var(--green)}
+  .gbtn{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--line);background:#fff;padding:10px;border-radius:9px;cursor:pointer;font-weight:600;margin-bottom:12px}
+  .err{color:#c0492c;font-size:.85rem;margin-top:8px}
+  .rep-item{border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:10px;cursor:pointer}
+  .rep-item:hover{border-color:var(--green)}
+  .rep-item b{color:var(--green-d)}
   @media print{.no-print{display:none!important}body{background:#fff}.ck-card{box-shadow:none;border-color:#ccc}}
 </style>
 </head>
@@ -90,10 +103,11 @@
     <div class="ck-topbar">
       <div><h1 data-t="title">KOBİ Karbon Ayak İzi Hesaplayıcı</h1>
       <p class="sub" data-t="subtitle">GHG Protocol tabanlı temel karbon ayak izi raporu — Kapsam 1, 2, 3</p></div>
-      <div class="ck-lang no-print">
-        <button id="lang-tr" class="active" onclick="setLang('tr')">TR</button>
-        <button id="lang-en" onclick="setLang('en')">EN</button>
-      </div>
+      <div class="authbar no-print" id="authbar"></div>
+    </div>
+    <div class="ck-lang no-print" style="margin-bottom:12px">
+      <button id="lang-tr" class="active" onclick="setLang('tr')">TR</button>
+      <button id="lang-en" onclick="setLang('en')">EN</button>
     </div>
     <h2 data-t="chooseMode">Ne yapmak istiyorsunuz?</h2>
     <div class="ck-modes">
@@ -105,9 +119,10 @@
       <div class="ck-mode" id="mode-buyer" onclick="chooseMode('buyer')">
         <span class="em">🏢</span>
         <b data-t="buyerTitle">Alıcıyım — tedarikçilerimin emisyonlarını topluyorum</b>
-        <span data-t="buyerDesc">Mal alan büyük firma. Tedarikçilerden gelen emisyon raporlarını girerek Kapsam 3.1 (satın alınan mal ve hizmetler) toplamını ölçer.</span>
+        <span data-t="buyerDesc">Mal alan büyük firma. Tedarikçilerden gelen emisyon raporlarını girerek Kapsam 3.1 toplamını ölçer.</span>
       </div>
     </div>
+    <div class="btn-row no-print" id="intro-actions"></div>
   </div>
 
   <!-- SECTOR -->
@@ -118,12 +133,11 @@
     <div class="ck-modes" id="sector-list"></div>
   </div>
 
-  <!-- FORM (profile + data) -->
+  <!-- FORM -->
   <div class="ck-card hidden" id="screen-form">
     <button class="back no-print" onclick="show('screen-sector')">‹ <span data-t="back">Geri</span></button>
     <div class="steps no-print"><span>1 · <span data-t="stepSector">Sektör</span></span><span class="on">2 · <span data-t="stepData">Veri</span></span><span>3 · <span data-t="stepReport">Rapor</span></span></div>
     <h2 id="form-title"></h2>
-
     <h3 data-t="profileTitle">Firma profili</h3>
     <p class="sub" data-t="profileHint">Yoğunluk metrikleri (çalışan/ciro başına) için kullanılır.</p>
     <div class="grid2">
@@ -131,7 +145,6 @@
       <div><label data-t="yearLabel">Raporlama yılı</label><input type="text" id="f-year" placeholder="2025"></div>
     </div>
     <div id="profile-fields" class="grid2"></div>
-
     <h3 data-t="dataTitle">Yıllık faaliyet verileri</h3>
     <p class="sub" data-t="formHint">Yıllık tüketim değerlerinizi girin. Bilmediğiniz alanları boş bırakabilirsiniz.</p>
     <div id="questions"></div>
@@ -145,7 +158,7 @@
   <div class="ck-card hidden" id="screen-buyer">
     <button class="back no-print" onclick="show('screen-intro')">‹ <span data-t="back">Geri</span></button>
     <h2 data-t="buyerFormTitle">Tedarikçi emisyonlarını girin</h2>
-    <p class="sub" data-t="buyerFormHint">Her tedarikçiden aldığınız raporun toplam emisyonunu (kg CO₂e) girin. Bu değerler Kapsam 3.1 (satın alınan mal ve hizmetler) altında toplanır.</p>
+    <p class="sub" data-t="buyerFormHint">Her tedarikçiden aldığınız raporun toplam emisyonunu (kg CO₂e) girin.</p>
     <div class="grid2">
       <div><label data-t="buyerCompany">Firmanızın adı <span class="fieldnote">(opsiyonel)</span></label><input type="text" id="b-company"></div>
       <div><label data-t="yearLabel">Raporlama yılı</label><input type="text" id="b-year" placeholder="2025"></div>
@@ -155,9 +168,15 @@
     </div>
     <div id="supplier-rows"></div>
     <button class="btn sec no-print" style="margin-top:6px" onclick="addSupplierRow()">+ <span data-t="addSupplier">Tedarikçi ekle</span></button>
-    <div class="btn-row no-print">
-      <button class="btn" onclick="calcBuyer()" data-t="calcBtn">Raporu oluştur</button>
-    </div>
+    <div class="btn-row no-print"><button class="btn" onclick="calcBuyer()" data-t="calcBtn">Raporu oluştur</button></div>
+  </div>
+
+  <!-- REPORTS LIST -->
+  <div class="ck-card hidden" id="screen-reports">
+    <button class="back no-print" onclick="show('screen-intro')">‹ <span data-t="back">Geri</span></button>
+    <h2 data-t="myReports">Önceki raporlarım</h2>
+    <p class="sub" id="reports-empty" data-t="noReports">Henüz kayıtlı rapor yok.</p>
+    <div id="reports-list"></div>
   </div>
 
   <!-- RESULT -->
@@ -166,62 +185,95 @@
     <div class="steps no-print"><span>1 · <span data-t="stepSector">Sektör</span></span><span>2 · <span data-t="stepData">Veri</span></span><span class="on">3 · <span data-t="stepReport">Rapor</span></span></div>
     <h2 id="result-title" data-t="resultTitle">Karbon Ayak İzi Raporu</h2>
     <p class="sub" id="result-meta"></p>
-
-    <div class="total">
-      <div class="num" id="total-num">0</div>
-      <div class="unit" id="total-unit">kg CO₂e / yıl</div>
-    </div>
-
+    <div class="total"><div class="num" id="total-num">0</div><div class="unit" id="total-unit">kg CO₂e / yıl</div></div>
     <div id="scopes-block">
       <div class="scopes" id="scopes"></div>
       <div class="bar" id="bar"></div>
       <p class="sub" style="font-size:.8rem;margin-top:6px" id="scope2note"></p>
     </div>
-
     <h3 id="metrics-title" data-t="metricsTitle">Yoğunluk metrikleri</h3>
     <div class="metrics" id="metrics"></div>
-
     <h3 data-t="breakdownTitle">Kapsam bazında dağılım</h3>
     <table class="rep"><tbody id="breakdown-body"></tbody></table>
-
     <div class="equiv" id="equiv"></div>
     <div class="methnote" id="meth-note"></div>
     <div class="notice" id="factor-notice"></div>
     <div class="btn-row no-print">
-      <button class="btn" onclick="window.print()" data-t="printBtn">Yazdır / PDF kaydet</button>
-      <button class="btn sec" onclick="exportReport()" data-t="exportBtn">Raporu indir (JSON)</button>
+      <button class="btn" id="save-btn" onclick="saveReport()" data-t="saveCloud">Bulut'a kaydet</button>
+      <button class="btn sec" onclick="window.print()" data-t="printBtn">Yazdır / PDF</button>
+      <button class="btn ghost" onclick="exportReport()" data-t="exportBtn">JSON indir</button>
     </div>
+    <p class="sub no-print" id="save-hint" style="font-size:.82rem;margin-top:8px"></p>
   </div>
 
-  <p class="sub" style="text-align:center;font-size:.8rem">commitedevents.app · KOBİ Karbon Modülü v2</p>
+  <p class="sub" style="text-align:center;font-size:.8rem">commitedevents.app · KOBİ Karbon Modülü v3</p>
 </div>
 
-<script>
-/* =========================================================================
-   VARSAYILAN AYARLAR — config.default.json (v2) ile aynı içerik.
-   Admin panelinden dışa aktardığınız JSON'u yazılım ekibi buraya yapıştırır.
-   ========================================================================= */
+<!-- LOGIN MODAL -->
+<div class="modal-bg hidden no-print" id="login-modal">
+  <div class="modal">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <h2 style="margin:0" data-t="loginTitle">Giriş / Kayıt</h2>
+      <button class="authbtn" onclick="closeLogin()">✕</button>
+    </div>
+    <p class="sub" data-t="loginHint">Hesaplamalarınızı kaydedip sonraki girişte görmek için giriş yapın.</p>
+    <button class="gbtn" onclick="loginGoogle()"><span style="font-weight:800;color:#4285F4">G</span> <span data-t="googleBtn">Google ile devam et</span></button>
+    <div class="tabbtns">
+      <button id="tab-login" class="on" onclick="authTab('login')" data-t="tabLogin">Giriş yap</button>
+      <button id="tab-register" onclick="authTab('register')" data-t="tabRegister">Kayıt ol</button>
+    </div>
+    <label data-t="emailLabel">E-posta</label><input type="email" id="auth-email" autocomplete="username">
+    <label data-t="passLabel">Şifre</label><input type="password" id="auth-pass" autocomplete="current-password">
+    <div class="btn-row"><button class="btn" style="width:100%" id="auth-submit" onclick="submitAuth()" data-t="tabLogin">Giriş yap</button></div>
+    <div class="err hidden" id="auth-err"></div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signInWithRedirect,
+  createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, setPersistence, browserLocalPersistence
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, collection, addDoc, getDocs, query, orderBy, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA908koeADcOLR2ROU6R7fARAqjC1v-inc",
+  authDomain: "kobi-karbon-hesaplama.firebaseapp.com",
+  projectId: "kobi-karbon-hesaplama",
+  storageBucket: "kobi-karbon-hesaplama.firebasestorage.app",
+  messagingSenderId: "148732593523",
+  appId: "1:148732593523:web:505abef73a48a29469b106"
+};
+const ADMIN_EMAILS = ["levent.koseoglu@commited.app","commitedapp@gmail.com","lkoseoglu@hotmail.com"];
+
+let fbApp, auth, db, currentUser=null;
+try{
+  fbApp = initializeApp(firebaseConfig);
+  auth = getAuth(fbApp);
+  db = getFirestore(fbApp);
+  setPersistence(auth, browserLocalPersistence).catch(()=>{});
+  onAuthStateChanged(auth, u=>{ currentUser=u; renderAuthBar(); renderIntroActions(); updateSaveUi(); });
+}catch(e){ console.warn("Firebase init hata:", e); }
+
+/* ---- VARSAYILAN AYARLAR (config.default.json v2 ile aynı) ---- */
 const DEFAULT_CONFIG = {
   "meta":{"version":"2.0","updated":"2026-07-27",
-    "methodology":{"tr":"GHG Protocol Kurumsal Standardı temel alınmıştır; KOBİ'ler için sadeleştirilmiştir. Faaliyet-verisi esas alınır. Kapsam 2 hem konum-bazlı hem pazar-bazlı raporlanır. Kapsam 3 kalemleri GHG Protocol kategori numaralarıyla etiketlenmiştir. Çıktı CDP basitleştirilmiş açıklama / VSME mantığına uyar.","en":"Based on the GHG Protocol Corporate Standard, streamlined for SMEs. Uses activity data. Scope 2 reported both location- and market-based. Scope 3 items tagged with GHG Protocol category numbers. Output follows CDP simplified disclosure / VSME logic."},
-    "notice":{"tr":"Emisyon faktörleri VARSAYILAN referans değerlerdir. Resmi raporlama öncesi güncel IPCC / DEFRA / Türkiye Ulusal Envanter değerleriyle admin panelinden doğrulayın. Bu araç tam LCA değil, temel seviye tahmin sağlar.","en":"Emission factors are DEFAULT reference values. Verify against current IPCC / DEFRA / Turkish National Inventory values before official reporting. This is a basic estimate, not a full LCA."}},
+    "methodology":{"tr":"GHG Protocol Kurumsal Standardı temel alınmıştır; KOBİ'ler için sadeleştirilmiştir. Faaliyet-verisi esas alınır. Kapsam 2 hem konum-bazlı hem pazar-bazlı raporlanır. Kapsam 3 kalemleri GHG Protocol kategori numaralarıyla etiketlenmiştir.","en":"Based on the GHG Protocol Corporate Standard, streamlined for SMEs. Uses activity data. Scope 2 reported location- and market-based. Scope 3 items tagged with GHG Protocol category numbers."},
+    "notice":{"tr":"Emisyon faktörleri VARSAYILAN referans değerlerdir. Resmi raporlama öncesi güncel IPCC / DEFRA / Türkiye Ulusal Envanter değerleriyle doğrulayın. Bu araç tam LCA değil, temel seviye tahmin sağlar.","en":"Emission factors are DEFAULT reference values. Verify before official reporting. This is a basic estimate, not a full LCA."}},
   "profile":{"fields":[
-    {"id":"employees","name":{"tr":"Çalışan sayısı (TZE)","en":"Employees (FTE)"},"type":"number","hint":{"tr":"Yoğunluk metriği için","en":"For intensity metric"}},
-    {"id":"revenue","name":{"tr":"Yıllık ciro","en":"Annual revenue"},"type":"number","unit":{"tr":"₺/yıl","en":"₺/yr"},"hint":{"tr":"Yoğunluk metriği için","en":"For intensity metric"}},
-    {"id":"output","name":{"tr":"Yıllık üretim/çıktı (opsiyonel)","en":"Annual output (optional)"},"type":"number","unit":{"tr":"birim/yıl","en":"units/yr"},"hint":{"tr":"ör. kg kumaş, oda-gece","en":"e.g. kg fabric, room-nights"}},
+    {"id":"employees","name":{"tr":"Çalışan sayısı (TZE)","en":"Employees (FTE)"},"type":"number","hint":{"tr":"Yoğunluk için","en":"For intensity"}},
+    {"id":"revenue","name":{"tr":"Yıllık ciro","en":"Annual revenue"},"type":"number","unit":{"tr":"₺/yıl","en":"₺/yr"},"hint":{"tr":"Yoğunluk için","en":"For intensity"}},
+    {"id":"output","name":{"tr":"Yıllık üretim/çıktı (ops.)","en":"Annual output (opt.)"},"type":"number","unit":{"tr":"birim/yıl","en":"units/yr"},"hint":{"tr":"ör. kg kumaş, oda-gece","en":"e.g. kg fabric, room-nights"}},
     {"id":"market","name":{"tr":"Pazar","en":"Market"},"type":"select","options":[
       {"value":"domestic","label":{"tr":"Yurtiçi","en":"Domestic"}},
       {"value":"export","label":{"tr":"İhracat ağırlıklı","en":"Export-focused"}},
       {"value":"both","label":{"tr":"Karma","en":"Mixed"}}]}],
-    "sizeClasses":[
-      {"max":10,"label":{"tr":"Mikro (<10)","en":"Micro (<10)"}},
-      {"max":50,"label":{"tr":"Küçük (10-50)","en":"Small (10-50)"}},
-      {"max":500,"label":{"tr":"Orta (50-500)","en":"Medium (50-500)"}},
-      {"max":100000000,"label":{"tr":"Büyük (500+)","en":"Large (500+)"}}]},
+    "sizeClasses":[{"max":10,"label":{"tr":"Mikro (<10)","en":"Micro (<10)"}},{"max":50,"label":{"tr":"Küçük (10-50)","en":"Small (10-50)"}},{"max":500,"label":{"tr":"Orta (50-500)","en":"Medium (50-500)"}},{"max":100000000,"label":{"tr":"Büyük (500+)","en":"Large (500+)"}}]},
   "intensity":{"perEmployee":true,"perRevenue":true,"revenueBase":1000000,"revenueBaseLabel":{"tr":"milyon ₺","en":"million ₺"},"perOutput":true},
   "factors":{
     "electricity_kwh":{"name":{"tr":"Elektrik (şebeke)","en":"Electricity (grid)"},"value":0.442,"unit":"kgCO2e/kWh","scope":2},
-    "electricity_green_kwh":{"name":{"tr":"Yeşil/sertifikalı elektrik (I-REC vb.)","en":"Certified renewable electricity (I-REC etc.)"},"value":0.0,"unit":"kgCO2e/kWh","scope":2,"marketAdjust":true},
+    "electricity_green_kwh":{"name":{"tr":"Yeşil/sertifikalı elektrik","en":"Certified renewable electricity"},"value":0.0,"unit":"kgCO2e/kWh","scope":2,"marketAdjust":true},
     "natural_gas_m3":{"name":{"tr":"Doğal gaz","en":"Natural gas"},"value":2.02,"unit":"kgCO2e/m³","scope":1},
     "diesel_l":{"name":{"tr":"Motorin (dizel)","en":"Diesel"},"value":2.68,"unit":"kgCO2e/L","scope":1},
     "gasoline_l":{"name":{"tr":"Benzin","en":"Gasoline"},"value":2.31,"unit":"kgCO2e/L","scope":1},
@@ -254,8 +306,8 @@ const DEFAULT_CONFIG = {
       {"id":"t_diesel","factorKey":"diesel_l","name":{"tr":"Jeneratör/araç motorin tüketimi","en":"Generator/vehicle diesel"},"unitLabel":{"tr":"L/yıl","en":"L/yr"}},
       {"id":"t_refrig","factorKey":"refrigerant_r410a_kg","name":{"tr":"Soğutucu gaz dolumu (kaçak)","en":"Refrigerant refill (leak)"},"unitLabel":{"tr":"kg/yıl","en":"kg/yr"}},
       {"id":"t_steam","factorKey":"steam_kwh","name":{"tr":"Satın alınan buhar/ısı","en":"Purchased steam/heat"},"unitLabel":{"tr":"kWh/yıl","en":"kWh/yr"}},
-      {"id":"t_cotton","factorKey":"cotton_kg","name":{"tr":"İşlenen pamuk (hammadde)","en":"Cotton processed (raw material)"},"unitLabel":{"tr":"kg/yıl","en":"kg/yr"}},
-      {"id":"t_poly","factorKey":"polyester_kg","name":{"tr":"İşlenen polyester (hammadde)","en":"Polyester processed (raw material)"},"unitLabel":{"tr":"kg/yıl","en":"kg/yr"}},
+      {"id":"t_cotton","factorKey":"cotton_kg","name":{"tr":"İşlenen pamuk (hammadde)","en":"Cotton processed"},"unitLabel":{"tr":"kg/yıl","en":"kg/yr"}},
+      {"id":"t_poly","factorKey":"polyester_kg","name":{"tr":"İşlenen polyester (hammadde)","en":"Polyester processed"},"unitLabel":{"tr":"kg/yıl","en":"kg/yr"}},
       {"id":"t_dye","factorKey":"dye_chemical_kg","name":{"tr":"Boya / kimyasal kullanımı","en":"Dye / chemical used"},"unitLabel":{"tr":"kg/yıl","en":"kg/yr"}},
       {"id":"t_water","factorKey":"water_m3","name":{"tr":"Su tüketimi","en":"Water use"},"unitLabel":{"tr":"m³/yıl","en":"m³/yr"}},
       {"id":"t_waste","factorKey":"waste_landfill_kg","name":{"tr":"Depolamaya giden atık","en":"Waste to landfill"},"unitLabel":{"tr":"kg/yıl","en":"kg/yr"}},
@@ -275,202 +327,125 @@ const DEFAULT_CONFIG = {
       {"id":"h_waste","factorKey":"waste_landfill_kg","name":{"tr":"Depolamaya giden atık","en":"Waste to landfill"},"unitLabel":{"tr":"kg/yıl","en":"kg/yr"}}
     ]}
   },
-  "scope3cats":{
-    "3.1":{"tr":"Satın alınan mal ve hizmetler","en":"Purchased goods & services"},
-    "3.4":{"tr":"Yukarı yön taşıma ve dağıtım","en":"Upstream transport & distribution"},
-    "3.5":{"tr":"Operasyonda oluşan atık ve su","en":"Waste & water in operations"},
-    "3.6":{"tr":"İş seyahatleri","en":"Business travel"},
-    "3.7":{"tr":"Personel ulaşımı","en":"Employee commuting"},
-    "3.9":{"tr":"Aşağı yön taşıma ve dağıtım","en":"Downstream transport & distribution"}
-  },
+  "scope3cats":{"3.1":{"tr":"Satın alınan mal ve hizmetler","en":"Purchased goods & services"},"3.4":{"tr":"Yukarı yön taşıma ve dağıtım","en":"Upstream transport"},"3.5":{"tr":"Operasyonda oluşan atık ve su","en":"Waste & water in operations"},"3.6":{"tr":"İş seyahatleri","en":"Business travel"},"3.7":{"tr":"Personel ulaşımı","en":"Employee commuting"},"3.9":{"tr":"Aşağı yön taşıma","en":"Downstream transport"}},
   "benchmarks":{"tree_kg_per_year":21,"car_km_equiv_factor":0.170}
 };
 
 const UI = {
   title:{tr:"KOBİ Karbon Ayak İzi Hesaplayıcı",en:"SME Carbon Footprint Calculator"},
-  subtitle:{tr:"GHG Protocol tabanlı temel karbon ayak izi raporu — Kapsam 1, 2, 3",en:"GHG Protocol-based basic carbon footprint report — Scope 1, 2, 3"},
+  subtitle:{tr:"GHG Protocol tabanlı temel karbon ayak izi raporu — Kapsam 1, 2, 3",en:"GHG Protocol-based basic footprint report — Scope 1, 2, 3"},
   chooseMode:{tr:"Ne yapmak istiyorsunuz?",en:"What would you like to do?"},
-  supplierTitle:{tr:"Tedarikçiyim — kendi ayak izimi hesaplayacağım",en:"I'm a supplier — calculate my own footprint"},
-  supplierDesc:{tr:"Ana firmalara üretim yapan KOBİ. Kapsam 1-2-3 emisyonlarını ölçer, çalışan ve ciro başına yoğunlukla birlikte müşterine sunabileceğin bir rapor üretir.",en:"An SME producing for larger customers. Measures Scope 1-2-3 with per-employee and per-revenue intensity, ready to share with your customer."},
+  supplierTitle:{tr:"Tedarikçiyim — kendi ayak izimi hesaplayacağım",en:"I'm a supplier — calculate my footprint"},
+  supplierDesc:{tr:"Ana firmalara üretim yapan KOBİ. Kapsam 1-2-3 emisyonlarını ölçer, yoğunlukla birlikte müşterine sunabileceğin bir rapor üretir.",en:"An SME producing for larger customers. Scope 1-2-3 with intensity, ready to share."},
   buyerTitle:{tr:"Alıcıyım — tedarikçilerimin emisyonlarını topluyorum",en:"I'm a buyer — collecting supplier emissions"},
-  buyerDesc:{tr:"Mal alan büyük firma. Tedarikçilerden gelen emisyon raporlarını girerek Kapsam 3.1 (satın alınan mal ve hizmetler) toplamını ölçer.",en:"A larger buyer. Enter supplier reports to measure Scope 3.1 (purchased goods & services)."},
+  buyerDesc:{tr:"Mal alan büyük firma. Tedarikçi raporlarını girerek Kapsam 3.1 toplamını ölçer.",en:"A larger buyer. Measures Scope 3.1 from supplier reports."},
   chooseSector:{tr:"Sektörünüzü seçin",en:"Choose your sector"},
-  back:{tr:"Geri",en:"Back"},
-  stepSector:{tr:"Sektör",en:"Sector"},stepData:{tr:"Veri",en:"Data"},stepReport:{tr:"Rapor",en:"Report"},
-  profileTitle:{tr:"Firma profili",en:"Company profile"},
-  profileHint:{tr:"Yoğunluk metrikleri (çalışan/ciro başına) için kullanılır.",en:"Used for intensity metrics (per employee/revenue)."},
+  back:{tr:"Geri",en:"Back"},stepSector:{tr:"Sektör",en:"Sector"},stepData:{tr:"Veri",en:"Data"},stepReport:{tr:"Rapor",en:"Report"},
+  profileTitle:{tr:"Firma profili",en:"Company profile"},profileHint:{tr:"Yoğunluk metrikleri için kullanılır.",en:"Used for intensity metrics."},
   dataTitle:{tr:"Yıllık faaliyet verileri",en:"Annual activity data"},
-  formHint:{tr:"Yıllık tüketim değerlerinizi girin. Bilmediğiniz alanları boş bırakabilirsiniz.",en:"Enter your annual consumption. Leave unknown fields blank."},
-  companyName:{tr:"Firma adı",en:"Company name"},
-  yearLabel:{tr:"Raporlama yılı",en:"Reporting year"},
-  calcBtn:{tr:"Raporu oluştur",en:"Generate report"},
-  clearBtn:{tr:"Temizle",en:"Clear"},
+  formHint:{tr:"Yıllık tüketim değerlerinizi girin. Bilmediğiniz alanları boş bırakabilirsiniz.",en:"Enter annual consumption. Leave unknown fields blank."},
+  companyName:{tr:"Firma adı",en:"Company name"},yearLabel:{tr:"Raporlama yılı",en:"Reporting year"},
+  calcBtn:{tr:"Raporu oluştur",en:"Generate report"},clearBtn:{tr:"Temizle",en:"Clear"},
   buyerFormTitle:{tr:"Tedarikçi emisyonlarını girin",en:"Enter supplier emissions"},
-  buyerFormHint:{tr:"Her tedarikçiden aldığınız raporun toplam emisyonunu (kg CO₂e) girin. Bu değerler Kapsam 3.1 altında toplanır.",en:"Enter each supplier's total reported emissions (kg CO₂e). Summed under Scope 3.1."},
-  buyerCompany:{tr:"Firmanızın adı",en:"Your company name"},
-  supName:{tr:"Tedarikçi adı",en:"Supplier name"},
-  supEmis:{tr:"Emisyon (kg CO₂e)",en:"Emissions (kg CO₂e)"},
-  addSupplier:{tr:"Tedarikçi ekle",en:"Add supplier"},
-  resultTitle:{tr:"Karbon Ayak İzi Raporu",en:"Carbon Footprint Report"},
-  metricsTitle:{tr:"Yoğunluk metrikleri",en:"Intensity metrics"},
-  breakdownTitle:{tr:"Kapsam bazında dağılım",en:"Breakdown by scope"},
-  colEmis:{tr:"Emisyon (kg CO₂e)",en:"Emissions (kg CO₂e)"},
-  printBtn:{tr:"Yazdır / PDF kaydet",en:"Print / Save PDF"},
-  exportBtn:{tr:"Raporu indir (JSON)",en:"Download report (JSON)"},
-  editBtn:{tr:"Girdileri düzenle",en:"Edit inputs"},
+  buyerFormHint:{tr:"Her tedarikçiden aldığınız raporun toplam emisyonunu (kg CO₂e) girin.",en:"Enter each supplier's total reported emissions (kg CO₂e)."},
+  buyerCompany:{tr:"Firmanızın adı",en:"Your company name"},supName:{tr:"Tedarikçi adı",en:"Supplier name"},supEmis:{tr:"Emisyon (kg CO₂e)",en:"Emissions (kg CO₂e)"},addSupplier:{tr:"Tedarikçi ekle",en:"Add supplier"},
+  resultTitle:{tr:"Karbon Ayak İzi Raporu",en:"Carbon Footprint Report"},metricsTitle:{tr:"Yoğunluk metrikleri",en:"Intensity metrics"},breakdownTitle:{tr:"Kapsam bazında dağılım",en:"Breakdown by scope"},
+  printBtn:{tr:"Yazdır / PDF",en:"Print / PDF"},exportBtn:{tr:"JSON indir",en:"Download JSON"},editBtn:{tr:"Girdileri düzenle",en:"Edit inputs"},saveCloud:{tr:"Bulut'a kaydet",en:"Save to cloud"},
   totalUnit:{tr:"kg CO₂e / yıl (pazar-bazlı)",en:"kg CO₂e / yr (market-based)"},
-  s1:{tr:"Kapsam 1 · Doğrudan",en:"Scope 1 · Direct"},
-  s2:{tr:"Kapsam 2 · Enerji",en:"Scope 2 · Energy"},
-  s3:{tr:"Kapsam 3 · Diğer",en:"Scope 3 · Other"},
-  s2loc:{tr:"konum-bazlı",en:"location-based"},s2mkt:{tr:"pazar-bazlı",en:"market-based"},
-  scope2noteTxt:{tr:"Kapsam 2 çift raporlanır. Grafik ve toplam pazar-bazlı değeri kullanır.",en:"Scope 2 is dual-reported. Chart and total use the market-based value."},
-  perEmployee:{tr:"çalışan başına",en:"per employee"},
-  perRevenue:{tr:"başına",en:"per"},
-  perOutput:{tr:"üretim birimi başına",en:"per output unit"},
-  kgco2e:{tr:"kg CO₂e",en:"kg CO₂e"},
-  equivTree:{tr:"ağacın yıllık yuttuğu CO₂'ye eşdeğer",en:"equivalent to what these trees absorb yearly"},
-  equivCar:{tr:"km binek araç sürüşüne eşdeğer",en:"equivalent to driving a car this far"},
-  buyerScope3:{tr:"Kapsam 3.1 — Satın alınan mal ve hizmetler",en:"Scope 3.1 — Purchased goods & services"},
-  supplierWord:{tr:"tedarikçi",en:"suppliers"},
-  scope1:{tr:"Kapsam 1 (doğrudan)",en:"Scope 1 (direct)"},
-  scope2locrow:{tr:"Kapsam 2 (konum-bazlı)",en:"Scope 2 (location-based)"},
-  scope2mktrow:{tr:"Kapsam 2 (pazar-bazlı)",en:"Scope 2 (market-based)"},
-  scope3row:{tr:"Kapsam 3 (diğer)",en:"Scope 3 (other)"},
-  totalRow:{tr:"TOPLAM (pazar-bazlı)",en:"TOTAL (market-based)"},
-  sizeLabel:{tr:"Boyut",en:"Size"},marketLabel:{tr:"Pazar",en:"Market"}
+  s1:{tr:"Kapsam 1 · Doğrudan",en:"Scope 1 · Direct"},s2:{tr:"Kapsam 2 · Enerji",en:"Scope 2 · Energy"},s3:{tr:"Kapsam 3 · Diğer",en:"Scope 3 · Other"},
+  s2loc:{tr:"konum-bazlı",en:"location-based"},scope2noteTxt:{tr:"Kapsam 2 çift raporlanır. Grafik ve toplam pazar-bazlı değeri kullanır.",en:"Scope 2 is dual-reported. Chart/total use market-based."},
+  perEmployee:{tr:"çalışan başına",en:"per employee"},perRevenue:{tr:"başına",en:"per"},perOutput:{tr:"üretim birimi başına",en:"per output unit"},kgco2e:{tr:"kg CO₂e",en:"kg CO₂e"},
+  equivTree:{tr:"ağacın yıllık yuttuğu CO₂'ye eşdeğer",en:"equivalent to trees' yearly absorption"},equivCar:{tr:"km binek araç sürüşüne eşdeğer",en:"equivalent to driving a car"},
+  buyerScope3:{tr:"Kapsam 3.1 — Satın alınan mal ve hizmetler",en:"Scope 3.1 — Purchased goods & services"},supplierWord:{tr:"tedarikçi",en:"suppliers"},
+  scope1:{tr:"Kapsam 1 (doğrudan)",en:"Scope 1 (direct)"},scope2locrow:{tr:"Kapsam 2 (konum-bazlı)",en:"Scope 2 (location-based)"},scope2mktrow:{tr:"Kapsam 2 (pazar-bazlı)",en:"Scope 2 (market-based)"},scope3row:{tr:"Kapsam 3 (diğer)",en:"Scope 3 (other)"},totalRow:{tr:"TOPLAM (pazar-bazlı)",en:"TOTAL (market-based)"},
+  sizeLabel:{tr:"Boyut",en:"Size"},marketLabel:{tr:"Pazar",en:"Market"},
+  loginTitle:{tr:"Giriş / Kayıt",en:"Sign in / Register"},loginHint:{tr:"Hesaplamalarınızı kaydedip sonraki girişte görmek için giriş yapın.",en:"Sign in to save your calculations and see them next time."},
+  googleBtn:{tr:"Google ile devam et",en:"Continue with Google"},tabLogin:{tr:"Giriş yap",en:"Sign in"},tabRegister:{tr:"Kayıt ol",en:"Register"},emailLabel:{tr:"E-posta",en:"Email"},passLabel:{tr:"Şifre",en:"Password"},
+  myReports:{tr:"Önceki raporlarım",en:"My previous reports"},noReports:{tr:"Henüz kayıtlı rapor yok.",en:"No saved reports yet."},
+  loginBtn:{tr:"Giriş yap",en:"Sign in"},logoutBtn:{tr:"Çıkış",en:"Sign out"},reportsBtn:{tr:"Raporlarım",en:"My reports"},adminBadge:{tr:"admin",en:"admin"},
+  savedOk:{tr:"✔ Rapor buluta kaydedildi.",en:"✔ Report saved to cloud."},saveNeedLogin:{tr:"Kaydetmek için giriş yapın.",en:"Sign in to save."},saving:{tr:"Kaydediliyor…",en:"Saving…"},
+  loginToSave:{tr:"Bu raporu buluta kaydetmek ve sonraki girişte görmek için giriş yapın.",en:"Sign in to save this report to the cloud and see it next time."}
 };
 
-let CONFIG = loadConfig();
-let lang='tr', mode=null, currentSector=null, lastResult=null;
+let CONFIG = DEFAULT_CONFIG;
+let lang='tr', mode=null, currentSector=null, lastResult=null, authMode='login';
 
-function loadConfig(){ try{const s=localStorage.getItem('karbonConfig'); if(s){const c=JSON.parse(s); if(c.factors&&c.sectors) return c;}}catch(e){} return DEFAULT_CONFIG; }
+// Config'i Firestore'dan yükle (admin düzenlemeleri anında yansır), yoksa varsayılan
+async function loadRemoteConfig(){
+  try{ if(!db) return; const s=await getDoc(doc(db,'config','current')); if(s.exists()){ const c=s.data(); if(c&&c.factors&&c.sectors){ CONFIG=c; if(!document.getElementById('screen-sector').classList.contains('hidden')) renderSectors(); } } }catch(e){ console.warn('config yüklenemedi',e); }
+}
+loadRemoteConfig();
+
 function t(k){return (UI[k]&&UI[k][lang])||k;}
 function L(o){return o?(o[lang]||o.tr||o.en||''):'';}
 function fmt(n){return Math.round(n).toLocaleString(lang==='tr'?'tr-TR':'en-US');}
 function fmt1(n){return (Math.round(n*10)/10).toLocaleString(lang==='tr'?'tr-TR':'en-US');}
+function isAdmin(){return currentUser&&currentUser.email&&ADMIN_EMAILS.indexOf(currentUser.email)>=0;}
 
-function setLang(l){lang=l;
-  document.getElementById('lang-tr').classList.toggle('active',l==='tr');
-  document.getElementById('lang-en').classList.toggle('active',l==='en');
-  document.documentElement.lang=l; applyStatic();
-  if(mode==='supplier'&&currentSector){renderProfile();renderQuestions();}
-  if(!document.getElementById('screen-sector').classList.contains('hidden'))renderSectors();
-  if(lastResult)renderResult(lastResult);
-}
+window.setLang=function(l){lang=l;document.getElementById('lang-tr').classList.toggle('active',l==='tr');document.getElementById('lang-en').classList.toggle('active',l==='en');document.documentElement.lang=l;applyStatic();renderAuthBar();renderIntroActions();if(mode==='supplier'&&currentSector){renderProfile();renderQuestions();}if(!document.getElementById('screen-sector').classList.contains('hidden'))renderSectors();if(lastResult)renderResult(lastResult);updateSaveUi();};
 function applyStatic(){document.querySelectorAll('[data-t]').forEach(el=>{el.textContent=t(el.getAttribute('data-t'));});}
-function show(id){['screen-intro','screen-sector','screen-form','screen-buyer','screen-result'].forEach(s=>document.getElementById(s).classList.toggle('hidden',s!==id));window.scrollTo({top:0,behavior:'smooth'});}
-function chooseMode(m){mode=m;
-  document.getElementById('mode-supplier').classList.toggle('sel',m==='supplier');
-  document.getElementById('mode-buyer').classList.toggle('sel',m==='buyer');
-  if(m==='supplier'){renderSectors();show('screen-sector');}
-  else{if(!document.querySelector('#supplier-rows .supplier-row')){addSupplierRow();addSupplierRow();}show('screen-buyer');}
-}
-function renderSectors(){const box=document.getElementById('sector-list');box.innerHTML='';
-  Object.entries(CONFIG.sectors).forEach(([key,sec])=>{const d=document.createElement('div');d.className='ck-mode';
-    d.onclick=()=>{currentSector=key;renderProfile();renderQuestions();document.getElementById('form-title').textContent=(sec.icon||'')+' '+L(sec.name);show('screen-form');};
-    d.innerHTML='<span class="em">'+(sec.icon||'📊')+'</span><b>'+L(sec.name)+'</b><span>'+sec.questions.length+(lang==='tr'?' soru':' questions')+'</span>';box.appendChild(d);});
-}
-function renderProfile(){const box=document.getElementById('profile-fields');box.innerHTML='';
-  (CONFIG.profile&&CONFIG.profile.fields||[]).forEach(f=>{
-    const wrap=document.createElement('div');let inner='<label>'+L(f.name)+(f.hint?' <span class="fieldnote">('+L(f.hint)+')</span>':'')+'</label>';
-    if(f.type==='select'){inner+='<select id="p_'+f.id+'"><option value="">—</option>'+(f.options||[]).map(o=>'<option value="'+o.value+'">'+L(o.label)+'</option>').join('')+'</select>';}
-    else{inner+='<input type="number" min="0" step="any" id="p_'+f.id+'" placeholder="'+(f.unit?L(f.unit):'0')+'">';}
-    wrap.innerHTML=inner;box.appendChild(wrap);});
-}
-function renderQuestions(){const sec=CONFIG.sectors[currentSector];const box=document.getElementById('questions');box.innerHTML='';
-  document.getElementById('form-title').textContent=(sec.icon||'')+' '+L(sec.name);
-  sec.questions.forEach(q=>{const f=CONFIG.factors[q.factorKey]||{};
-    const wrap=document.createElement('div');wrap.className='row'+((''+q.factorKey).indexOf('green')>-1?' qsub':'');
-    const catPill=f.scope===3&&f.cat?'<span class="pill">'+f.cat+'</span>':'';
-    wrap.innerHTML='<div><label>'+L(q.name)+catPill+' <span class="fieldnote">('+L(q.unitLabel)+' · '+f.value+' '+(f.unit||'')+')</span></label>'+
-      '<input type="number" min="0" step="any" id="q_'+q.id+'" placeholder="0"></div>'+
-      '<div><label class="fieldnote">'+L(q.unitLabel)+'</label><input type="number" disabled value="'+f.value+'"></div>';box.appendChild(wrap);});
-}
-function clearForm(){document.querySelectorAll('#questions input:not([disabled]),#profile-fields input,#profile-fields select').forEach(i=>i.value='');}
+window.show=function(id){['screen-intro','screen-sector','screen-form','screen-buyer','screen-result','screen-reports'].forEach(s=>document.getElementById(s).classList.toggle('hidden',s!==id));window.scrollTo({top:0,behavior:'smooth'});};
 
+/* ---- AUTH UI ---- */
+function renderAuthBar(){const b=document.getElementById('authbar');if(!b)return;
+  if(currentUser){const badge=isAdmin()?' <span class="pill">'+t('adminBadge')+'</span>':'';
+    b.innerHTML='<span class="who">'+(currentUser.email||currentUser.displayName||'')+badge+'</span><button class="authbtn" onclick="doLogout()">'+t('logoutBtn')+'</button>';}
+  else{b.innerHTML='<button class="authbtn" onclick="openLogin()">'+t('loginBtn')+'</button>';}
+}
+function renderIntroActions(){const a=document.getElementById('intro-actions');if(!a)return;let h='';
+  if(currentUser){h+='<button class="btn sec sm" onclick="openReports()">📁 '+t('reportsBtn')+'</button>';}
+  a.innerHTML=h;
+}
+window.openLogin=function(){document.getElementById('auth-err').classList.add('hidden');document.getElementById('login-modal').classList.remove('hidden');};
+window.closeLogin=function(){document.getElementById('login-modal').classList.add('hidden');};
+window.authTab=function(m){authMode=m;document.getElementById('tab-login').classList.toggle('on',m==='login');document.getElementById('tab-register').classList.toggle('on',m==='register');document.getElementById('auth-submit').textContent=m==='login'?t('tabLogin'):t('tabRegister');};
+window.submitAuth=async function(){const email=document.getElementById('auth-email').value.trim();const pass=document.getElementById('auth-pass').value;const err=document.getElementById('auth-err');err.classList.add('hidden');
+  if(!auth){err.textContent='Firebase yüklenemedi.';err.classList.remove('hidden');return;}
+  try{ if(authMode==='register') await createUserWithEmailAndPassword(auth,email,pass); else await signInWithEmailAndPassword(auth,email,pass); closeLogin(); }
+  catch(e){ err.textContent=authErr(e); err.classList.remove('hidden'); }
+};
+window.loginGoogle=async function(){const err=document.getElementById('auth-err');err.classList.add('hidden');
+  if(!auth){err.textContent='Firebase yüklenemedi.';err.classList.remove('hidden');return;}
+  const provider=new GoogleAuthProvider();
+  try{ await signInWithPopup(auth,provider); closeLogin(); }
+  catch(e){ // iframe/popup engellenirse redirect dene
+    try{ await signInWithRedirect(auth,provider); }
+    catch(e2){ err.textContent=authErr(e)+' '+(lang==='tr'?'(Google girişi bu gömülü sayfada engellendiyse e-posta/şifre kullanın.)':'(If Google is blocked in this embed, use email/password.)'); err.classList.remove('hidden'); } }
+};
+window.doLogout=async function(){ try{ await signOut(auth);}catch(e){} show('screen-intro'); };
+function authErr(e){const c=(e&&e.code)||'';const m={
+  'auth/invalid-email':{tr:'Geçersiz e-posta.',en:'Invalid email.'},'auth/missing-password':{tr:'Şifre girin.',en:'Enter a password.'},
+  'auth/weak-password':{tr:'Şifre en az 6 karakter olmalı.',en:'Password must be 6+ chars.'},'auth/email-already-in-use':{tr:'Bu e-posta zaten kayıtlı. Giriş yapın.',en:'Email already registered. Sign in.'},
+  'auth/invalid-credential':{tr:'E-posta veya şifre hatalı.',en:'Wrong email or password.'},'auth/popup-blocked':{tr:'Açılır pencere engellendi.',en:'Popup blocked.'},'auth/popup-closed-by-user':{tr:'Giriş penceresi kapatıldı.',en:'Popup closed.'}
+};return (m[c]&&m[c][lang])||(e&&e.message)||'Hata';}
+
+/* ---- CALCULATOR ---- */
+window.chooseMode=function(m){mode=m;document.getElementById('mode-supplier').classList.toggle('sel',m==='supplier');document.getElementById('mode-buyer').classList.toggle('sel',m==='buyer');if(m==='supplier'){renderSectors();show('screen-sector');}else{if(!document.querySelector('#supplier-rows .supplier-row')){addSupplierRow();addSupplierRow();}show('screen-buyer');}};
+function renderSectors(){const box=document.getElementById('sector-list');box.innerHTML='';Object.entries(CONFIG.sectors).forEach(([key,sec])=>{const d=document.createElement('div');d.className='ck-mode';d.onclick=()=>{currentSector=key;renderProfile();renderQuestions();document.getElementById('form-title').textContent=(sec.icon||'')+' '+L(sec.name);show('screen-form');};d.innerHTML='<span class="em">'+(sec.icon||'📊')+'</span><b>'+L(sec.name)+'</b><span>'+sec.questions.length+(lang==='tr'?' soru':' questions')+'</span>';box.appendChild(d);});}
+function renderProfile(){const box=document.getElementById('profile-fields');box.innerHTML='';(CONFIG.profile&&CONFIG.profile.fields||[]).forEach(f=>{const wrap=document.createElement('div');let inner='<label>'+L(f.name)+(f.hint?' <span class="fieldnote">('+L(f.hint)+')</span>':'')+'</label>';if(f.type==='select'){inner+='<select id="p_'+f.id+'"><option value="">—</option>'+(f.options||[]).map(o=>'<option value="'+o.value+'">'+L(o.label)+'</option>').join('')+'</select>';}else{inner+='<input type="number" min="0" step="any" id="p_'+f.id+'" placeholder="'+(f.unit?L(f.unit):'0')+'">';}wrap.innerHTML=inner;box.appendChild(wrap);});}
+function renderQuestions(){const sec=CONFIG.sectors[currentSector];const box=document.getElementById('questions');box.innerHTML='';document.getElementById('form-title').textContent=(sec.icon||'')+' '+L(sec.name);sec.questions.forEach(q=>{const f=CONFIG.factors[q.factorKey]||{};const wrap=document.createElement('div');wrap.className='row'+((''+q.factorKey).indexOf('green')>-1?' qsub':'');const catPill=f.scope===3&&f.cat?'<span class="pill">'+f.cat+'</span>':'';wrap.innerHTML='<div><label>'+L(q.name)+catPill+' <span class="fieldnote">('+L(q.unitLabel)+' · '+f.value+' '+(f.unit||'')+')</span></label><input type="number" min="0" step="any" id="q_'+q.id+'" placeholder="0"></div><div><label class="fieldnote">'+L(q.unitLabel)+'</label><input type="number" disabled value="'+f.value+'"></div>';box.appendChild(wrap);});}
+window.clearForm=function(){document.querySelectorAll('#questions input:not([disabled]),#profile-fields input,#profile-fields select').forEach(i=>i.value='');};
 function scopeName(s){return s===1?t('s1'):s===2?t('s2'):t('s3');}
 function scopeColor(s){return s===1?'var(--s1)':s===2?'var(--s2)':'var(--s3)';}
 function sizeClass(emp){const sc=CONFIG.profile&&CONFIG.profile.sizeClasses||[];for(const c of sc){if(emp<c.max)return L(c.label);}return '';}
-
-function calcSupplier(){const sec=CONFIG.sectors[currentSector];
-  const items=[]; let s1=0,s2loc=0,s2mktReduction=0,s3=0;
-  const cats={}; const gridFactor=(CONFIG.factors.electricity_kwh||{}).value||0.442;
-  sec.questions.forEach(q=>{const val=parseFloat((document.getElementById('q_'+q.id)||{}).value)||0;if(val<=0)return;
-    const f=CONFIG.factors[q.factorKey];if(!f)return;const emis=val*f.value;const sc=f.scope||3;
-    if(sc===1)s1+=emis;
-    else if(sc===2){s2loc+=emis; if(f.marketAdjust){s2mktReduction+=val*gridFactor;}}
-    else{s3+=emis; const c=f.cat||'3.x'; cats[c]=(cats[c]||0)+emis;}
-    items.push({name:L(f.name),scope:sc,cat:f.cat||'',amount:val,unit:L(q.unitLabel),emis:emis});
-  });
-  const s2mkt=Math.max(0,s2loc-s2mktReduction);
-  const total=s1+s2mkt+s3;
-  const prof={}; (CONFIG.profile&&CONFIG.profile.fields||[]).forEach(f=>{const el=document.getElementById('p_'+f.id);prof[f.id]=el?el.value:'';});
-  lastResult={type:'supplier',company:document.getElementById('f-company').value,year:document.getElementById('f-year').value,
-    sector:L(sec.name),profile:prof,items:items,s1:s1,s2loc:s2loc,s2mkt:s2mkt,s3:s3,cats:cats,total:total};
-  renderResult(lastResult);show('screen-result');
-}
-
-function addSupplierRow(){const box=document.getElementById('supplier-rows');const div=document.createElement('div');div.className='supplier-row';
-  div.innerHTML='<input type="text" placeholder="'+(lang==='tr'?'Tedarikçi':'Supplier')+'" class="s-name"><input type="number" min="0" step="any" placeholder="0" class="s-emis"><button class="del" onclick="this.parentNode.remove()">×</button>';box.appendChild(div);}
-function calcBuyer(){const rows=document.querySelectorAll('#supplier-rows .supplier-row');const items=[];let total=0;
-  rows.forEach((r,i)=>{const name=r.querySelector('.s-name').value||((lang==='tr'?'Tedarikçi ':'Supplier ')+(i+1));const emis=parseFloat(r.querySelector('.s-emis').value)||0;if(emis<=0)return;total+=emis;items.push({name:name,scope:3,cat:'3.1',amount:emis,unit:'kg CO₂e',emis:emis});});
-  lastResult={type:'buyer',company:document.getElementById('b-company').value,year:document.getElementById('b-year').value,
-    sector:t('buyerScope3'),items:items,s1:0,s2loc:0,s2mkt:0,s3:total,cats:{'3.1':total},total:total,supplierCount:items.length};
-  renderResult(lastResult);show('screen-result');
-}
-
-function renderResult(r){
-  document.getElementById('total-num').textContent=fmt(r.total);
-  document.getElementById('total-unit').textContent=t('totalUnit');
-  document.getElementById('result-title').textContent=t('resultTitle');
-  // meta
-  const meta=[];if(r.company)meta.push(r.company);if(r.year)meta.push(r.year);meta.push(r.sector);
-  if(r.type==='supplier'&&r.profile){const emp=parseFloat(r.profile.employees)||0;if(emp>0)meta.push(t('sizeLabel')+': '+sizeClass(emp));
-    if(r.profile.market){const mf=(CONFIG.profile.fields.find(f=>f.id==='market')||{}).options||[];const mo=mf.find(o=>o.value===r.profile.market);if(mo)meta.push(t('marketLabel')+': '+L(mo.label));}}
-  if(r.type==='buyer'&&r.supplierCount!=null)meta.push(r.supplierCount+' '+t('supplierWord'));
-  document.getElementById('result-meta').textContent=meta.join(' · ');
-  // scopes
-  const scEl=document.getElementById('scopes'),barEl=document.getElementById('bar');
-  if(r.type==='buyer'){document.getElementById('scopes-block').style.display='none';}
-  else{document.getElementById('scopes-block').style.display='';scEl.innerHTML='';barEl.innerHTML='';
-    const vals={1:r.s1,2:r.s2mkt,3:r.s3};
-    [1,2,3].forEach(s=>{const v=vals[s]||0;const d=document.createElement('div');d.className='scope';
-      let extra=s===2?'<div class="s">'+t('s2loc')+': '+fmt(r.s2loc)+'</div>':'';
-      d.innerHTML='<div><span class="dot" style="background:'+scopeColor(s)+'"></span>'+scopeName(s)+'</div><div class="v">'+fmt(v)+'</div>'+extra;scEl.appendChild(d);
-      if(r.total>0&&v>0){const i=document.createElement('i');i.style.width=(v/r.total*100)+'%';i.style.background=scopeColor(s);barEl.appendChild(i);}});
-    document.getElementById('scope2note').textContent=t('scope2noteTxt');
-  }
-  // metrics
-  const mBox=document.getElementById('metrics');mBox.innerHTML='';
-  const mt=document.getElementById('metrics-title');
-  if(r.type==='supplier'&&CONFIG.intensity){const p=r.profile||{};let any=false;
-    const emp=parseFloat(p.employees)||0,rev=parseFloat(p.revenue)||0,out=parseFloat(p.output)||0;
-    if(CONFIG.intensity.perEmployee&&emp>0){any=true;mBox.appendChild(metricEl(fmt(r.total/emp)+' '+t('kgco2e'),t('perEmployee')));}
-    if(CONFIG.intensity.perRevenue&&rev>0){any=true;const base=CONFIG.intensity.revenueBase||1000000;mBox.appendChild(metricEl(fmt(r.total/(rev/base))+' '+t('kgco2e'),t('perRevenue')+' '+L(CONFIG.intensity.revenueBaseLabel)));}
-    if(CONFIG.intensity.perOutput&&out>0){any=true;mBox.appendChild(metricEl(fmt1(r.total/out)+' '+t('kgco2e'),t('perOutput')));}
-    mt.style.display=any?'':'none';mBox.style.display=any?'':'none';
-    if(!any){mBox.innerHTML='<div class="metric" style="grid-column:1/-1"><span>'+(lang==='tr'?'Yoğunluk için firma profilini doldurun (çalışan/ciro).':'Fill company profile (employees/revenue) for intensity.')+'</span></div>';mBox.style.display='';mt.style.display='';}
-  } else {mt.style.display='none';mBox.style.display='none';}
-  // breakdown by scope + scope3 categories
-  const tb=document.getElementById('breakdown-body');tb.innerHTML='';
-  const addRow=(label,val,cls)=>{const tr=document.createElement('tr');if(cls)tr.className=cls;tr.innerHTML='<td>'+label+'</td><td class="n">'+fmt(val)+'</td>';tb.appendChild(tr);};
-  if(r.type!=='buyer'){addRow(t('scope1'),r.s1);addRow(t('scope2locrow'),r.s2loc);addRow(t('scope2mktrow'),r.s2mkt);}
-  addRow(t('scope3row'),r.s3,'grp');
-  const cats=CONFIG.scope3cats||{};
-  Object.keys(r.cats).sort().forEach(c=>{const nm=cats[c]?L(cats[c]):c;addRow('&nbsp;&nbsp;'+c+' · '+nm,r.cats[c]);});
-  addRow(t('totalRow'),r.total,'tot');
-  // equivalents
-  const trees=r.total/((CONFIG.benchmarks&&CONFIG.benchmarks.tree_kg_per_year)||21);
-  const km=r.total/((CONFIG.benchmarks&&CONFIG.benchmarks.car_km_equiv_factor)||0.170);
-  document.getElementById('equiv').innerHTML='<div>🌳 <b>'+fmt(trees)+'</b> '+t('equivTree')+'</div><div>🚗 <b>'+fmt(km)+'</b> '+t('equivCar')+'</div>';
-  document.getElementById('meth-note').textContent=L(CONFIG.meta.methodology);
-  document.getElementById('factor-notice').textContent=L(CONFIG.meta.notice);
-}
+window.calcSupplier=function(){const sec=CONFIG.sectors[currentSector];const items=[];let s1=0,s2loc=0,s2mktReduction=0,s3=0;const cats={};const gridFactor=(CONFIG.factors.electricity_kwh||{}).value||0.442;sec.questions.forEach(q=>{const val=parseFloat((document.getElementById('q_'+q.id)||{}).value)||0;if(val<=0)return;const f=CONFIG.factors[q.factorKey];if(!f)return;const emis=val*f.value;const sc=f.scope||3;if(sc===1)s1+=emis;else if(sc===2){s2loc+=emis;if(f.marketAdjust)s2mktReduction+=val*gridFactor;}else{s3+=emis;const c=f.cat||'3.x';cats[c]=(cats[c]||0)+emis;}items.push({name:L(f.name),scope:sc,cat:f.cat||'',amount:val,unit:L(q.unitLabel),emis:emis});});const s2mkt=Math.max(0,s2loc-s2mktReduction);const total=s1+s2mkt+s3;const prof={};(CONFIG.profile&&CONFIG.profile.fields||[]).forEach(f=>{const el=document.getElementById('p_'+f.id);prof[f.id]=el?el.value:'';});lastResult={type:'supplier',company:document.getElementById('f-company').value,year:document.getElementById('f-year').value,sector:L(sec.name),profile:prof,items:items,s1:s1,s2loc:s2loc,s2mkt:s2mkt,s3:s3,cats:cats,total:total};renderResult(lastResult);show('screen-result');};
+window.addSupplierRow=function(){const box=document.getElementById('supplier-rows');const div=document.createElement('div');div.className='supplier-row';div.innerHTML='<input type="text" placeholder="'+(lang==='tr'?'Tedarikçi':'Supplier')+'" class="s-name"><input type="number" min="0" step="any" placeholder="0" class="s-emis"><button class="del" onclick="this.parentNode.remove()">×</button>';box.appendChild(div);};
+window.calcBuyer=function(){const rows=document.querySelectorAll('#supplier-rows .supplier-row');const items=[];let total=0;rows.forEach((r,i)=>{const name=r.querySelector('.s-name').value||((lang==='tr'?'Tedarikçi ':'Supplier ')+(i+1));const emis=parseFloat(r.querySelector('.s-emis').value)||0;if(emis<=0)return;total+=emis;items.push({name:name,scope:3,cat:'3.1',amount:emis,unit:'kg CO₂e',emis:emis});});lastResult={type:'buyer',company:document.getElementById('b-company').value,year:document.getElementById('b-year').value,sector:t('buyerScope3'),items:items,s1:0,s2loc:0,s2mkt:0,s3:total,cats:{'3.1':total},total:total,supplierCount:items.length};renderResult(lastResult);show('screen-result');};
+function renderResult(r){document.getElementById('total-num').textContent=fmt(r.total);document.getElementById('total-unit').textContent=t('totalUnit');document.getElementById('result-title').textContent=t('resultTitle');const meta=[];if(r.company)meta.push(r.company);if(r.year)meta.push(r.year);meta.push(r.sector);if(r.type==='supplier'&&r.profile){const emp=parseFloat(r.profile.employees)||0;if(emp>0)meta.push(t('sizeLabel')+': '+sizeClass(emp));if(r.profile.market){const mf=(CONFIG.profile.fields.find(f=>f.id==='market')||{}).options||[];const mo=mf.find(o=>o.value===r.profile.market);if(mo)meta.push(t('marketLabel')+': '+L(mo.label));}}if(r.type==='buyer'&&r.supplierCount!=null)meta.push(r.supplierCount+' '+t('supplierWord'));document.getElementById('result-meta').textContent=meta.join(' · ');
+  const scEl=document.getElementById('scopes'),barEl=document.getElementById('bar');if(r.type==='buyer'){document.getElementById('scopes-block').style.display='none';}else{document.getElementById('scopes-block').style.display='';scEl.innerHTML='';barEl.innerHTML='';const vals={1:r.s1,2:r.s2mkt,3:r.s3};[1,2,3].forEach(s=>{const v=vals[s]||0;const d=document.createElement('div');d.className='scope';let extra=s===2?'<div class="s">'+t('s2loc')+': '+fmt(r.s2loc)+'</div>':'';d.innerHTML='<div><span class="dot" style="background:'+scopeColor(s)+'"></span>'+scopeName(s)+'</div><div class="v">'+fmt(v)+'</div>'+extra;scEl.appendChild(d);if(r.total>0&&v>0){const i=document.createElement('i');i.style.width=(v/r.total*100)+'%';i.style.background=scopeColor(s);barEl.appendChild(i);}});document.getElementById('scope2note').textContent=t('scope2noteTxt');}
+  const mBox=document.getElementById('metrics');mBox.innerHTML='';const mt=document.getElementById('metrics-title');if(r.type==='supplier'&&CONFIG.intensity){const p=r.profile||{};let any=false;const emp=parseFloat(p.employees)||0,rev=parseFloat(p.revenue)||0,out=parseFloat(p.output)||0;if(CONFIG.intensity.perEmployee&&emp>0){any=true;mBox.appendChild(metricEl(fmt(r.total/emp)+' '+t('kgco2e'),t('perEmployee')));}if(CONFIG.intensity.perRevenue&&rev>0){any=true;const base=CONFIG.intensity.revenueBase||1000000;mBox.appendChild(metricEl(fmt(r.total/(rev/base))+' '+t('kgco2e'),t('perRevenue')+' '+L(CONFIG.intensity.revenueBaseLabel)));}if(CONFIG.intensity.perOutput&&out>0){any=true;mBox.appendChild(metricEl(fmt1(r.total/out)+' '+t('kgco2e'),t('perOutput')));}mt.style.display=any?'':'none';mBox.style.display=any?'':'none';if(!any){mBox.innerHTML='<div class="metric" style="grid-column:1/-1"><span>'+(lang==='tr'?'Yoğunluk için firma profilini doldurun.':'Fill company profile for intensity.')+'</span></div>';mBox.style.display='';mt.style.display='';}}else{mt.style.display='none';mBox.style.display='none';}
+  const tb=document.getElementById('breakdown-body');tb.innerHTML='';const addRow=(label,val,cls)=>{const tr=document.createElement('tr');if(cls)tr.className=cls;tr.innerHTML='<td>'+label+'</td><td class="n">'+fmt(val)+'</td>';tb.appendChild(tr);};if(r.type!=='buyer'){addRow(t('scope1'),r.s1);addRow(t('scope2locrow'),r.s2loc);addRow(t('scope2mktrow'),r.s2mkt);}addRow(t('scope3row'),r.s3,'grp');const cats=CONFIG.scope3cats||{};Object.keys(r.cats).sort().forEach(c=>{const nm=cats[c]?L(cats[c]):c;addRow('&nbsp;&nbsp;'+c+' · '+nm,r.cats[c]);});addRow(t('totalRow'),r.total,'tot');
+  const trees=r.total/((CONFIG.benchmarks&&CONFIG.benchmarks.tree_kg_per_year)||21);const km=r.total/((CONFIG.benchmarks&&CONFIG.benchmarks.car_km_equiv_factor)||0.170);document.getElementById('equiv').innerHTML='<div>🌳 <b>'+fmt(trees)+'</b> '+t('equivTree')+'</div><div>🚗 <b>'+fmt(km)+'</b> '+t('equivCar')+'</div>';document.getElementById('meth-note').textContent=L(CONFIG.meta.methodology);document.getElementById('factor-notice').textContent=L(CONFIG.meta.notice);updateSaveUi();}
 function metricEl(big,small){const d=document.createElement('div');d.className='metric';d.innerHTML='<b>'+big+'</b><span>'+small+'</span>';return d;}
-function goBackFromResult(){show(mode==='buyer'?'screen-buyer':'screen-form');}
-function exportReport(){const data=JSON.stringify(lastResult,null,2);const blob=new Blob([data],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='karbon-raporu-'+((lastResult.company||'firma')+'').replace(/\s+/g,'_')+'.json';a.click();}
+window.goBackFromResult=function(){show(mode==='buyer'?'screen-buyer':'screen-form');};
+window.exportReport=function(){const data=JSON.stringify(lastResult,null,2);const blob=new Blob([data],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='karbon-raporu-'+((lastResult.company||'firma')+'').replace(/\s+/g,'_')+'.json';a.click();};
 
-applyStatic();
+/* ---- SAVE / REPORTS (Firestore) ---- */
+function updateSaveUi(){const btn=document.getElementById('save-btn');const hint=document.getElementById('save-hint');if(!btn)return;if(currentUser){btn.disabled=false;btn.style.opacity=1;hint.textContent='';}else{btn.disabled=false;btn.style.opacity=.85;hint.textContent=t('loginToSave');}}
+window.saveReport=async function(){const hint=document.getElementById('save-hint');if(!currentUser){openLogin();return;}if(!db||!lastResult)return;hint.textContent=t('saving');try{const payload=Object.assign({},lastResult,{createdAt:serverTimestamp(),userEmail:currentUser.email||''});await addDoc(collection(db,'reports',currentUser.uid,'items'),payload);hint.textContent=t('savedOk');}catch(e){hint.textContent=(lang==='tr'?'Kaydedilemedi: ':'Save failed: ')+(e.message||e);}};
+window.openReports=async function(){show('screen-reports');const list=document.getElementById('reports-list');const empty=document.getElementById('reports-empty');list.innerHTML='';empty.style.display='none';if(!currentUser){empty.textContent=t('saveNeedLogin');empty.style.display='';return;}try{const snap=await getDocs(query(collection(db,'reports',currentUser.uid,'items'),orderBy('createdAt','desc')));if(snap.empty){empty.textContent=t('noReports');empty.style.display='';return;}snap.forEach(docSnap=>{const d=docSnap.data();const dt=d.createdAt&&d.createdAt.toDate?d.createdAt.toDate().toLocaleString(lang==='tr'?'tr-TR':'en-US'):'';const el=document.createElement('div');el.className='rep-item';el.innerHTML='<div><b>'+fmt(d.total||0)+'</b> kg CO₂e<br><span class="fieldnote">'+((d.company||'')+' · '+(d.sector||'')+' · '+dt)+'</span></div><span>›</span>';el.onclick=()=>{lastResult=d;renderResult(d);show('screen-result');};list.appendChild(el);});}catch(e){empty.textContent=(lang==='tr'?'Yüklenemedi: ':'Load failed: ')+(e.message||e);empty.style.display='';}};
+
+applyStatic();renderAuthBar();renderIntroActions();
 </script>
 </body>
 </html>

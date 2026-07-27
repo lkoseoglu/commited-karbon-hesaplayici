@@ -1,0 +1,43 @@
+rules_version = '2';
+
+// KOBİ Karbon Modülü — Firestore güvenlik kuralları
+// Not: Admin e-postasını buradaki değerle koddaki ADMIN_EMAIL AYNI olmalı.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    function isAdmin() {
+      return isSignedIn()
+        && request.auth.token.email_verified == true
+        && request.auth.token.email in [
+          'levent.koseoglu@commited.app',
+          'commitedapp@gmail.com',
+          'lkoseoglu@hotmail.com'
+        ];
+    }
+
+    // --- Hesaplama parametreleri (config) ---
+    // Hesaplayıcının çalışması için herkes okuyabilir; yalnız admin yazar.
+    match /config/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // --- Firma raporları ---
+    // Her firma yalnızca kendi raporlarını okur/yazar. Admin hepsini okur.
+    // Admin panelindeki "tüm firma raporları" görünümü collectionGroup('items')
+    // sorgusu kullanır; bu kural onu da kapsar.
+    match /reports/{uid}/items/{reportId} {
+      allow read, write: if isSignedIn() && request.auth.uid == uid;
+      allow read: if isAdmin();
+    }
+
+    // --- Firma profil özeti (opsiyonel; son giriş, firma adı vb.) ---
+    match /firms/{uid} {
+      allow read, write: if isSignedIn() && request.auth.uid == uid;
+      allow read: if isAdmin();
+    }
+  }
+}
