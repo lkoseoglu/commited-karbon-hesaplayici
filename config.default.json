@@ -1,0 +1,74 @@
+{
+  "meta": {
+    "version": "1.0",
+    "updated": "2026-07-27",
+    "notice": {
+      "tr": "Emisyon faktörleri VARSAYILAN referans değerlerdir. Resmi raporlama öncesi güncel IPCC / DEFRA / Türkiye Ulusal Envanter değerleriyle admin panelinden doğrulayın.",
+      "en": "Emission factors are DEFAULT reference values. Verify against current IPCC / DEFRA / Turkish National Inventory values in the admin panel before official reporting."
+    }
+  },
+  "factors": {
+    "electricity_kwh": { "name": { "tr": "Elektrik (şebeke)", "en": "Electricity (grid)" }, "value": 0.442, "unit": "kgCO2e/kWh", "scope": 2, "source": "TR şebeke ort. (varsayılan)" },
+    "natural_gas_m3": { "name": { "tr": "Doğal gaz", "en": "Natural gas" }, "value": 2.02, "unit": "kgCO2e/m³", "scope": 1, "source": "IPCC (varsayılan)" },
+    "diesel_l": { "name": { "tr": "Motorin (dizel)", "en": "Diesel" }, "value": 2.68, "unit": "kgCO2e/L", "scope": 1, "source": "DEFRA (varsayılan)" },
+    "gasoline_l": { "name": { "tr": "Benzin", "en": "Gasoline" }, "value": 2.31, "unit": "kgCO2e/L", "scope": 1, "source": "DEFRA (varsayılan)" },
+    "lpg_kg": { "name": { "tr": "LPG / Tüp gaz", "en": "LPG" }, "value": 2.98, "unit": "kgCO2e/kg", "scope": 1, "source": "DEFRA (varsayılan)" },
+    "fuel_oil_l": { "name": { "tr": "Fuel oil", "en": "Fuel oil" }, "value": 3.15, "unit": "kgCO2e/L", "scope": 1, "source": "DEFRA (varsayılan)" },
+    "coal_kg": { "name": { "tr": "Kömür", "en": "Coal" }, "value": 2.42, "unit": "kgCO2e/kg", "scope": 1, "source": "IPCC (varsayılan)" },
+    "steam_kwh": { "name": { "tr": "Satın alınan buhar/ısı", "en": "Purchased steam/heat" }, "value": 0.27, "unit": "kgCO2e/kWh", "scope": 2, "source": "DEFRA (varsayılan)" },
+    "water_m3": { "name": { "tr": "Şebeke suyu", "en": "Mains water" }, "value": 0.344, "unit": "kgCO2e/m³", "scope": 3, "source": "DEFRA (varsayılan)" },
+    "wastewater_m3": { "name": { "tr": "Atık su arıtma", "en": "Wastewater treatment" }, "value": 0.708, "unit": "kgCO2e/m³", "scope": 3, "source": "DEFRA (varsayılan)" },
+    "waste_landfill_kg": { "name": { "tr": "Atık (düzenli depolama)", "en": "Waste (landfill)" }, "value": 0.458, "unit": "kgCO2e/kg", "scope": 3, "source": "DEFRA (varsayılan)" },
+    "waste_recycled_kg": { "name": { "tr": "Atık (geri dönüşüm)", "en": "Waste (recycled)" }, "value": 0.021, "unit": "kgCO2e/kg", "scope": 3, "source": "DEFRA (varsayılan)" },
+    "cotton_kg": { "name": { "tr": "Pamuklu kumaş/iplik", "en": "Cotton fabric/yarn" }, "value": 16.5, "unit": "kgCO2e/kg", "scope": 3, "source": "Literatür ort. (varsayılan)" },
+    "polyester_kg": { "name": { "tr": "Polyester kumaş/iplik", "en": "Polyester fabric/yarn" }, "value": 9.5, "unit": "kgCO2e/kg", "scope": 3, "source": "Literatür ort. (varsayılan)" },
+    "wool_kg": { "name": { "tr": "Yün", "en": "Wool" }, "value": 24.0, "unit": "kgCO2e/kg", "scope": 3, "source": "Literatür ort. (varsayılan)" },
+    "dye_chemical_kg": { "name": { "tr": "Boya / kimyasal", "en": "Dye / chemical" }, "value": 3.4, "unit": "kgCO2e/kg", "scope": 3, "source": "Literatür ort. (varsayılan)" },
+    "freight_road_tkm": { "name": { "tr": "Karayolu yük taşıma", "en": "Road freight" }, "value": 0.107, "unit": "kgCO2e/ton·km", "scope": 3, "source": "DEFRA (varsayılan)" },
+    "freight_sea_tkm": { "name": { "tr": "Deniz yük taşıma", "en": "Sea freight" }, "value": 0.016, "unit": "kgCO2e/ton·km", "scope": 3, "source": "DEFRA (varsayılan)" },
+    "car_km": { "name": { "tr": "Binek araç (iş seyahati)", "en": "Car (business travel)" }, "value": 0.170, "unit": "kgCO2e/km", "scope": 3, "source": "DEFRA (varsayılan)" },
+    "flight_km": { "name": { "tr": "Uçuş (yolcu)", "en": "Flight (passenger)" }, "value": 0.150, "unit": "kgCO2e/km", "scope": 3, "source": "DEFRA (varsayılan)" },
+    "meal_unit": { "name": { "tr": "Servis edilen öğün", "en": "Meal served" }, "value": 1.9, "unit": "kgCO2e/öğün", "scope": 3, "source": "Literatür ort. (varsayılan)" },
+    "laundry_kg": { "name": { "tr": "Çamaşır (kuru ağırlık)", "en": "Laundry (dry weight)" }, "value": 0.9, "unit": "kgCO2e/kg", "scope": 3, "source": "Literatür ort. (varsayılan)" },
+    "refrigerant_r410a_kg": { "name": { "tr": "Soğutucu gaz kaçağı (R410A)", "en": "Refrigerant leak (R410A)" }, "value": 2088.0, "unit": "kgCO2e/kg", "scope": 1, "source": "IPCC GWP (varsayılan)" }
+  },
+  "sectors": {
+    "textile": {
+      "name": { "tr": "Tekstil Üretimi", "en": "Textile Manufacturing" },
+      "icon": "🧵",
+      "questions": [
+        { "id": "t_elec", "factorKey": "electricity_kwh", "name": { "tr": "Yıllık elektrik tüketimi", "en": "Annual electricity use" }, "unitLabel": { "tr": "kWh/yıl", "en": "kWh/yr" } },
+        { "id": "t_gas", "factorKey": "natural_gas_m3", "name": { "tr": "Yıllık doğal gaz tüketimi", "en": "Annual natural gas use" }, "unitLabel": { "tr": "m³/yıl", "en": "m³/yr" } },
+        { "id": "t_diesel", "factorKey": "diesel_l", "name": { "tr": "Jeneratör/araç motorin tüketimi", "en": "Generator/vehicle diesel" }, "unitLabel": { "tr": "L/yıl", "en": "L/yr" } },
+        { "id": "t_steam", "factorKey": "steam_kwh", "name": { "tr": "Satın alınan buhar/ısı", "en": "Purchased steam/heat" }, "unitLabel": { "tr": "kWh/yıl", "en": "kWh/yr" } },
+        { "id": "t_cotton", "factorKey": "cotton_kg", "name": { "tr": "İşlenen pamuk (hammadde)", "en": "Cotton processed (raw material)" }, "unitLabel": { "tr": "kg/yıl", "en": "kg/yr" } },
+        { "id": "t_poly", "factorKey": "polyester_kg", "name": { "tr": "İşlenen polyester (hammadde)", "en": "Polyester processed (raw material)" }, "unitLabel": { "tr": "kg/yıl", "en": "kg/yr" } },
+        { "id": "t_dye", "factorKey": "dye_chemical_kg", "name": { "tr": "Boya / kimyasal kullanımı", "en": "Dye / chemical used" }, "unitLabel": { "tr": "kg/yıl", "en": "kg/yr" } },
+        { "id": "t_water", "factorKey": "water_m3", "name": { "tr": "Su tüketimi", "en": "Water use" }, "unitLabel": { "tr": "m³/yıl", "en": "m³/yr" } },
+        { "id": "t_waste", "factorKey": "waste_landfill_kg", "name": { "tr": "Depolamaya giden atık", "en": "Waste to landfill" }, "unitLabel": { "tr": "kg/yıl", "en": "kg/yr" } },
+        { "id": "t_freight", "factorKey": "freight_road_tkm", "name": { "tr": "Ürün sevkiyatı (ton·km)", "en": "Product shipping (tonne·km)" }, "unitLabel": { "tr": "ton·km/yıl", "en": "tonne·km/yr" } }
+      ]
+    },
+    "tourism": {
+      "name": { "tr": "Turizm / Konaklama", "en": "Tourism / Hospitality" },
+      "icon": "🏨",
+      "questions": [
+        { "id": "h_elec", "factorKey": "electricity_kwh", "name": { "tr": "Yıllık elektrik tüketimi", "en": "Annual electricity use" }, "unitLabel": { "tr": "kWh/yıl", "en": "kWh/yr" } },
+        { "id": "h_gas", "factorKey": "natural_gas_m3", "name": { "tr": "Yıllık doğal gaz tüketimi", "en": "Annual natural gas use" }, "unitLabel": { "tr": "m³/yıl", "en": "m³/yr" } },
+        { "id": "h_lpg", "factorKey": "lpg_kg", "name": { "tr": "LPG / tüp gaz (mutfak vb.)", "en": "LPG (kitchen etc.)" }, "unitLabel": { "tr": "kg/yıl", "en": "kg/yr" } },
+        { "id": "h_diesel", "factorKey": "diesel_l", "name": { "tr": "Jeneratör/servis aracı motorin", "en": "Generator/shuttle diesel" }, "unitLabel": { "tr": "L/yıl", "en": "L/yr" } },
+        { "id": "h_refrig", "factorKey": "refrigerant_r410a_kg", "name": { "tr": "Soğutucu gaz dolumu (kaçak)", "en": "Refrigerant refill (leak)" }, "unitLabel": { "tr": "kg/yıl", "en": "kg/yr" } },
+        { "id": "h_water", "factorKey": "water_m3", "name": { "tr": "Su tüketimi", "en": "Water use" }, "unitLabel": { "tr": "m³/yıl", "en": "m³/yr" } },
+        { "id": "h_wastewater", "factorKey": "wastewater_m3", "name": { "tr": "Atık su", "en": "Wastewater" }, "unitLabel": { "tr": "m³/yıl", "en": "m³/yr" } },
+        { "id": "h_meals", "factorKey": "meal_unit", "name": { "tr": "Servis edilen öğün sayısı", "en": "Meals served" }, "unitLabel": { "tr": "öğün/yıl", "en": "meals/yr" } },
+        { "id": "h_laundry", "factorKey": "laundry_kg", "name": { "tr": "Çamaşırhane (kuru ağırlık)", "en": "Laundry (dry weight)" }, "unitLabel": { "tr": "kg/yıl", "en": "kg/yr" } },
+        { "id": "h_waste", "factorKey": "waste_landfill_kg", "name": { "tr": "Depolamaya giden atık", "en": "Waste to landfill" }, "unitLabel": { "tr": "kg/yıl", "en": "kg/yr" } }
+      ]
+    }
+  },
+  "benchmarks": {
+    "note": { "tr": "Karşılaştırma referansları (opsiyonel, rapor yorumunda kullanılır).", "en": "Benchmark references (optional, used in report interpretation)." },
+    "tree_kg_per_year": 21,
+    "car_km_equiv_factor": 0.170
+  }
+}
