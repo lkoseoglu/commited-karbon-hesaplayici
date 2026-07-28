@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>KOBİ Karbon Ayak İzi Hesaplayıcı</title>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <style>
   :root{
     --green:#1f7a4d; --green-d:#155e3a; --green-l:#e7f4ec;
@@ -19,7 +20,8 @@
   h2{font-size:1.15rem;margin:0 0 14px;color:var(--green-d)}
   h3{font-size:1rem;margin:20px 0 8px}
   p.sub{color:var(--muted);margin:0 0 14px;font-size:.95rem}
-  .ck-topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+  .freebadge{display:inline-block;background:#e7f4ec;color:var(--green-d);border:1px solid #bfe3cd;border-radius:20px;padding:3px 12px;font-size:.82rem;font-weight:800;margin-bottom:8px}
+  .ck-topbar{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:14px}
   .ck-lang button, .authbtn{border:1px solid var(--line);background:#fff;padding:6px 12px;border-radius:8px;cursor:pointer;font-weight:600;color:var(--muted)}
   .ck-lang button.active{background:var(--green);color:#fff;border-color:var(--green)}
   .authbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
@@ -41,7 +43,9 @@
   input:focus,select:focus{outline:none;border-color:var(--green)}
   .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
   @media(max-width:600px){.grid2{grid-template-columns:1fr}}
-  .row{display:grid;grid-template-columns:1fr 130px;gap:10px;align-items:end}
+  .qrow{border-bottom:1px solid #f0f5f2;padding:8px 0;display:grid;grid-template-columns:1fr 120px 140px;gap:10px;align-items:end}
+  @media(max-width:600px){.qrow{grid-template-columns:1fr}}
+  .qrow .qual select{padding:8px;font-size:.85rem}
   .qsub{margin-left:14px;border-left:2px solid var(--green-l);padding-left:12px}
   .btn{background:var(--green);color:#fff;border:none;padding:12px 20px;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer}
   .btn:hover{background:var(--green-d)}
@@ -71,6 +75,9 @@
   .metric{background:#f5f8f6;border-radius:10px;padding:12px;text-align:center}
   .metric b{display:block;font-size:1.2rem;color:var(--green-d)}
   .metric span{font-size:.8rem;color:var(--muted)}
+  .dq{background:#f5f8f6;border-radius:10px;padding:12px;margin-top:12px;font-size:.9rem}
+  .dq .bar2{height:12px;border-radius:6px;background:#e2e8e4;overflow:hidden;margin-top:6px}
+  .dq .bar2 i{display:block;height:100%;background:var(--green)}
   .equiv{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
   @media(max-width:600px){.equiv{grid-template-columns:1fr}}
   .equiv div{background:#f5f8f6;border-radius:10px;padding:12px;font-size:.92rem}
@@ -101,8 +108,11 @@
   <!-- INTRO -->
   <div class="ck-card" id="screen-intro">
     <div class="ck-topbar">
-      <div><h1 data-t="title">KOBİ Karbon Ayak İzi Hesaplayıcı</h1>
-      <p class="sub" data-t="subtitle">GHG Protocol tabanlı temel karbon ayak izi raporu — Kapsam 1, 2, 3</p></div>
+      <div>
+        <span class="freebadge" data-t="freeBadge">🆓 %100 Ücretsiz</span>
+        <h1 data-t="title">KOBİ Karbon Ayak İzi Hesaplayıcı</h1>
+        <p class="sub" data-t="subtitle">Ücretsiz · GHG Protocol tabanlı temel karbon ayak izi raporu — Kapsam 1, 2, 3</p>
+      </div>
       <div class="authbar no-print" id="authbar"></div>
     </div>
     <div class="ck-lang no-print" style="margin-bottom:12px">
@@ -146,7 +156,7 @@
     </div>
     <div id="profile-fields" class="grid2"></div>
     <h3 data-t="dataTitle">Yıllık faaliyet verileri</h3>
-    <p class="sub" data-t="formHint">Yıllık tüketim değerlerinizi girin. Bilmediğiniz alanları boş bırakabilirsiniz.</p>
+    <p class="sub" data-t="formHint">Yıllık tüketim değerlerinizi girin. Bilmediğiniz alanları boş bırakabilirsiniz. Her satırda verinin ölçüm mü tahmin mi olduğunu işaretleyebilirsiniz.</p>
     <div id="questions"></div>
     <div class="btn-row no-print">
       <button class="btn" onclick="calcSupplier()" data-t="calcBtn">Raporu oluştur</button>
@@ -174,7 +184,10 @@
   <!-- REPORTS LIST -->
   <div class="ck-card hidden" id="screen-reports">
     <button class="back no-print" onclick="show('screen-intro')">‹ <span data-t="back">Geri</span></button>
-    <h2 data-t="myReports">Önceki raporlarım</h2>
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+      <h2 data-t="myReports">Önceki raporlarım</h2>
+      <button class="btn sec sm no-print" id="reports-xlsx" onclick="exportAllExcel()">⤓ <span data-t="exportAllXlsx">Tümünü Excel'e aktar</span></button>
+    </div>
     <p class="sub" id="reports-empty" data-t="noReports">Henüz kayıtlı rapor yok.</p>
     <div id="reports-list"></div>
   </div>
@@ -193,6 +206,7 @@
     </div>
     <h3 id="metrics-title" data-t="metricsTitle">Yoğunluk metrikleri</h3>
     <div class="metrics" id="metrics"></div>
+    <div class="dq" id="dq-box"></div>
     <h3 data-t="breakdownTitle">Kapsam bazında dağılım</h3>
     <table class="rep"><tbody id="breakdown-body"></tbody></table>
     <div class="equiv" id="equiv"></div>
@@ -200,13 +214,13 @@
     <div class="notice" id="factor-notice"></div>
     <div class="btn-row no-print">
       <button class="btn" id="save-btn" onclick="saveReport()" data-t="saveCloud">Bulut'a kaydet</button>
-      <button class="btn sec" onclick="window.print()" data-t="printBtn">Yazdır / PDF</button>
-      <button class="btn ghost" onclick="exportReport()" data-t="exportBtn">JSON indir</button>
+      <button class="btn sec" onclick="exportExcel()" data-t="exportXlsx">Excel indir</button>
+      <button class="btn ghost" onclick="window.print()" data-t="printBtn">Yazdır / PDF</button>
     </div>
     <p class="sub no-print" id="save-hint" style="font-size:.82rem;margin-top:8px"></p>
   </div>
 
-  <p class="sub" style="text-align:center;font-size:.8rem">commitedevents.app · KOBİ Karbon Modülü v3</p>
+  <p class="sub" style="text-align:center;font-size:.8rem" data-t="footer">commitedevents.app · KOBİ Karbon Modülü v3 · Ücretsiz</p>
 </div>
 
 <!-- LOGIN MODAL -->
@@ -256,21 +270,22 @@ try{
   onAuthStateChanged(auth, u=>{ currentUser=u; renderAuthBar(); renderIntroActions(); updateSaveUi(); });
 }catch(e){ console.warn("Firebase init hata:", e); }
 
-/* ---- VARSAYILAN AYARLAR (config.default.json v2 ile aynı) ---- */
+/* ---- VARSAYILAN AYARLAR (config.default.json v3.0 ile aynı) ---- */
 const DEFAULT_CONFIG = {
-  "meta":{"version":"2.0","updated":"2026-07-27",
-    "methodology":{"tr":"GHG Protocol Kurumsal Standardı temel alınmıştır; KOBİ'ler için sadeleştirilmiştir. Faaliyet-verisi esas alınır. Kapsam 2 hem konum-bazlı hem pazar-bazlı raporlanır. Kapsam 3 kalemleri GHG Protocol kategori numaralarıyla etiketlenmiştir.","en":"Based on the GHG Protocol Corporate Standard, streamlined for SMEs. Uses activity data. Scope 2 reported location- and market-based. Scope 3 items tagged with GHG Protocol category numbers."},
+  "meta":{"version":"3.0","updated":"2026-07-27",
+    "methodology":{"tr":"GHG Protocol Kurumsal Standardı temel alınmıştır; KOBİ'ler için sadeleştirilmiştir. Faaliyet-verisi esas alınır. Kapsam 2 hem konum-bazlı hem pazar-bazlı raporlanır. Kapsam 3 kalemleri GHG Protocol kategori numaralarıyla etiketlenmiştir. Her girdi için veri kalitesi (ölçüm/tahmin) işaretlenebilir.","en":"Based on the GHG Protocol Corporate Standard, streamlined for SMEs. Uses activity data. Scope 2 reported location- and market-based. Scope 3 items tagged with GHG Protocol category numbers. Data quality (measured/estimate) per input."},
     "notice":{"tr":"Emisyon faktörleri VARSAYILAN referans değerlerdir. Resmi raporlama öncesi güncel IPCC / DEFRA / Türkiye Ulusal Envanter değerleriyle doğrulayın. Bu araç tam LCA değil, temel seviye tahmin sağlar.","en":"Emission factors are DEFAULT reference values. Verify before official reporting. This is a basic estimate, not a full LCA."}},
   "profile":{"fields":[
     {"id":"employees","name":{"tr":"Çalışan sayısı (TZE)","en":"Employees (FTE)"},"type":"number","hint":{"tr":"Yoğunluk için","en":"For intensity"}},
     {"id":"revenue","name":{"tr":"Yıllık ciro","en":"Annual revenue"},"type":"number","unit":{"tr":"₺/yıl","en":"₺/yr"},"hint":{"tr":"Yoğunluk için","en":"For intensity"}},
-    {"id":"output","name":{"tr":"Yıllık üretim/çıktı (ops.)","en":"Annual output (opt.)"},"type":"number","unit":{"tr":"birim/yıl","en":"units/yr"},"hint":{"tr":"ör. kg kumaş, oda-gece","en":"e.g. kg fabric, room-nights"}},
+    {"id":"output","name":{"tr":"Yıllık üretim/çıktı (ops.)","en":"Annual output (opt.)"},"type":"number","unit":{"tr":"birim/yıl","en":"units/yr"},"hint":{"tr":"ör. kg kumaş, oda-gece","en":"e.g. kg fabric"}},
     {"id":"market","name":{"tr":"Pazar","en":"Market"},"type":"select","options":[
       {"value":"domestic","label":{"tr":"Yurtiçi","en":"Domestic"}},
       {"value":"export","label":{"tr":"İhracat ağırlıklı","en":"Export-focused"}},
       {"value":"both","label":{"tr":"Karma","en":"Mixed"}}]}],
     "sizeClasses":[{"max":10,"label":{"tr":"Mikro (<10)","en":"Micro (<10)"}},{"max":50,"label":{"tr":"Küçük (10-50)","en":"Small (10-50)"}},{"max":500,"label":{"tr":"Orta (50-500)","en":"Medium (50-500)"}},{"max":100000000,"label":{"tr":"Büyük (500+)","en":"Large (500+)"}}]},
   "intensity":{"perEmployee":true,"perRevenue":true,"revenueBase":1000000,"revenueBaseLabel":{"tr":"milyon ₺","en":"million ₺"},"perOutput":true},
+  "dataQuality":{"enabled":true},
   "factors":{
     "electricity_kwh":{"name":{"tr":"Elektrik (şebeke)","en":"Electricity (grid)"},"value":0.442,"unit":"kgCO2e/kWh","scope":2},
     "electricity_green_kwh":{"name":{"tr":"Yeşil/sertifikalı elektrik","en":"Certified renewable electricity"},"value":0.0,"unit":"kgCO2e/kWh","scope":2,"marketAdjust":true},
@@ -286,6 +301,8 @@ const DEFAULT_CONFIG = {
     "polyester_kg":{"name":{"tr":"Polyester kumaş/iplik","en":"Polyester fabric/yarn"},"value":9.5,"unit":"kgCO2e/kg","scope":3,"cat":"3.1"},
     "wool_kg":{"name":{"tr":"Yün","en":"Wool"},"value":24.0,"unit":"kgCO2e/kg","scope":3,"cat":"3.1"},
     "dye_chemical_kg":{"name":{"tr":"Boya / kimyasal","en":"Dye / chemical"},"value":3.4,"unit":"kgCO2e/kg","scope":3,"cat":"3.1"},
+    "cardboard_kg":{"name":{"tr":"Karton ambalaj","en":"Cardboard packaging"},"value":0.94,"unit":"kgCO2e/kg","scope":3,"cat":"3.1"},
+    "plastic_kg":{"name":{"tr":"Plastik ambalaj","en":"Plastic packaging"},"value":2.7,"unit":"kgCO2e/kg","scope":3,"cat":"3.1"},
     "meal_unit":{"name":{"tr":"Servis edilen öğün","en":"Meal served"},"value":1.9,"unit":"kgCO2e/öğün","scope":3,"cat":"3.1"},
     "laundry_kg":{"name":{"tr":"Çamaşır (kuru ağırlık)","en":"Laundry (dry weight)"},"value":0.9,"unit":"kgCO2e/kg","scope":3,"cat":"3.1"},
     "freight_road_tkm":{"name":{"tr":"Karayolu yük taşıma","en":"Road freight"},"value":0.107,"unit":"kgCO2e/ton·km","scope":3,"cat":"3.4"},
@@ -295,36 +312,53 @@ const DEFAULT_CONFIG = {
     "waste_landfill_kg":{"name":{"tr":"Atık (düzenli depolama)","en":"Waste (landfill)"},"value":0.458,"unit":"kgCO2e/kg","scope":3,"cat":"3.5"},
     "waste_recycled_kg":{"name":{"tr":"Atık (geri dönüşüm)","en":"Waste (recycled)"},"value":0.021,"unit":"kgCO2e/kg","scope":3,"cat":"3.5"},
     "car_km":{"name":{"tr":"Binek araç (iş seyahati)","en":"Car (business travel)"},"value":0.170,"unit":"kgCO2e/km","scope":3,"cat":"3.6"},
-    "flight_km":{"name":{"tr":"Uçuş (yolcu)","en":"Flight (passenger)"},"value":0.150,"unit":"kgCO2e/km","scope":3,"cat":"3.6"},
+    "flight_km":{"name":{"tr":"Uçuş (yolcu·km)","en":"Flight (passenger·km)"},"value":0.150,"unit":"kgCO2e/km","scope":3,"cat":"3.6"},
     "commute_km":{"name":{"tr":"Personel ulaşımı","en":"Employee commuting"},"value":0.150,"unit":"kgCO2e/km","scope":3,"cat":"3.7"}
   },
   "sectors":{
     "textile":{"name":{"tr":"Tekstil Üretimi","en":"Textile Manufacturing"},"icon":"🧵","questions":[
       {"id":"t_elec","factorKey":"electricity_kwh","name":{"tr":"Yıllık elektrik tüketimi (toplam)","en":"Annual electricity use (total)"},"unitLabel":{"tr":"kWh/yıl","en":"kWh/yr"}},
       {"id":"t_elec_green","factorKey":"electricity_green_kwh","name":{"tr":"Bunun yeşil/sertifikalı olan kısmı","en":"Of which certified renewable"},"unitLabel":{"tr":"kWh/yıl","en":"kWh/yr"}},
-      {"id":"t_gas","factorKey":"natural_gas_m3","name":{"tr":"Yıllık doğal gaz tüketimi","en":"Annual natural gas use"},"unitLabel":{"tr":"m³/yıl","en":"m³/yr"}},
-      {"id":"t_diesel","factorKey":"diesel_l","name":{"tr":"Jeneratör/araç motorin tüketimi","en":"Generator/vehicle diesel"},"unitLabel":{"tr":"L/yıl","en":"L/yr"}},
+      {"id":"t_gas","factorKey":"natural_gas_m3","name":{"tr":"Doğal gaz tüketimi","en":"Natural gas use"},"unitLabel":{"tr":"m³/yıl","en":"m³/yr"}},
+      {"id":"t_coal","factorKey":"coal_kg","name":{"tr":"Kömür (kazan/ısıtma)","en":"Coal (boiler)"},"unitLabel":{"tr":"kg/yıl","en":"kg/yr"}},
+      {"id":"t_diesel","factorKey":"diesel_l","name":{"tr":"Araç filosu — motorin","en":"Fleet — diesel"},"unitLabel":{"tr":"L/yıl","en":"L/yr"}},
+      {"id":"t_gasoline","factorKey":"gasoline_l","name":{"tr":"Araç filosu — benzin","en":"Fleet — gasoline"},"unitLabel":{"tr":"L/yıl","en":"L/yr"}},
       {"id":"t_refrig","factorKey":"refrigerant_r410a_kg","name":{"tr":"Soğutucu gaz dolumu (kaçak)","en":"Refrigerant refill (leak)"},"unitLabel":{"tr":"kg/yıl","en":"kg/yr"}},
       {"id":"t_steam","factorKey":"steam_kwh","name":{"tr":"Satın alınan buhar/ısı","en":"Purchased steam/heat"},"unitLabel":{"tr":"kWh/yıl","en":"kWh/yr"}},
       {"id":"t_cotton","factorKey":"cotton_kg","name":{"tr":"İşlenen pamuk (hammadde)","en":"Cotton processed"},"unitLabel":{"tr":"kg/yıl","en":"kg/yr"}},
       {"id":"t_poly","factorKey":"polyester_kg","name":{"tr":"İşlenen polyester (hammadde)","en":"Polyester processed"},"unitLabel":{"tr":"kg/yıl","en":"kg/yr"}},
+      {"id":"t_wool","factorKey":"wool_kg","name":{"tr":"İşlenen yün (hammadde)","en":"Wool processed"},"unitLabel":{"tr":"kg/yıl","en":"kg/yr"}},
       {"id":"t_dye","factorKey":"dye_chemical_kg","name":{"tr":"Boya / kimyasal kullanımı","en":"Dye / chemical used"},"unitLabel":{"tr":"kg/yıl","en":"kg/yr"}},
+      {"id":"t_card","factorKey":"cardboard_kg","name":{"tr":"Karton ambalaj","en":"Cardboard packaging"},"unitLabel":{"tr":"kg/yıl","en":"kg/yr"}},
+      {"id":"t_plastic","factorKey":"plastic_kg","name":{"tr":"Plastik ambalaj","en":"Plastic packaging"},"unitLabel":{"tr":"kg/yıl","en":"kg/yr"}},
       {"id":"t_water","factorKey":"water_m3","name":{"tr":"Su tüketimi","en":"Water use"},"unitLabel":{"tr":"m³/yıl","en":"m³/yr"}},
-      {"id":"t_waste","factorKey":"waste_landfill_kg","name":{"tr":"Depolamaya giden atık","en":"Waste to landfill"},"unitLabel":{"tr":"kg/yıl","en":"kg/yr"}},
-      {"id":"t_freight","factorKey":"freight_road_tkm","name":{"tr":"Ürün sevkiyatı (ton·km)","en":"Product shipping (tonne·km)"},"unitLabel":{"tr":"ton·km/yıl","en":"tonne·km/yr"}}
+      {"id":"t_waste","factorKey":"waste_landfill_kg","name":{"tr":"Atık — düzenli depolama","en":"Waste — landfill"},"unitLabel":{"tr":"kg/yıl","en":"kg/yr"}},
+      {"id":"t_waste_rec","factorKey":"waste_recycled_kg","name":{"tr":"Atık — geri dönüşüm","en":"Waste — recycled"},"unitLabel":{"tr":"kg/yıl","en":"kg/yr"}},
+      {"id":"t_freight","factorKey":"freight_road_tkm","name":{"tr":"Ürün sevkiyatı — karayolu","en":"Shipping — road"},"unitLabel":{"tr":"ton·km/yıl","en":"tonne·km/yr"}},
+      {"id":"t_freight_sea","factorKey":"freight_sea_tkm","name":{"tr":"Ürün sevkiyatı — deniz","en":"Shipping — sea"},"unitLabel":{"tr":"ton·km/yıl","en":"tonne·km/yr"}},
+      {"id":"t_car","factorKey":"car_km","name":{"tr":"İş seyahati — araç","en":"Business travel — car"},"unitLabel":{"tr":"km/yıl","en":"km/yr"}},
+      {"id":"t_flight","factorKey":"flight_km","name":{"tr":"İş seyahati — uçuş (yolcu·km)","en":"Business travel — flight"},"unitLabel":{"tr":"km/yıl","en":"km/yr"}},
+      {"id":"t_commute","factorKey":"commute_km","name":{"tr":"Personel ulaşımı (toplam)","en":"Employee commuting (total)"},"unitLabel":{"tr":"km/yıl","en":"km/yr"}}
     ]},
     "tourism":{"name":{"tr":"Turizm / Konaklama","en":"Tourism / Hospitality"},"icon":"🏨","questions":[
       {"id":"h_elec","factorKey":"electricity_kwh","name":{"tr":"Yıllık elektrik tüketimi (toplam)","en":"Annual electricity use (total)"},"unitLabel":{"tr":"kWh/yıl","en":"kWh/yr"}},
       {"id":"h_elec_green","factorKey":"electricity_green_kwh","name":{"tr":"Bunun yeşil/sertifikalı olan kısmı","en":"Of which certified renewable"},"unitLabel":{"tr":"kWh/yıl","en":"kWh/yr"}},
-      {"id":"h_gas","factorKey":"natural_gas_m3","name":{"tr":"Yıllık doğal gaz tüketimi","en":"Annual natural gas use"},"unitLabel":{"tr":"m³/yıl","en":"m³/yr"}},
+      {"id":"h_gas","factorKey":"natural_gas_m3","name":{"tr":"Doğal gaz tüketimi","en":"Natural gas use"},"unitLabel":{"tr":"m³/yıl","en":"m³/yr"}},
       {"id":"h_lpg","factorKey":"lpg_kg","name":{"tr":"LPG / tüp gaz (mutfak vb.)","en":"LPG (kitchen etc.)"},"unitLabel":{"tr":"kg/yıl","en":"kg/yr"}},
-      {"id":"h_diesel","factorKey":"diesel_l","name":{"tr":"Jeneratör/servis aracı motorin","en":"Generator/shuttle diesel"},"unitLabel":{"tr":"L/yıl","en":"L/yr"}},
+      {"id":"h_diesel","factorKey":"diesel_l","name":{"tr":"Jeneratör/servis aracı — motorin","en":"Generator/shuttle — diesel"},"unitLabel":{"tr":"L/yıl","en":"L/yr"}},
+      {"id":"h_gasoline","factorKey":"gasoline_l","name":{"tr":"Servis aracı — benzin","en":"Shuttle — gasoline"},"unitLabel":{"tr":"L/yıl","en":"L/yr"}},
       {"id":"h_refrig","factorKey":"refrigerant_r410a_kg","name":{"tr":"Soğutucu gaz dolumu (kaçak)","en":"Refrigerant refill (leak)"},"unitLabel":{"tr":"kg/yıl","en":"kg/yr"}},
       {"id":"h_water","factorKey":"water_m3","name":{"tr":"Su tüketimi","en":"Water use"},"unitLabel":{"tr":"m³/yıl","en":"m³/yr"}},
       {"id":"h_wastewater","factorKey":"wastewater_m3","name":{"tr":"Atık su","en":"Wastewater"},"unitLabel":{"tr":"m³/yıl","en":"m³/yr"}},
       {"id":"h_meals","factorKey":"meal_unit","name":{"tr":"Servis edilen öğün sayısı","en":"Meals served"},"unitLabel":{"tr":"öğün/yıl","en":"meals/yr"}},
       {"id":"h_laundry","factorKey":"laundry_kg","name":{"tr":"Çamaşırhane (kuru ağırlık)","en":"Laundry (dry weight)"},"unitLabel":{"tr":"kg/yıl","en":"kg/yr"}},
-      {"id":"h_waste","factorKey":"waste_landfill_kg","name":{"tr":"Depolamaya giden atık","en":"Waste to landfill"},"unitLabel":{"tr":"kg/yıl","en":"kg/yr"}}
+      {"id":"h_card","factorKey":"cardboard_kg","name":{"tr":"Karton ambalaj","en":"Cardboard packaging"},"unitLabel":{"tr":"kg/yıl","en":"kg/yr"}},
+      {"id":"h_plastic","factorKey":"plastic_kg","name":{"tr":"Plastik / tek kullanımlık","en":"Plastic / single-use"},"unitLabel":{"tr":"kg/yıl","en":"kg/yr"}},
+      {"id":"h_waste","factorKey":"waste_landfill_kg","name":{"tr":"Atık — düzenli depolama","en":"Waste — landfill"},"unitLabel":{"tr":"kg/yıl","en":"kg/yr"}},
+      {"id":"h_waste_rec","factorKey":"waste_recycled_kg","name":{"tr":"Atık — geri dönüşüm","en":"Waste — recycled"},"unitLabel":{"tr":"kg/yıl","en":"kg/yr"}},
+      {"id":"h_car","factorKey":"car_km","name":{"tr":"İş seyahati — araç","en":"Business travel — car"},"unitLabel":{"tr":"km/yıl","en":"km/yr"}},
+      {"id":"h_flight","factorKey":"flight_km","name":{"tr":"İş seyahati — uçuş (yolcu·km)","en":"Business travel — flight"},"unitLabel":{"tr":"km/yıl","en":"km/yr"}},
+      {"id":"h_commute","factorKey":"commute_km","name":{"tr":"Personel ulaşımı (toplam)","en":"Employee commuting (total)"},"unitLabel":{"tr":"km/yıl","en":"km/yr"}}
     ]}
   },
   "scope3cats":{"3.1":{"tr":"Satın alınan mal ve hizmetler","en":"Purchased goods & services"},"3.4":{"tr":"Yukarı yön taşıma ve dağıtım","en":"Upstream transport"},"3.5":{"tr":"Operasyonda oluşan atık ve su","en":"Waste & water in operations"},"3.6":{"tr":"İş seyahatleri","en":"Business travel"},"3.7":{"tr":"Personel ulaşımı","en":"Employee commuting"},"3.9":{"tr":"Aşağı yön taşıma","en":"Downstream transport"}},
@@ -332,8 +366,10 @@ const DEFAULT_CONFIG = {
 };
 
 const UI = {
+  freeBadge:{tr:"🆓 %100 Ücretsiz",en:"🆓 100% Free"},
   title:{tr:"KOBİ Karbon Ayak İzi Hesaplayıcı",en:"SME Carbon Footprint Calculator"},
-  subtitle:{tr:"GHG Protocol tabanlı temel karbon ayak izi raporu — Kapsam 1, 2, 3",en:"GHG Protocol-based basic footprint report — Scope 1, 2, 3"},
+  subtitle:{tr:"Ücretsiz · GHG Protocol tabanlı temel karbon ayak izi raporu — Kapsam 1, 2, 3",en:"Free · GHG Protocol-based basic footprint report — Scope 1, 2, 3"},
+  footer:{tr:"commitedevents.app · KOBİ Karbon Modülü v3 · Ücretsiz",en:"commitedevents.app · SME Carbon Module v3 · Free"},
   chooseMode:{tr:"Ne yapmak istiyorsunuz?",en:"What would you like to do?"},
   supplierTitle:{tr:"Tedarikçiyim — kendi ayak izimi hesaplayacağım",en:"I'm a supplier — calculate my footprint"},
   supplierDesc:{tr:"Ana firmalara üretim yapan KOBİ. Kapsam 1-2-3 emisyonlarını ölçer, yoğunlukla birlikte müşterine sunabileceğin bir rapor üretir.",en:"An SME producing for larger customers. Scope 1-2-3 with intensity, ready to share."},
@@ -343,14 +379,14 @@ const UI = {
   back:{tr:"Geri",en:"Back"},stepSector:{tr:"Sektör",en:"Sector"},stepData:{tr:"Veri",en:"Data"},stepReport:{tr:"Rapor",en:"Report"},
   profileTitle:{tr:"Firma profili",en:"Company profile"},profileHint:{tr:"Yoğunluk metrikleri için kullanılır.",en:"Used for intensity metrics."},
   dataTitle:{tr:"Yıllık faaliyet verileri",en:"Annual activity data"},
-  formHint:{tr:"Yıllık tüketim değerlerinizi girin. Bilmediğiniz alanları boş bırakabilirsiniz.",en:"Enter annual consumption. Leave unknown fields blank."},
+  formHint:{tr:"Yıllık tüketim değerlerinizi girin. Bilmediğiniz alanları boş bırakabilirsiniz. Her satırda verinin ölçüm mü tahmin mi olduğunu işaretleyebilirsiniz.",en:"Enter annual consumption. Leave unknown fields blank. Flag each row as measured or estimated."},
   companyName:{tr:"Firma adı",en:"Company name"},yearLabel:{tr:"Raporlama yılı",en:"Reporting year"},
   calcBtn:{tr:"Raporu oluştur",en:"Generate report"},clearBtn:{tr:"Temizle",en:"Clear"},
   buyerFormTitle:{tr:"Tedarikçi emisyonlarını girin",en:"Enter supplier emissions"},
   buyerFormHint:{tr:"Her tedarikçiden aldığınız raporun toplam emisyonunu (kg CO₂e) girin.",en:"Enter each supplier's total reported emissions (kg CO₂e)."},
   buyerCompany:{tr:"Firmanızın adı",en:"Your company name"},supName:{tr:"Tedarikçi adı",en:"Supplier name"},supEmis:{tr:"Emisyon (kg CO₂e)",en:"Emissions (kg CO₂e)"},addSupplier:{tr:"Tedarikçi ekle",en:"Add supplier"},
   resultTitle:{tr:"Karbon Ayak İzi Raporu",en:"Carbon Footprint Report"},metricsTitle:{tr:"Yoğunluk metrikleri",en:"Intensity metrics"},breakdownTitle:{tr:"Kapsam bazında dağılım",en:"Breakdown by scope"},
-  printBtn:{tr:"Yazdır / PDF",en:"Print / PDF"},exportBtn:{tr:"JSON indir",en:"Download JSON"},editBtn:{tr:"Girdileri düzenle",en:"Edit inputs"},saveCloud:{tr:"Bulut'a kaydet",en:"Save to cloud"},
+  printBtn:{tr:"Yazdır / PDF",en:"Print / PDF"},exportXlsx:{tr:"Excel indir",en:"Download Excel"},exportAllXlsx:{tr:"Tümünü Excel'e aktar",en:"Export all to Excel"},editBtn:{tr:"Girdileri düzenle",en:"Edit inputs"},saveCloud:{tr:"Bulut'a kaydet",en:"Save to cloud"},
   totalUnit:{tr:"kg CO₂e / yıl (pazar-bazlı)",en:"kg CO₂e / yr (market-based)"},
   s1:{tr:"Kapsam 1 · Doğrudan",en:"Scope 1 · Direct"},s2:{tr:"Kapsam 2 · Enerji",en:"Scope 2 · Energy"},s3:{tr:"Kapsam 3 · Diğer",en:"Scope 3 · Other"},
   s2loc:{tr:"konum-bazlı",en:"location-based"},scope2noteTxt:{tr:"Kapsam 2 çift raporlanır. Grafik ve toplam pazar-bazlı değeri kullanır.",en:"Scope 2 is dual-reported. Chart/total use market-based."},
@@ -364,15 +400,22 @@ const UI = {
   myReports:{tr:"Önceki raporlarım",en:"My previous reports"},noReports:{tr:"Henüz kayıtlı rapor yok.",en:"No saved reports yet."},
   loginBtn:{tr:"Giriş yap",en:"Sign in"},logoutBtn:{tr:"Çıkış",en:"Sign out"},reportsBtn:{tr:"Raporlarım",en:"My reports"},adminBadge:{tr:"admin",en:"admin"},
   savedOk:{tr:"✔ Rapor buluta kaydedildi.",en:"✔ Report saved to cloud."},saveNeedLogin:{tr:"Kaydetmek için giriş yapın.",en:"Sign in to save."},saving:{tr:"Kaydediliyor…",en:"Saving…"},
-  loginToSave:{tr:"Bu raporu buluta kaydetmek ve sonraki girişte görmek için giriş yapın.",en:"Sign in to save this report to the cloud and see it next time."}
+  loginToSave:{tr:"Bu raporu buluta kaydetmek ve sonraki girişte görmek için giriş yapın.",en:"Sign in to save this report and see it next time."},
+  qMeasured:{tr:"Veri: ölçüm",en:"Data: measured"},qEstimate:{tr:"Veri: tahmin",en:"Data: estimate"},qNone:{tr:"Veri: belirtilmemiş",en:"Data: unspecified"},
+  dqTitle:{tr:"Veri kalitesi",en:"Data quality"},dqText:{tr:"Emisyonların %{p}'i ölçüm-bazlı veriye dayanıyor; kalanı tahmin/belirtilmemiş. Denetime hazırlık için ölçüm oranını artırın.",en:"{p}% of emissions are based on measured data; the rest are estimated/unspecified."},
+  colItem:{tr:"Kalem",en:"Item"},colScope:{tr:"Kapsam",en:"Scope"},colCat:{tr:"Kategori",en:"Category"},colAmount:{tr:"Miktar",en:"Amount"},colUnit:{tr:"Birim",en:"Unit"},colEmis:{tr:"Emisyon (kg CO₂e)",en:"Emissions (kg CO₂e)"},colQuality:{tr:"Veri kalitesi",en:"Data quality"}
 };
 
 let CONFIG = DEFAULT_CONFIG;
 let lang='tr', mode=null, currentSector=null, lastResult=null, authMode='login';
 
-// Config'i Firestore'dan yükle (admin düzenlemeleri anında yansır), yoksa varsayılan
 async function loadRemoteConfig(){
-  try{ if(!db) return; const s=await getDoc(doc(db,'config','current')); if(s.exists()){ const c=s.data(); if(c&&c.factors&&c.sectors){ CONFIG=c; if(!document.getElementById('screen-sector').classList.contains('hidden')) renderSectors(); } } }catch(e){ console.warn('config yüklenemedi',e); }
+  try{ if(!db) return; const s=await getDoc(doc(db,'config','current'));
+    if(s.exists()){ const c=s.data();
+      if(c&&c.factors&&c.sectors&&c.meta&&c.meta.version===DEFAULT_CONFIG.meta.version){ CONFIG=c; if(!document.getElementById('screen-sector').classList.contains('hidden')) renderSectors(); }
+      // Sürüm eşleşmezse (ör. eski v2.0 kayıt) gömülü v3.0 kullanılır.
+    }
+  }catch(e){ console.warn('config yüklenemedi',e); }
 }
 loadRemoteConfig();
 
@@ -381,69 +424,67 @@ function L(o){return o?(o[lang]||o.tr||o.en||''):'';}
 function fmt(n){return Math.round(n).toLocaleString(lang==='tr'?'tr-TR':'en-US');}
 function fmt1(n){return (Math.round(n*10)/10).toLocaleString(lang==='tr'?'tr-TR':'en-US');}
 function isAdmin(){return currentUser&&currentUser.email&&ADMIN_EMAILS.indexOf(currentUser.email)>=0;}
+function qualLabel(q){return q==='measured'?t('qMeasured'):q==='estimate'?t('qEstimate'):t('qNone');}
 
 window.setLang=function(l){lang=l;document.getElementById('lang-tr').classList.toggle('active',l==='tr');document.getElementById('lang-en').classList.toggle('active',l==='en');document.documentElement.lang=l;applyStatic();renderAuthBar();renderIntroActions();if(mode==='supplier'&&currentSector){renderProfile();renderQuestions();}if(!document.getElementById('screen-sector').classList.contains('hidden'))renderSectors();if(lastResult)renderResult(lastResult);updateSaveUi();};
 function applyStatic(){document.querySelectorAll('[data-t]').forEach(el=>{el.textContent=t(el.getAttribute('data-t'));});}
 window.show=function(id){['screen-intro','screen-sector','screen-form','screen-buyer','screen-result','screen-reports'].forEach(s=>document.getElementById(s).classList.toggle('hidden',s!==id));window.scrollTo({top:0,behavior:'smooth'});};
 
-/* ---- AUTH UI ---- */
-function renderAuthBar(){const b=document.getElementById('authbar');if(!b)return;
-  if(currentUser){const badge=isAdmin()?' <span class="pill">'+t('adminBadge')+'</span>':'';
-    b.innerHTML='<span class="who">'+(currentUser.email||currentUser.displayName||'')+badge+'</span><button class="authbtn" onclick="doLogout()">'+t('logoutBtn')+'</button>';}
-  else{b.innerHTML='<button class="authbtn" onclick="openLogin()">'+t('loginBtn')+'</button>';}
-}
-function renderIntroActions(){const a=document.getElementById('intro-actions');if(!a)return;let h='';
-  if(currentUser){h+='<button class="btn sec sm" onclick="openReports()">📁 '+t('reportsBtn')+'</button>';}
-  a.innerHTML=h;
-}
+function renderAuthBar(){const b=document.getElementById('authbar');if(!b)return;if(currentUser){const badge=isAdmin()?' <span class="pill">'+t('adminBadge')+'</span>':'';b.innerHTML='<span class="who">'+(currentUser.email||currentUser.displayName||'')+badge+'</span><button class="authbtn" onclick="doLogout()">'+t('logoutBtn')+'</button>';}else{b.innerHTML='<button class="authbtn" onclick="openLogin()">'+t('loginBtn')+'</button>';}}
+function renderIntroActions(){const a=document.getElementById('intro-actions');if(!a)return;a.innerHTML=currentUser?('<button class="btn sec sm" onclick="openReports()">📁 '+t('reportsBtn')+'</button>'):'';}
 window.openLogin=function(){document.getElementById('auth-err').classList.add('hidden');document.getElementById('login-modal').classList.remove('hidden');};
 window.closeLogin=function(){document.getElementById('login-modal').classList.add('hidden');};
 window.authTab=function(m){authMode=m;document.getElementById('tab-login').classList.toggle('on',m==='login');document.getElementById('tab-register').classList.toggle('on',m==='register');document.getElementById('auth-submit').textContent=m==='login'?t('tabLogin'):t('tabRegister');};
-window.submitAuth=async function(){const email=document.getElementById('auth-email').value.trim();const pass=document.getElementById('auth-pass').value;const err=document.getElementById('auth-err');err.classList.add('hidden');
-  if(!auth){err.textContent='Firebase yüklenemedi.';err.classList.remove('hidden');return;}
-  try{ if(authMode==='register') await createUserWithEmailAndPassword(auth,email,pass); else await signInWithEmailAndPassword(auth,email,pass); closeLogin(); }
-  catch(e){ err.textContent=authErr(e); err.classList.remove('hidden'); }
-};
-window.loginGoogle=async function(){const err=document.getElementById('auth-err');err.classList.add('hidden');
-  if(!auth){err.textContent='Firebase yüklenemedi.';err.classList.remove('hidden');return;}
-  const provider=new GoogleAuthProvider();
-  try{ await signInWithPopup(auth,provider); closeLogin(); }
-  catch(e){ // iframe/popup engellenirse redirect dene
-    try{ await signInWithRedirect(auth,provider); }
-    catch(e2){ err.textContent=authErr(e)+' '+(lang==='tr'?'(Google girişi bu gömülü sayfada engellendiyse e-posta/şifre kullanın.)':'(If Google is blocked in this embed, use email/password.)'); err.classList.remove('hidden'); } }
-};
-window.doLogout=async function(){ try{ await signOut(auth);}catch(e){} show('screen-intro'); };
-function authErr(e){const c=(e&&e.code)||'';const m={
-  'auth/invalid-email':{tr:'Geçersiz e-posta.',en:'Invalid email.'},'auth/missing-password':{tr:'Şifre girin.',en:'Enter a password.'},
-  'auth/weak-password':{tr:'Şifre en az 6 karakter olmalı.',en:'Password must be 6+ chars.'},'auth/email-already-in-use':{tr:'Bu e-posta zaten kayıtlı. Giriş yapın.',en:'Email already registered. Sign in.'},
-  'auth/invalid-credential':{tr:'E-posta veya şifre hatalı.',en:'Wrong email or password.'},'auth/popup-blocked':{tr:'Açılır pencere engellendi.',en:'Popup blocked.'},'auth/popup-closed-by-user':{tr:'Giriş penceresi kapatıldı.',en:'Popup closed.'}
-};return (m[c]&&m[c][lang])||(e&&e.message)||'Hata';}
+window.submitAuth=async function(){const email=document.getElementById('auth-email').value.trim();const pass=document.getElementById('auth-pass').value;const err=document.getElementById('auth-err');err.classList.add('hidden');if(!auth){err.textContent='Firebase yüklenemedi.';err.classList.remove('hidden');return;}try{if(authMode==='register')await createUserWithEmailAndPassword(auth,email,pass);else await signInWithEmailAndPassword(auth,email,pass);closeLogin();}catch(e){err.textContent=authErr(e);err.classList.remove('hidden');}};
+window.loginGoogle=async function(){const err=document.getElementById('auth-err');err.classList.add('hidden');if(!auth){err.textContent='Firebase yüklenemedi.';err.classList.remove('hidden');return;}const provider=new GoogleAuthProvider();try{await signInWithPopup(auth,provider);closeLogin();}catch(e){try{await signInWithRedirect(auth,provider);}catch(e2){err.textContent=authErr(e)+' '+(lang==='tr'?'(Google engellendiyse e-posta/şifre kullanın.)':'(If Google is blocked, use email/password.)');err.classList.remove('hidden');}}};
+window.doLogout=async function(){try{await signOut(auth);}catch(e){}show('screen-intro');};
+function authErr(e){const c=(e&&e.code)||'';const m={'auth/invalid-email':{tr:'Geçersiz e-posta.',en:'Invalid email.'},'auth/missing-password':{tr:'Şifre girin.',en:'Enter a password.'},'auth/weak-password':{tr:'Şifre en az 6 karakter olmalı.',en:'Password must be 6+ chars.'},'auth/email-already-in-use':{tr:'Bu e-posta zaten kayıtlı. Giriş yapın.',en:'Email already registered.'},'auth/invalid-credential':{tr:'E-posta veya şifre hatalı.',en:'Wrong email or password.'},'auth/popup-blocked':{tr:'Açılır pencere engellendi.',en:'Popup blocked.'},'auth/popup-closed-by-user':{tr:'Giriş penceresi kapatıldı.',en:'Popup closed.'}};return (m[c]&&m[c][lang])||(e&&e.message)||'Hata';}
 
-/* ---- CALCULATOR ---- */
 window.chooseMode=function(m){mode=m;document.getElementById('mode-supplier').classList.toggle('sel',m==='supplier');document.getElementById('mode-buyer').classList.toggle('sel',m==='buyer');if(m==='supplier'){renderSectors();show('screen-sector');}else{if(!document.querySelector('#supplier-rows .supplier-row')){addSupplierRow();addSupplierRow();}show('screen-buyer');}};
 function renderSectors(){const box=document.getElementById('sector-list');box.innerHTML='';Object.entries(CONFIG.sectors).forEach(([key,sec])=>{const d=document.createElement('div');d.className='ck-mode';d.onclick=()=>{currentSector=key;renderProfile();renderQuestions();document.getElementById('form-title').textContent=(sec.icon||'')+' '+L(sec.name);show('screen-form');};d.innerHTML='<span class="em">'+(sec.icon||'📊')+'</span><b>'+L(sec.name)+'</b><span>'+sec.questions.length+(lang==='tr'?' soru':' questions')+'</span>';box.appendChild(d);});}
 function renderProfile(){const box=document.getElementById('profile-fields');box.innerHTML='';(CONFIG.profile&&CONFIG.profile.fields||[]).forEach(f=>{const wrap=document.createElement('div');let inner='<label>'+L(f.name)+(f.hint?' <span class="fieldnote">('+L(f.hint)+')</span>':'')+'</label>';if(f.type==='select'){inner+='<select id="p_'+f.id+'"><option value="">—</option>'+(f.options||[]).map(o=>'<option value="'+o.value+'">'+L(o.label)+'</option>').join('')+'</select>';}else{inner+='<input type="number" min="0" step="any" id="p_'+f.id+'" placeholder="'+(f.unit?L(f.unit):'0')+'">';}wrap.innerHTML=inner;box.appendChild(wrap);});}
-function renderQuestions(){const sec=CONFIG.sectors[currentSector];const box=document.getElementById('questions');box.innerHTML='';document.getElementById('form-title').textContent=(sec.icon||'')+' '+L(sec.name);sec.questions.forEach(q=>{const f=CONFIG.factors[q.factorKey]||{};const wrap=document.createElement('div');wrap.className='row'+((''+q.factorKey).indexOf('green')>-1?' qsub':'');const catPill=f.scope===3&&f.cat?'<span class="pill">'+f.cat+'</span>':'';wrap.innerHTML='<div><label>'+L(q.name)+catPill+' <span class="fieldnote">('+L(q.unitLabel)+' · '+f.value+' '+(f.unit||'')+')</span></label><input type="number" min="0" step="any" id="q_'+q.id+'" placeholder="0"></div><div><label class="fieldnote">'+L(q.unitLabel)+'</label><input type="number" disabled value="'+f.value+'"></div>';box.appendChild(wrap);});}
-window.clearForm=function(){document.querySelectorAll('#questions input:not([disabled]),#profile-fields input,#profile-fields select').forEach(i=>i.value='');};
+function dqOn(){return CONFIG.dataQuality&&CONFIG.dataQuality.enabled;}
+function renderQuestions(){const sec=CONFIG.sectors[currentSector];const box=document.getElementById('questions');box.innerHTML='';document.getElementById('form-title').textContent=(sec.icon||'')+' '+L(sec.name);sec.questions.forEach(q=>{const f=CONFIG.factors[q.factorKey]||{};const wrap=document.createElement('div');wrap.className='qrow'+((''+q.factorKey).indexOf('green')>-1?' qsub':'');const catPill=f.scope===3&&f.cat?'<span class="pill">'+f.cat+'</span>':'';let qual='';if(dqOn()){qual='<div class="qual"><label class="fieldnote">'+t('dqTitle')+'</label><select id="qq_'+q.id+'"><option value="">'+t('qNone')+'</option><option value="measured">'+t('qMeasured')+'</option><option value="estimate">'+t('qEstimate')+'</option></select></div>';}wrap.innerHTML='<div><label>'+L(q.name)+catPill+' <span class="fieldnote">('+L(q.unitLabel)+' · '+f.value+' '+(f.unit||'')+')</span></label><input type="number" min="0" step="any" id="q_'+q.id+'" placeholder="0"></div><div><label class="fieldnote">'+L(q.unitLabel)+'</label><input type="number" disabled value="'+f.value+'"></div>'+qual;box.appendChild(wrap);});}
+window.clearForm=function(){document.querySelectorAll('#questions input:not([disabled]),#questions select,#profile-fields input,#profile-fields select').forEach(i=>i.value='');};
 function scopeName(s){return s===1?t('s1'):s===2?t('s2'):t('s3');}
 function scopeColor(s){return s===1?'var(--s1)':s===2?'var(--s2)':'var(--s3)';}
 function sizeClass(emp){const sc=CONFIG.profile&&CONFIG.profile.sizeClasses||[];for(const c of sc){if(emp<c.max)return L(c.label);}return '';}
-window.calcSupplier=function(){const sec=CONFIG.sectors[currentSector];const items=[];let s1=0,s2loc=0,s2mktReduction=0,s3=0;const cats={};const gridFactor=(CONFIG.factors.electricity_kwh||{}).value||0.442;sec.questions.forEach(q=>{const val=parseFloat((document.getElementById('q_'+q.id)||{}).value)||0;if(val<=0)return;const f=CONFIG.factors[q.factorKey];if(!f)return;const emis=val*f.value;const sc=f.scope||3;if(sc===1)s1+=emis;else if(sc===2){s2loc+=emis;if(f.marketAdjust)s2mktReduction+=val*gridFactor;}else{s3+=emis;const c=f.cat||'3.x';cats[c]=(cats[c]||0)+emis;}items.push({name:L(f.name),scope:sc,cat:f.cat||'',amount:val,unit:L(q.unitLabel),emis:emis});});const s2mkt=Math.max(0,s2loc-s2mktReduction);const total=s1+s2mkt+s3;const prof={};(CONFIG.profile&&CONFIG.profile.fields||[]).forEach(f=>{const el=document.getElementById('p_'+f.id);prof[f.id]=el?el.value:'';});lastResult={type:'supplier',company:document.getElementById('f-company').value,year:document.getElementById('f-year').value,sector:L(sec.name),profile:prof,items:items,s1:s1,s2loc:s2loc,s2mkt:s2mkt,s3:s3,cats:cats,total:total};renderResult(lastResult);show('screen-result');};
+window.calcSupplier=function(){const sec=CONFIG.sectors[currentSector];const items=[];let s1=0,s2loc=0,s2mktReduction=0,s3=0,measuredEmis=0;const cats={};const gridFactor=(CONFIG.factors.electricity_kwh||{}).value||0.442;sec.questions.forEach(q=>{const val=parseFloat((document.getElementById('q_'+q.id)||{}).value)||0;if(val<=0)return;const f=CONFIG.factors[q.factorKey];if(!f)return;const emis=val*f.value;const sc=f.scope||3;const qq=(document.getElementById('qq_'+q.id)||{}).value||'';if(qq==='measured')measuredEmis+=emis;if(sc===1)s1+=emis;else if(sc===2){s2loc+=emis;if(f.marketAdjust)s2mktReduction+=val*gridFactor;}else{s3+=emis;const c=f.cat||'3.x';cats[c]=(cats[c]||0)+emis;}items.push({name:L(f.name),scope:sc,cat:f.cat||'',amount:val,unit:L(q.unitLabel),emis:emis,quality:qq});});const s2mkt=Math.max(0,s2loc-s2mktReduction);const total=s1+s2mkt+s3;const prof={};(CONFIG.profile&&CONFIG.profile.fields||[]).forEach(f=>{const el=document.getElementById('p_'+f.id);prof[f.id]=el?el.value:'';});const measuredPct=total>0?Math.round(measuredEmis/total*100):0;lastResult={type:'supplier',company:document.getElementById('f-company').value,year:document.getElementById('f-year').value,sector:L(sec.name),profile:prof,items:items,s1:s1,s2loc:s2loc,s2mkt:s2mkt,s3:s3,cats:cats,total:total,measuredPct:measuredPct};renderResult(lastResult);show('screen-result');};
 window.addSupplierRow=function(){const box=document.getElementById('supplier-rows');const div=document.createElement('div');div.className='supplier-row';div.innerHTML='<input type="text" placeholder="'+(lang==='tr'?'Tedarikçi':'Supplier')+'" class="s-name"><input type="number" min="0" step="any" placeholder="0" class="s-emis"><button class="del" onclick="this.parentNode.remove()">×</button>';box.appendChild(div);};
-window.calcBuyer=function(){const rows=document.querySelectorAll('#supplier-rows .supplier-row');const items=[];let total=0;rows.forEach((r,i)=>{const name=r.querySelector('.s-name').value||((lang==='tr'?'Tedarikçi ':'Supplier ')+(i+1));const emis=parseFloat(r.querySelector('.s-emis').value)||0;if(emis<=0)return;total+=emis;items.push({name:name,scope:3,cat:'3.1',amount:emis,unit:'kg CO₂e',emis:emis});});lastResult={type:'buyer',company:document.getElementById('b-company').value,year:document.getElementById('b-year').value,sector:t('buyerScope3'),items:items,s1:0,s2loc:0,s2mkt:0,s3:total,cats:{'3.1':total},total:total,supplierCount:items.length};renderResult(lastResult);show('screen-result');};
+window.calcBuyer=function(){const rows=document.querySelectorAll('#supplier-rows .supplier-row');const items=[];let total=0;rows.forEach((r,i)=>{const name=r.querySelector('.s-name').value||((lang==='tr'?'Tedarikçi ':'Supplier ')+(i+1));const emis=parseFloat(r.querySelector('.s-emis').value)||0;if(emis<=0)return;total+=emis;items.push({name:name,scope:3,cat:'3.1',amount:emis,unit:'kg CO₂e',emis:emis,quality:''});});lastResult={type:'buyer',company:document.getElementById('b-company').value,year:document.getElementById('b-year').value,sector:t('buyerScope3'),items:items,s1:0,s2loc:0,s2mkt:0,s3:total,cats:{'3.1':total},total:total,supplierCount:items.length,measuredPct:0};renderResult(lastResult);show('screen-result');};
 function renderResult(r){document.getElementById('total-num').textContent=fmt(r.total);document.getElementById('total-unit').textContent=t('totalUnit');document.getElementById('result-title').textContent=t('resultTitle');const meta=[];if(r.company)meta.push(r.company);if(r.year)meta.push(r.year);meta.push(r.sector);if(r.type==='supplier'&&r.profile){const emp=parseFloat(r.profile.employees)||0;if(emp>0)meta.push(t('sizeLabel')+': '+sizeClass(emp));if(r.profile.market){const mf=(CONFIG.profile.fields.find(f=>f.id==='market')||{}).options||[];const mo=mf.find(o=>o.value===r.profile.market);if(mo)meta.push(t('marketLabel')+': '+L(mo.label));}}if(r.type==='buyer'&&r.supplierCount!=null)meta.push(r.supplierCount+' '+t('supplierWord'));document.getElementById('result-meta').textContent=meta.join(' · ');
   const scEl=document.getElementById('scopes'),barEl=document.getElementById('bar');if(r.type==='buyer'){document.getElementById('scopes-block').style.display='none';}else{document.getElementById('scopes-block').style.display='';scEl.innerHTML='';barEl.innerHTML='';const vals={1:r.s1,2:r.s2mkt,3:r.s3};[1,2,3].forEach(s=>{const v=vals[s]||0;const d=document.createElement('div');d.className='scope';let extra=s===2?'<div class="s">'+t('s2loc')+': '+fmt(r.s2loc)+'</div>':'';d.innerHTML='<div><span class="dot" style="background:'+scopeColor(s)+'"></span>'+scopeName(s)+'</div><div class="v">'+fmt(v)+'</div>'+extra;scEl.appendChild(d);if(r.total>0&&v>0){const i=document.createElement('i');i.style.width=(v/r.total*100)+'%';i.style.background=scopeColor(s);barEl.appendChild(i);}});document.getElementById('scope2note').textContent=t('scope2noteTxt');}
   const mBox=document.getElementById('metrics');mBox.innerHTML='';const mt=document.getElementById('metrics-title');if(r.type==='supplier'&&CONFIG.intensity){const p=r.profile||{};let any=false;const emp=parseFloat(p.employees)||0,rev=parseFloat(p.revenue)||0,out=parseFloat(p.output)||0;if(CONFIG.intensity.perEmployee&&emp>0){any=true;mBox.appendChild(metricEl(fmt(r.total/emp)+' '+t('kgco2e'),t('perEmployee')));}if(CONFIG.intensity.perRevenue&&rev>0){any=true;const base=CONFIG.intensity.revenueBase||1000000;mBox.appendChild(metricEl(fmt(r.total/(rev/base))+' '+t('kgco2e'),t('perRevenue')+' '+L(CONFIG.intensity.revenueBaseLabel)));}if(CONFIG.intensity.perOutput&&out>0){any=true;mBox.appendChild(metricEl(fmt1(r.total/out)+' '+t('kgco2e'),t('perOutput')));}mt.style.display=any?'':'none';mBox.style.display=any?'':'none';if(!any){mBox.innerHTML='<div class="metric" style="grid-column:1/-1"><span>'+(lang==='tr'?'Yoğunluk için firma profilini doldurun.':'Fill company profile for intensity.')+'</span></div>';mBox.style.display='';mt.style.display='';}}else{mt.style.display='none';mBox.style.display='none';}
+  const dqBox=document.getElementById('dq-box');if(r.type==='supplier'&&dqOn()){const p=r.measuredPct||0;dqBox.style.display='';dqBox.innerHTML='<b>'+t('dqTitle')+'</b><div>'+t('dqText').replace('{p}',p)+'</div><div class="bar2"><i style="width:'+p+'%"></i></div>';}else{dqBox.style.display='none';}
   const tb=document.getElementById('breakdown-body');tb.innerHTML='';const addRow=(label,val,cls)=>{const tr=document.createElement('tr');if(cls)tr.className=cls;tr.innerHTML='<td>'+label+'</td><td class="n">'+fmt(val)+'</td>';tb.appendChild(tr);};if(r.type!=='buyer'){addRow(t('scope1'),r.s1);addRow(t('scope2locrow'),r.s2loc);addRow(t('scope2mktrow'),r.s2mkt);}addRow(t('scope3row'),r.s3,'grp');const cats=CONFIG.scope3cats||{};Object.keys(r.cats).sort().forEach(c=>{const nm=cats[c]?L(cats[c]):c;addRow('&nbsp;&nbsp;'+c+' · '+nm,r.cats[c]);});addRow(t('totalRow'),r.total,'tot');
   const trees=r.total/((CONFIG.benchmarks&&CONFIG.benchmarks.tree_kg_per_year)||21);const km=r.total/((CONFIG.benchmarks&&CONFIG.benchmarks.car_km_equiv_factor)||0.170);document.getElementById('equiv').innerHTML='<div>🌳 <b>'+fmt(trees)+'</b> '+t('equivTree')+'</div><div>🚗 <b>'+fmt(km)+'</b> '+t('equivCar')+'</div>';document.getElementById('meth-note').textContent=L(CONFIG.meta.methodology);document.getElementById('factor-notice').textContent=L(CONFIG.meta.notice);updateSaveUi();}
 function metricEl(big,small){const d=document.createElement('div');d.className='metric';d.innerHTML='<b>'+big+'</b><span>'+small+'</span>';return d;}
 window.goBackFromResult=function(){show(mode==='buyer'?'screen-buyer':'screen-form');};
-window.exportReport=function(){const data=JSON.stringify(lastResult,null,2);const blob=new Blob([data],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='karbon-raporu-'+((lastResult.company||'firma')+'').replace(/\s+/g,'_')+'.json';a.click();};
 
-/* ---- SAVE / REPORTS (Firestore) ---- */
-function updateSaveUi(){const btn=document.getElementById('save-btn');const hint=document.getElementById('save-hint');if(!btn)return;if(currentUser){btn.disabled=false;btn.style.opacity=1;hint.textContent='';}else{btn.disabled=false;btn.style.opacity=.85;hint.textContent=t('loginToSave');}}
+/* ---- EXCEL ---- */
+function reportRows(r){
+  const rows=[];
+  rows.push([t('resultTitle')]);
+  rows.push([t('companyName'),r.company||'']);
+  rows.push([t('yearLabel'),r.year||'']);
+  rows.push(['Sektör / Sector',r.sector||'']);
+  rows.push([]);
+  if(r.type!=='buyer'){rows.push([t('scope1'),Math.round(r.s1)]);rows.push([t('scope2locrow'),Math.round(r.s2loc)]);rows.push([t('scope2mktrow'),Math.round(r.s2mkt)]);}
+  rows.push([t('scope3row'),Math.round(r.s3)]);
+  rows.push([t('totalRow'),Math.round(r.total)]);
+  if(r.type==='supplier'&&r.measuredPct!=null)rows.push([t('dqTitle')+' (% ölçüm)',r.measuredPct]);
+  rows.push([]);
+  rows.push([t('colItem'),t('colScope'),t('colCat'),t('colAmount'),t('colUnit'),t('colEmis'),t('colQuality')]);
+  (r.items||[]).forEach(it=>{rows.push([it.name,it.scope,it.cat||'',it.amount,it.unit,Math.round(it.emis),qualLabel(it.quality)]);});
+  return rows;
+}
+window.exportExcel=function(){ if(!window.XLSX||!lastResult){alert('Excel kütüphanesi yüklenemedi.');return;} const ws=XLSX.utils.aoa_to_sheet(reportRows(lastResult)); ws['!cols']=[{wch:34},{wch:10},{wch:10},{wch:14},{wch:12},{wch:16},{wch:16}]; const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Rapor'); XLSX.writeFile(wb,'karbon-raporu-'+((lastResult.company||'firma')+'').replace(/\s+/g,'_')+'.xlsx'); };
+window.exportAllExcel=function(){ if(!window.XLSX){alert('Excel kütüphanesi yüklenemedi.');return;} const data=window._allReports||[]; if(!data.length){alert(lang==='tr'?'Aktarılacak rapor yok.':'No reports to export.');return;} const head=['Tarih/Date','Firma/Company','E-posta','Sektör/Sector','Tür/Type','Toplam kg CO2e','Kapsam1','Kapsam2 (pazar)','Kapsam3','% ölçüm']; const rows=[head]; data.forEach(d=>{rows.push([d._date||'',d.company||'',d.userEmail||'',d.sector||'',d.type==='buyer'?'Alıcı':'Tedarikçi',Math.round(d.total||0),Math.round(d.s1||0),Math.round(d.s2mkt||0),Math.round(d.s3||0),d.measuredPct||0]);}); const ws=XLSX.utils.aoa_to_sheet(rows); ws['!cols']=[{wch:18},{wch:22},{wch:24},{wch:20},{wch:12},{wch:16},{wch:12},{wch:14},{wch:12},{wch:10}]; const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Raporlar'); XLSX.writeFile(wb,'karbon-raporlarim.xlsx'); };
+
+/* ---- SAVE / REPORTS ---- */
+function updateSaveUi(){const btn=document.getElementById('save-btn');const hint=document.getElementById('save-hint');if(!btn)return;if(currentUser){btn.style.opacity=1;hint.textContent='';}else{btn.style.opacity=.85;hint.textContent=t('loginToSave');}}
 window.saveReport=async function(){const hint=document.getElementById('save-hint');if(!currentUser){openLogin();return;}if(!db||!lastResult)return;hint.textContent=t('saving');try{const payload=Object.assign({},lastResult,{createdAt:serverTimestamp(),userEmail:currentUser.email||''});await addDoc(collection(db,'reports',currentUser.uid,'items'),payload);hint.textContent=t('savedOk');}catch(e){hint.textContent=(lang==='tr'?'Kaydedilemedi: ':'Save failed: ')+(e.message||e);}};
-window.openReports=async function(){show('screen-reports');const list=document.getElementById('reports-list');const empty=document.getElementById('reports-empty');list.innerHTML='';empty.style.display='none';if(!currentUser){empty.textContent=t('saveNeedLogin');empty.style.display='';return;}try{const snap=await getDocs(query(collection(db,'reports',currentUser.uid,'items'),orderBy('createdAt','desc')));if(snap.empty){empty.textContent=t('noReports');empty.style.display='';return;}snap.forEach(docSnap=>{const d=docSnap.data();const dt=d.createdAt&&d.createdAt.toDate?d.createdAt.toDate().toLocaleString(lang==='tr'?'tr-TR':'en-US'):'';const el=document.createElement('div');el.className='rep-item';el.innerHTML='<div><b>'+fmt(d.total||0)+'</b> kg CO₂e<br><span class="fieldnote">'+((d.company||'')+' · '+(d.sector||'')+' · '+dt)+'</span></div><span>›</span>';el.onclick=()=>{lastResult=d;renderResult(d);show('screen-result');};list.appendChild(el);});}catch(e){empty.textContent=(lang==='tr'?'Yüklenemedi: ':'Load failed: ')+(e.message||e);empty.style.display='';}};
+window.openReports=async function(){show('screen-reports');const list=document.getElementById('reports-list');const empty=document.getElementById('reports-empty');list.innerHTML='';empty.style.display='none';window._allReports=[];if(!currentUser){empty.textContent=t('saveNeedLogin');empty.style.display='';return;}try{const snap=await getDocs(query(collection(db,'reports',currentUser.uid,'items'),orderBy('createdAt','desc')));if(snap.empty){empty.textContent=t('noReports');empty.style.display='';return;}const all=[];snap.forEach(docSnap=>{const d=docSnap.data();const dt=d.createdAt&&d.createdAt.toDate?d.createdAt.toDate().toLocaleString(lang==='tr'?'tr-TR':'en-US'):'';d._date=dt;all.push(d);const el=document.createElement('div');el.className='rep-item';el.innerHTML='<div><b>'+fmt(d.total||0)+'</b> kg CO₂e<br><span class="fieldnote">'+((d.company||'')+' · '+(d.sector||'')+' · '+dt)+'</span></div><span>›</span>';el.onclick=()=>{lastResult=d;renderResult(d);show('screen-result');};list.appendChild(el);});window._allReports=all;}catch(e){empty.textContent=(lang==='tr'?'Yüklenemedi: ':'Load failed: ')+(e.message||e);empty.style.display='';}};
 
 applyStatic();renderAuthBar();renderIntroActions();
 </script>
