@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Karbon Modülü — Admin Paneli v2</title>
+<title>Karbon Modülü — Admin Paneli v3</title>
 <style>
   :root{--green:#1f7a4d;--green-d:#155e3a;--green-l:#e7f4ec;--ink:#1c2b24;--muted:#5b6b63;--line:#dfe7e2;--bg:#f4f7f5;--warn:#c0492c;--radius:12px}
   *{box-sizing:border-box}
@@ -11,7 +11,8 @@
   header{background:var(--green-d);color:#fff;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;position:sticky;top:0;z-index:10}
   header h1{font-size:1.1rem;margin:0}
   header .v{opacity:.8;font-size:.8rem}
-  .toolbar{display:flex;gap:8px;flex-wrap:wrap}
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .who{font-size:.82rem;opacity:.9;margin-right:6px}
   .wrap{max-width:1040px;margin:0 auto;padding:18px}
   .btn{border:none;border-radius:9px;padding:9px 14px;font-weight:600;cursor:pointer;font-size:.9rem}
   .btn.primary{background:#fff;color:var(--green-d)}
@@ -44,100 +45,136 @@
   .status{font-size:.82rem;color:var(--muted);margin-left:8px}
   details{margin-top:10px}
   summary{cursor:pointer;font-weight:600;color:var(--green-d);font-size:.9rem}
+  /* login overlay */
+  #gate{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:100;padding:14px}
+  .loginbox{background:#fff;border:1px solid var(--line);border-radius:var(--radius);max-width:400px;width:100%;padding:24px;box-shadow:0 8px 30px rgba(0,0,0,.08)}
+  .loginbox h2{margin-top:0}
+  .gbtn{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--line);background:#fff;padding:10px;border-radius:9px;cursor:pointer;font-weight:600;margin-bottom:12px}
+  .err{color:var(--warn);font-size:.85rem;margin-top:8px}
+  .rep-row td{cursor:default}
 </style>
 </head>
 <body>
+
+<!-- LOGIN GATE -->
+<div id="gate">
+  <div class="loginbox">
+    <h2>🔒 Admin Girişi</h2>
+    <p class="hint" id="gate-hint">Bu panel yalnızca yöneticiler içindir. Lütfen admin hesabınızla giriş yapın.</p>
+    <button class="gbtn" onclick="loginGoogle()"><span style="font-weight:800;color:#4285F4">G</span> Google ile giriş</button>
+    <label>E-posta</label><input type="email" id="g-email" autocomplete="username">
+    <label style="margin-top:8px">Şifre</label><input type="password" id="g-pass" autocomplete="current-password">
+    <button class="btn save" style="width:100%;margin-top:12px" onclick="loginEmail()">Giriş yap</button>
+    <div class="err" id="gate-err" style="display:none"></div>
+  </div>
+</div>
+
+<div id="app" style="display:none">
 <header>
   <div><h1>🌱 Karbon Modülü — Admin Paneli</h1><span class="v" id="ver"></span></div>
   <div class="toolbar">
-    <button class="btn save" onclick="saveConfig()">💾 Kaydet</button>
-    <button class="btn primary" onclick="exportConfig()">⬇ JSON indir</button>
+    <span class="who" id="who"></span>
+    <button class="btn save" onclick="saveConfig()">☁️ Buluta kaydet</button>
+    <button class="btn primary" onclick="exportConfig()">⬇ JSON</button>
     <button class="btn g" onclick="document.getElementById('importFile').click()">⬆ JSON yükle</button>
-    <button class="btn g" onclick="resetConfig()">↺ Varsayılana dön</button>
+    <button class="btn g" onclick="resetConfig()">↺ Varsayılan</button>
+    <button class="btn g" onclick="doLogout()">Çıkış</button>
     <input type="file" id="importFile" accept="application/json" style="display:none" onchange="importConfig(event)">
   </div>
 </header>
 
 <div class="wrap">
-  <p class="hint">Değişiklikler önce bu tarayıcıya kaydedilir (aynı tarayıcıdaki hesaplayıcı önizlemede görür). Sitede canlı yayına almak için <b>JSON indir</b> ile <code>config.json</code> alıp yazılım ekibinize verin. <span class="status" id="savedStatus"></span></p>
+  <p class="hint">"Buluta kaydet" değişiklikleri Firestore'a yazar ve <b>hesaplayıcıya anında yansır</b> (yeniden yükleme gerekmez). <span class="status" id="savedStatus"></span></p>
 
   <div class="tabs">
     <div class="tab active" onclick="switchTab('factors',this)">Emisyon Faktörleri</div>
     <div class="tab" onclick="switchTab('sectors',this)">Sektörler &amp; Sorular</div>
     <div class="tab" onclick="switchTab('general',this)">Genel &amp; Metodoloji</div>
+    <div class="tab" onclick="switchTab('reports',this)">Firma Raporları</div>
   </div>
 
   <div class="panel active" id="panel-factors">
     <h2>Emisyon Faktörleri</h2>
-    <p class="hint">Her faktör = 1 birim için üretilen kg CO₂e. Kapsam: 1=doğrudan yakıt, 2=satın alınan enerji, 3=diğer/tedarik zinciri. <b>Kapsam 3 kat.</b> alanı yalnızca Kapsam 3 için GHG Protocol kategori numarasıdır (3.1, 3.4, 3.5, 3.6, 3.7, 3.9). Yeşil elektrik faktörü <code>marketAdjust</code> işaretlidir; pazar-bazlı Kapsam 2'yi düşürür.</p>
-    <table>
-      <thead><tr><th>Anahtar</th><th>Ad (TR)</th><th>Ad (EN)</th><th style="width:80px">Değer</th><th style="width:95px">Birim</th><th style="width:78px">Kapsam</th><th style="width:70px">K3 kat.</th><th style="width:30px"></th></tr></thead>
-      <tbody id="factors-body"></tbody>
-    </table>
+    <p class="hint">Kapsam: 1=doğrudan yakıt, 2=satın alınan enerji, 3=diğer/tedarik zinciri. K3 kat. yalnız Kapsam 3 için GHG Protocol kategori numarasıdır (3.1/3.4/3.5/3.6/3.7/3.9).</p>
+    <table><thead><tr><th>Anahtar</th><th>Ad (TR)</th><th>Ad (EN)</th><th style="width:80px">Değer</th><th style="width:95px">Birim</th><th style="width:78px">Kapsam</th><th style="width:70px">K3 kat.</th><th style="width:30px"></th></tr></thead><tbody id="factors-body"></tbody></table>
     <button class="btn mini" style="margin-top:12px" onclick="addFactor()">+ Faktör ekle</button>
   </div>
 
   <div class="panel" id="panel-sectors">
     <h2>Sektörler &amp; Sorular</h2>
-    <p class="hint">Her sektör için hesaplayıcıda sorulacak soruları düzenleyin. Her soru bir emisyon faktörüne bağlanır.</p>
+    <p class="hint">Her sektör için hesaplayıcıda sorulacak soruları düzenleyin. Her soru bir faktöre bağlanır.</p>
     <div id="sectors-container"></div>
     <button class="btn mini" onclick="addSector()">+ Sektör ekle</button>
   </div>
 
   <div class="panel" id="panel-general">
     <h2>Genel &amp; Metodoloji</h2>
-    <div class="card">
-      <label>Metodoloji notu (TR)</label><textarea id="g-meth-tr" rows="3"></textarea>
-      <label style="margin-top:10px">Metodoloji notu (EN)</label><textarea id="g-meth-en" rows="3"></textarea>
-    </div>
-    <div class="card">
-      <label>Uyarı metni (TR)</label><input id="g-notice-tr">
-      <label style="margin-top:10px">Uyarı metni (EN)</label><input id="g-notice-en">
-    </div>
-    <div class="card">
-      <h3>Yoğunluk metrikleri</h3>
-      <div class="grid3">
-        <div><label>Çalışan başına</label><select id="g-int-emp"><option value="true">Açık</option><option value="false">Kapalı</option></select></div>
-        <div><label>Ciro başına</label><select id="g-int-rev"><option value="true">Açık</option><option value="false">Kapalı</option></select></div>
-        <div><label>Üretim başına</label><select id="g-int-out"><option value="true">Açık</option><option value="false">Kapalı</option></select></div>
-      </div>
-      <div class="grid2" style="margin-top:10px">
-        <div><label>Ciro baz değeri (ör. 1000000)</label><input class="num" type="number" id="g-int-base"></div>
-        <div><label>Ciro baz etiketi (TR)</label><input id="g-int-baselabel"></div>
-      </div>
-    </div>
-    <div class="card grid2">
-      <div><label>1 ağacın yıllık yuttuğu CO₂ (kg)</label><input class="num" type="number" step="any" id="g-tree"></div>
-      <div><label>Araç km başına CO₂e (kg)</label><input class="num" type="number" step="any" id="g-car"></div>
-    </div>
-    <div class="card"><label>Sürüm / versiyon</label><input id="g-version"></div>
+    <div class="card"><label>Metodoloji notu (TR)</label><textarea id="g-meth-tr" rows="3"></textarea><label style="margin-top:10px">Metodoloji notu (EN)</label><textarea id="g-meth-en" rows="3"></textarea></div>
+    <div class="card"><label>Uyarı metni (TR)</label><input id="g-notice-tr"><label style="margin-top:10px">Uyarı metni (EN)</label><input id="g-notice-en"></div>
+    <div class="card"><h3>Yoğunluk metrikleri</h3><div class="grid3"><div><label>Çalışan başına</label><select id="g-int-emp"><option value="true">Açık</option><option value="false">Kapalı</option></select></div><div><label>Ciro başına</label><select id="g-int-rev"><option value="true">Açık</option><option value="false">Kapalı</option></select></div><div><label>Üretim başına</label><select id="g-int-out"><option value="true">Açık</option><option value="false">Kapalı</option></select></div></div><div class="grid2" style="margin-top:10px"><div><label>Ciro baz değeri</label><input class="num" type="number" id="g-int-base"></div><div><label>Ciro baz etiketi (TR)</label><input id="g-int-baselabel"></div></div></div>
+    <div class="card grid2"><div><label>1 ağacın yıllık yuttuğu CO₂ (kg)</label><input class="num" type="number" step="any" id="g-tree"></div><div><label>Araç km başına CO₂e (kg)</label><input class="num" type="number" step="any" id="g-car"></div></div>
+    <div class="card"><label>Sürüm</label><input id="g-version"></div>
   </div>
+
+  <div class="panel" id="panel-reports">
+    <h2>Firma Raporları</h2>
+    <p class="hint">Firmaların kaydettiği tüm karbon raporları. <button class="btn mini" onclick="loadReports()">↻ Yenile</button></p>
+    <div id="reports-status" class="hint"></div>
+    <table><thead><tr><th>Tarih</th><th>Firma</th><th>E-posta</th><th>Sektör</th><th style="width:130px">Toplam (kg CO₂e)</th><th>Tür</th></tr></thead><tbody id="reports-body"></tbody></table>
+  </div>
+</div>
 </div>
 
 <div class="toast" id="toast"></div>
 
-<script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, signOut, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, collectionGroup, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA908koeADcOLR2ROU6R7fARAqjC1v-inc",
+  authDomain: "kobi-karbon-hesaplama.firebaseapp.com",
+  projectId: "kobi-karbon-hesaplama",
+  storageBucket: "kobi-karbon-hesaplama.firebasestorage.app",
+  messagingSenderId: "148732593523",
+  appId: "1:148732593523:web:505abef73a48a29469b106"
+};
+const ADMIN_EMAILS = ["levent.koseoglu@commited.app","commitedapp@gmail.com","lkoseoglu@hotmail.com"];
+
+const fbApp = initializeApp(firebaseConfig);
+const auth = getAuth(fbApp);
+const db = getFirestore(fbApp);
+setPersistence(auth, browserLocalPersistence).catch(()=>{});
+let currentUser=null;
+
+function isAdmin(u){return u&&u.email&&ADMIN_EMAILS.indexOf(u.email)>=0;}
+onAuthStateChanged(auth, u=>{
+  currentUser=u;
+  if(isAdmin(u)){ document.getElementById('gate').style.display='none'; document.getElementById('app').style.display='block'; document.getElementById('who').textContent=u.email; if(!CONFIG) initConfig(); }
+  else if(u){ showGate('Bu hesap ('+u.email+') yönetici değil. Yönetici hesabıyla girin.'); }
+  else { showGate(''); }
+});
+function showGate(msg){ document.getElementById('gate').style.display='flex'; document.getElementById('app').style.display='none'; if(msg){const e=document.getElementById('gate-err');e.textContent=msg;e.style.display='';} }
+window.loginGoogle=async function(){const e=document.getElementById('gate-err');e.style.display='none';try{await signInWithPopup(auth,new GoogleAuthProvider());}catch(err){e.textContent=err.message||err;e.style.display='';}};
+window.loginEmail=async function(){const e=document.getElementById('gate-err');e.style.display='none';try{await signInWithEmailAndPassword(auth,document.getElementById('g-email').value.trim(),document.getElementById('g-pass').value);}catch(err){e.textContent=err.message||err;e.style.display='';}};
+window.doLogout=async function(){try{await signOut(auth);}catch(e){}};
+
+/* ---- DEFAULT CONFIG (config.default.json v2 ile aynı) ---- */
 const DEFAULT_CONFIG = {
   "meta":{"version":"2.0","updated":"2026-07-27",
-    "methodology":{"tr":"GHG Protocol Kurumsal Standardı temel alınmıştır; KOBİ'ler için sadeleştirilmiştir. Faaliyet-verisi esas alınır. Kapsam 2 hem konum-bazlı hem pazar-bazlı raporlanır. Kapsam 3 kalemleri GHG Protocol kategori numaralarıyla etiketlenmiştir. Çıktı CDP basitleştirilmiş açıklama / VSME mantığına uyar.","en":"Based on the GHG Protocol Corporate Standard, streamlined for SMEs. Uses activity data. Scope 2 reported both location- and market-based. Scope 3 items tagged with GHG Protocol category numbers. Output follows CDP simplified disclosure / VSME logic."},
-    "notice":{"tr":"Emisyon faktörleri VARSAYILAN referans değerlerdir. Resmi raporlama öncesi güncel IPCC / DEFRA / Türkiye Ulusal Envanter değerleriyle admin panelinden doğrulayın. Bu araç tam LCA değil, temel seviye tahmin sağlar.","en":"Emission factors are DEFAULT reference values. Verify against current IPCC / DEFRA / Turkish National Inventory values before official reporting. This is a basic estimate, not a full LCA."}},
+    "methodology":{"tr":"GHG Protocol Kurumsal Standardı temel alınmıştır; KOBİ'ler için sadeleştirilmiştir. Faaliyet-verisi esas alınır. Kapsam 2 hem konum hem pazar-bazlı raporlanır. Kapsam 3 kalemleri GHG Protocol kategori numaralarıyla etiketlenmiştir.","en":"Based on the GHG Protocol Corporate Standard, streamlined for SMEs."},
+    "notice":{"tr":"Emisyon faktörleri VARSAYILAN referans değerlerdir. Resmi raporlama öncesi güncel IPCC / DEFRA / Türkiye Ulusal Envanter değerleriyle doğrulayın.","en":"Emission factors are DEFAULT reference values. Verify before official reporting."}},
   "profile":{"fields":[
-    {"id":"employees","name":{"tr":"Çalışan sayısı (TZE)","en":"Employees (FTE)"},"type":"number","hint":{"tr":"Yoğunluk metriği için","en":"For intensity metric"}},
-    {"id":"revenue","name":{"tr":"Yıllık ciro","en":"Annual revenue"},"type":"number","unit":{"tr":"₺/yıl","en":"₺/yr"},"hint":{"tr":"Yoğunluk metriği için","en":"For intensity metric"}},
-    {"id":"output","name":{"tr":"Yıllık üretim/çıktı (opsiyonel)","en":"Annual output (optional)"},"type":"number","unit":{"tr":"birim/yıl","en":"units/yr"},"hint":{"tr":"ör. kg kumaş, oda-gece","en":"e.g. kg fabric, room-nights"}},
-    {"id":"market","name":{"tr":"Pazar","en":"Market"},"type":"select","options":[
-      {"value":"domestic","label":{"tr":"Yurtiçi","en":"Domestic"}},
-      {"value":"export","label":{"tr":"İhracat ağırlıklı","en":"Export-focused"}},
-      {"value":"both","label":{"tr":"Karma","en":"Mixed"}}]}],
-    "sizeClasses":[
-      {"max":10,"label":{"tr":"Mikro (<10)","en":"Micro (<10)"}},
-      {"max":50,"label":{"tr":"Küçük (10-50)","en":"Small (10-50)"}},
-      {"max":500,"label":{"tr":"Orta (50-500)","en":"Medium (50-500)"}},
-      {"max":100000000,"label":{"tr":"Büyük (500+)","en":"Large (500+)"}}]},
+    {"id":"employees","name":{"tr":"Çalışan sayısı (TZE)","en":"Employees (FTE)"},"type":"number","hint":{"tr":"Yoğunluk için","en":"For intensity"}},
+    {"id":"revenue","name":{"tr":"Yıllık ciro","en":"Annual revenue"},"type":"number","unit":{"tr":"₺/yıl","en":"₺/yr"},"hint":{"tr":"Yoğunluk için","en":"For intensity"}},
+    {"id":"output","name":{"tr":"Yıllık üretim/çıktı (ops.)","en":"Annual output (opt.)"},"type":"number","unit":{"tr":"birim/yıl","en":"units/yr"},"hint":{"tr":"ör. kg kumaş, oda-gece","en":"e.g. kg fabric"}},
+    {"id":"market","name":{"tr":"Pazar","en":"Market"},"type":"select","options":[{"value":"domestic","label":{"tr":"Yurtiçi","en":"Domestic"}},{"value":"export","label":{"tr":"İhracat ağırlıklı","en":"Export-focused"}},{"value":"both","label":{"tr":"Karma","en":"Mixed"}}]}],
+    "sizeClasses":[{"max":10,"label":{"tr":"Mikro (<10)","en":"Micro (<10)"}},{"max":50,"label":{"tr":"Küçük (10-50)","en":"Small (10-50)"}},{"max":500,"label":{"tr":"Orta (50-500)","en":"Medium (50-500)"}},{"max":100000000,"label":{"tr":"Büyük (500+)","en":"Large (500+)"}}]},
   "intensity":{"perEmployee":true,"perRevenue":true,"revenueBase":1000000,"revenueBaseLabel":{"tr":"milyon ₺","en":"million ₺"},"perOutput":true},
   "factors":{
     "electricity_kwh":{"name":{"tr":"Elektrik (şebeke)","en":"Electricity (grid)"},"value":0.442,"unit":"kgCO2e/kWh","scope":2},
-    "electricity_green_kwh":{"name":{"tr":"Yeşil/sertifikalı elektrik (I-REC vb.)","en":"Certified renewable electricity (I-REC etc.)"},"value":0.0,"unit":"kgCO2e/kWh","scope":2,"marketAdjust":true},
+    "electricity_green_kwh":{"name":{"tr":"Yeşil/sertifikalı elektrik","en":"Certified renewable electricity"},"value":0.0,"unit":"kgCO2e/kWh","scope":2,"marketAdjust":true},
     "natural_gas_m3":{"name":{"tr":"Doğal gaz","en":"Natural gas"},"value":2.02,"unit":"kgCO2e/m³","scope":1},
     "diesel_l":{"name":{"tr":"Motorin (dizel)","en":"Diesel"},"value":2.68,"unit":"kgCO2e/L","scope":1},
     "gasoline_l":{"name":{"tr":"Benzin","en":"Gasoline"},"value":2.31,"unit":"kgCO2e/L","scope":1},
@@ -170,8 +207,8 @@ const DEFAULT_CONFIG = {
       {"id":"t_diesel","factorKey":"diesel_l","name":{"tr":"Jeneratör/araç motorin tüketimi","en":"Generator/vehicle diesel"},"unitLabel":{"tr":"L/yıl","en":"L/yr"}},
       {"id":"t_refrig","factorKey":"refrigerant_r410a_kg","name":{"tr":"Soğutucu gaz dolumu (kaçak)","en":"Refrigerant refill (leak)"},"unitLabel":{"tr":"kg/yıl","en":"kg/yr"}},
       {"id":"t_steam","factorKey":"steam_kwh","name":{"tr":"Satın alınan buhar/ısı","en":"Purchased steam/heat"},"unitLabel":{"tr":"kWh/yıl","en":"kWh/yr"}},
-      {"id":"t_cotton","factorKey":"cotton_kg","name":{"tr":"İşlenen pamuk (hammadde)","en":"Cotton processed (raw material)"},"unitLabel":{"tr":"kg/yıl","en":"kg/yr"}},
-      {"id":"t_poly","factorKey":"polyester_kg","name":{"tr":"İşlenen polyester (hammadde)","en":"Polyester processed (raw material)"},"unitLabel":{"tr":"kg/yıl","en":"kg/yr"}},
+      {"id":"t_cotton","factorKey":"cotton_kg","name":{"tr":"İşlenen pamuk (hammadde)","en":"Cotton processed"},"unitLabel":{"tr":"kg/yıl","en":"kg/yr"}},
+      {"id":"t_poly","factorKey":"polyester_kg","name":{"tr":"İşlenen polyester (hammadde)","en":"Polyester processed"},"unitLabel":{"tr":"kg/yıl","en":"kg/yr"}},
       {"id":"t_dye","factorKey":"dye_chemical_kg","name":{"tr":"Boya / kimyasal kullanımı","en":"Dye / chemical used"},"unitLabel":{"tr":"kg/yıl","en":"kg/yr"}},
       {"id":"t_water","factorKey":"water_m3","name":{"tr":"Su tüketimi","en":"Water use"},"unitLabel":{"tr":"m³/yıl","en":"m³/yr"}},
       {"id":"t_waste","factorKey":"waste_landfill_kg","name":{"tr":"Depolamaya giden atık","en":"Waste to landfill"},"unitLabel":{"tr":"kg/yıl","en":"kg/yr"}},
@@ -191,98 +228,45 @@ const DEFAULT_CONFIG = {
       {"id":"h_waste","factorKey":"waste_landfill_kg","name":{"tr":"Depolamaya giden atık","en":"Waste to landfill"},"unitLabel":{"tr":"kg/yıl","en":"kg/yr"}}
     ]}
   },
-  "scope3cats":{
-    "3.1":{"tr":"Satın alınan mal ve hizmetler","en":"Purchased goods & services"},
-    "3.4":{"tr":"Yukarı yön taşıma ve dağıtım","en":"Upstream transport & distribution"},
-    "3.5":{"tr":"Operasyonda oluşan atık ve su","en":"Waste & water in operations"},
-    "3.6":{"tr":"İş seyahatleri","en":"Business travel"},
-    "3.7":{"tr":"Personel ulaşımı","en":"Employee commuting"},
-    "3.9":{"tr":"Aşağı yön taşıma ve dağıtım","en":"Downstream transport & distribution"}
-  },
+  "scope3cats":{"3.1":{"tr":"Satın alınan mal ve hizmetler","en":"Purchased goods & services"},"3.4":{"tr":"Yukarı yön taşıma ve dağıtım","en":"Upstream transport"},"3.5":{"tr":"Operasyonda oluşan atık ve su","en":"Waste & water in operations"},"3.6":{"tr":"İş seyahatleri","en":"Business travel"},"3.7":{"tr":"Personel ulaşımı","en":"Employee commuting"},"3.9":{"tr":"Aşağı yön taşıma","en":"Downstream transport"}},
   "benchmarks":{"tree_kg_per_year":21,"car_km_equiv_factor":0.170}
 };
 
-let CONFIG;
+let CONFIG=null;
 function clone(o){return JSON.parse(JSON.stringify(o));}
-function load(){try{const s=localStorage.getItem('karbonConfig');if(s){CONFIG=JSON.parse(s);migrate();mark('Tarayıcıdan yüklendi');return;}}catch(e){}CONFIG=clone(DEFAULT_CONFIG);mark('Varsayılan yüklendi');}
-function migrate(){CONFIG.meta=CONFIG.meta||{};if(!CONFIG.meta.methodology)CONFIG.meta.methodology=clone(DEFAULT_CONFIG.meta.methodology);
-  if(!CONFIG.profile)CONFIG.profile=clone(DEFAULT_CONFIG.profile);if(!CONFIG.intensity)CONFIG.intensity=clone(DEFAULT_CONFIG.intensity);
-  if(!CONFIG.scope3cats)CONFIG.scope3cats=clone(DEFAULT_CONFIG.scope3cats);}
-function mark(txt){document.getElementById('savedStatus').textContent=txt?'· '+txt:'';}
+async function initConfig(){
+  mark("Firestore'dan yükleniyor…");
+  try{ const s=await getDoc(doc(db,'config','current')); if(s.exists()&&s.data().factors){ CONFIG=s.data(); mark('Buluttan yüklendi'); } else { CONFIG=clone(DEFAULT_CONFIG); mark('Varsayılan (bulutta kayıt yok)'); } }
+  catch(e){ CONFIG=clone(DEFAULT_CONFIG); mark('Yüklenemedi, varsayılan'); }
+  migrate(); renderAll();
+}
+function migrate(){CONFIG.meta=CONFIG.meta||{};if(!CONFIG.meta.methodology)CONFIG.meta.methodology=clone(DEFAULT_CONFIG.meta.methodology);if(!CONFIG.profile)CONFIG.profile=clone(DEFAULT_CONFIG.profile);if(!CONFIG.intensity)CONFIG.intensity=clone(DEFAULT_CONFIG.intensity);if(!CONFIG.scope3cats)CONFIG.scope3cats=clone(DEFAULT_CONFIG.scope3cats);}
+function mark(t){const el=document.getElementById('savedStatus');if(el)el.textContent=t?'· '+t:'';}
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800);}
-function switchTab(id,el){document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));document.getElementById('panel-'+id).classList.add('active');}
-
-function renderFactors(){const tb=document.getElementById('factors-body');tb.innerHTML='';
-  Object.entries(CONFIG.factors).forEach(([key,f])=>{const tr=document.createElement('tr');
-    tr.innerHTML='<td><input value="'+key+'" onchange="renameFactor(\''+key+'\',this.value)" style="font-family:monospace;font-size:.8rem"></td>'+
-      '<td><input value="'+esc(f.name.tr)+'" onchange="CONFIG.factors[\''+key+'\'].name.tr=this.value"></td>'+
-      '<td><input value="'+esc(f.name.en||'')+'" onchange="CONFIG.factors[\''+key+'\'].name.en=this.value"></td>'+
-      '<td><input class="num" type="number" step="any" value="'+f.value+'" onchange="CONFIG.factors[\''+key+'\'].value=parseFloat(this.value)||0"></td>'+
-      '<td><input value="'+esc(f.unit||'')+'" onchange="CONFIG.factors[\''+key+'\'].unit=this.value"></td>'+
-      '<td><select onchange="CONFIG.factors[\''+key+'\'].scope=parseInt(this.value)">'+[1,2,3].map(s=>'<option value="'+s+'"'+(f.scope===s?' selected':'')+'>K'+s+'</option>').join('')+'</select></td>'+
-      '<td><input value="'+esc(f.cat||'')+'" placeholder="3.1" onchange="if(this.value)CONFIG.factors[\''+key+'\'].cat=this.value;else delete CONFIG.factors[\''+key+'\'].cat"></td>'+
-      '<td><button class="rowdel" title="Sil" onclick="delFactor(\''+key+'\')">×</button></td>';tb.appendChild(tr);});
-}
-function renameFactor(oldK,newK){newK=newK.trim();if(!newK||newK===oldK||CONFIG.factors[newK]){renderFactors();return;}
-  const nf={};Object.entries(CONFIG.factors).forEach(([k,v])=>{nf[k===oldK?newK:k]=v;});CONFIG.factors=nf;
-  Object.values(CONFIG.sectors).forEach(sec=>sec.questions.forEach(q=>{if(q.factorKey===oldK)q.factorKey=newK;}));renderFactors();renderSectors();}
-function addFactor(){let i=1,k='yeni_faktor';while(CONFIG.factors[k])k='yeni_faktor_'+(i++);CONFIG.factors[k]={name:{tr:'Yeni faktör',en:'New factor'},value:0,unit:'kgCO2e/birim',scope:1};renderFactors();}
-function delFactor(k){if(!confirm('“'+k+'” faktörü silinsin mi?'))return;delete CONFIG.factors[k];renderFactors();}
-
-function renderSectors(){const box=document.getElementById('sectors-container');box.innerHTML='';
-  Object.entries(CONFIG.sectors).forEach(([skey,sec])=>{const card=document.createElement('div');card.className='card';
-    let html='<h3><span>'+(sec.icon||'📊')+' '+esc(sec.name.tr)+' <span style="font-weight:400;color:var(--muted);font-family:monospace;font-size:.8rem">('+skey+')</span></span><button class="btn del" onclick="delSector(\''+skey+'\')">Sektörü sil</button></h3>';
-    html+='<div class="grid3"><div><label>Ad (TR)</label><input value="'+esc(sec.name.tr)+'" onchange="CONFIG.sectors[\''+skey+'\'].name.tr=this.value"></div><div><label>Ad (EN)</label><input value="'+esc(sec.name.en||'')+'" onchange="CONFIG.sectors[\''+skey+'\'].name.en=this.value"></div><div><label>İkon</label><input value="'+esc(sec.icon||'')+'" onchange="CONFIG.sectors[\''+skey+'\'].icon=this.value"></div></div>';
-    html+='<details open><summary>Sorular ('+sec.questions.length+')</summary><table><thead><tr><th>Soru (TR)</th><th>Soru (EN)</th><th style="width:170px">Bağlı faktör</th><th style="width:110px">Birim etiketi</th><th style="width:30px"></th></tr></thead><tbody>';
-    sec.questions.forEach((q,qi)=>{html+='<tr><td><input value="'+esc(q.name.tr)+'" onchange="CONFIG.sectors[\''+skey+'\'].questions['+qi+'].name.tr=this.value"></td><td><input value="'+esc(q.name.en||'')+'" onchange="CONFIG.sectors[\''+skey+'\'].questions['+qi+'].name.en=this.value"></td><td><select onchange="CONFIG.sectors[\''+skey+'\'].questions['+qi+'].factorKey=this.value">'+factorOptions(q.factorKey)+'</select></td><td><input value="'+esc(q.unitLabel?q.unitLabel.tr:'')+'" onchange="setUnitLabel(\''+skey+'\','+qi+',this.value)"></td><td><button class="rowdel" onclick="delQuestion(\''+skey+'\','+qi+')">×</button></td></tr>';});
-    html+='</tbody></table><button class="btn mini" style="margin-top:10px" onclick="addQuestion(\''+skey+'\')">+ Soru ekle</button></details>';card.innerHTML=html;box.appendChild(card);});
-}
-function factorOptions(sel){return Object.entries(CONFIG.factors).map(([k,f])=>'<option value="'+k+'"'+(k===sel?' selected':'')+'>'+esc(f.name.tr)+' ('+f.value+(f.cat?' · '+f.cat:'')+')</option>').join('');}
-function setUnitLabel(skey,qi,val){CONFIG.sectors[skey].questions[qi].unitLabel={tr:val,en:val};}
-function addQuestion(skey){const firstF=Object.keys(CONFIG.factors)[0];CONFIG.sectors[skey].questions.push({id:'q_'+Date.now(),factorKey:firstF,name:{tr:'Yeni soru',en:'New question'},unitLabel:{tr:'birim/yıl',en:'unit/yr'}});renderSectors();}
-function delQuestion(skey,qi){CONFIG.sectors[skey].questions.splice(qi,1);renderSectors();}
-function addSector(){let i=1,k='sektor';while(CONFIG.sectors[k])k='sektor_'+(i++);CONFIG.sectors[k]={name:{tr:'Yeni Sektör',en:'New Sector'},icon:'📊',questions:[]};renderSectors();}
-function delSector(k){if(!confirm('“'+k+'” sektörü silinsin mi?'))return;delete CONFIG.sectors[k];renderSectors();}
-
-function renderGeneral(){
-  document.getElementById('g-meth-tr').value=(CONFIG.meta.methodology&&CONFIG.meta.methodology.tr)||'';
-  document.getElementById('g-meth-en').value=(CONFIG.meta.methodology&&CONFIG.meta.methodology.en)||'';
-  document.getElementById('g-notice-tr').value=(CONFIG.meta.notice&&CONFIG.meta.notice.tr)||'';
-  document.getElementById('g-notice-en').value=(CONFIG.meta.notice&&CONFIG.meta.notice.en)||'';
-  const I=CONFIG.intensity||{};
-  document.getElementById('g-int-emp').value=String(I.perEmployee!==false);
-  document.getElementById('g-int-rev').value=String(I.perRevenue!==false);
-  document.getElementById('g-int-out').value=String(I.perOutput!==false);
-  document.getElementById('g-int-base').value=I.revenueBase||1000000;
-  document.getElementById('g-int-baselabel').value=(I.revenueBaseLabel&&I.revenueBaseLabel.tr)||'milyon ₺';
-  document.getElementById('g-tree').value=(CONFIG.benchmarks&&CONFIG.benchmarks.tree_kg_per_year)!=null?CONFIG.benchmarks.tree_kg_per_year:21;
-  document.getElementById('g-car').value=(CONFIG.benchmarks&&CONFIG.benchmarks.car_km_equiv_factor)!=null?CONFIG.benchmarks.car_km_equiv_factor:0.170;
-  document.getElementById('g-version').value=CONFIG.meta.version||'2.0';
-  document.getElementById('ver').textContent='v'+(CONFIG.meta.version||'2.0');
-}
-function collectGeneral(){
-  CONFIG.meta.methodology={tr:document.getElementById('g-meth-tr').value,en:document.getElementById('g-meth-en').value};
-  CONFIG.meta.notice={tr:document.getElementById('g-notice-tr').value,en:document.getElementById('g-notice-en').value};
-  CONFIG.intensity=CONFIG.intensity||{};
-  CONFIG.intensity.perEmployee=document.getElementById('g-int-emp').value==='true';
-  CONFIG.intensity.perRevenue=document.getElementById('g-int-rev').value==='true';
-  CONFIG.intensity.perOutput=document.getElementById('g-int-out').value==='true';
-  CONFIG.intensity.revenueBase=parseFloat(document.getElementById('g-int-base').value)||1000000;
-  const bl=document.getElementById('g-int-baselabel').value;CONFIG.intensity.revenueBaseLabel={tr:bl,en:bl};
-  CONFIG.benchmarks=CONFIG.benchmarks||{};
-  CONFIG.benchmarks.tree_kg_per_year=parseFloat(document.getElementById('g-tree').value)||21;
-  CONFIG.benchmarks.car_km_equiv_factor=parseFloat(document.getElementById('g-car').value)||0.170;
-  CONFIG.meta.version=document.getElementById('g-version').value||'2.0';
-}
-
-function saveConfig(){collectGeneral();CONFIG.meta.updated=new Date().toISOString().slice(0,10);localStorage.setItem('karbonConfig',JSON.stringify(CONFIG));mark('Kaydedildi ('+CONFIG.meta.updated+')');renderGeneral();toast('✔ Tarayıcıya kaydedildi');}
-function exportConfig(){collectGeneral();CONFIG.meta.updated=new Date().toISOString().slice(0,10);const blob=new Blob([JSON.stringify(CONFIG,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='config.json';a.click();toast('⬇ config.json indirildi');}
-function importConfig(ev){const file=ev.target.files[0];if(!file)return;const r=new FileReader();r.onload=e=>{try{const c=JSON.parse(e.target.result);if(!c.factors||!c.sectors)throw 0;CONFIG=c;migrate();renderAll();toast('✔ JSON yüklendi — kaydetmeyi unutmayın');}catch(err){alert('Geçersiz config dosyası.');}};r.readAsText(file);ev.target.value='';}
-function resetConfig(){if(!confirm('Tüm ayarlar varsayılana dönsün mü?'))return;CONFIG=clone(DEFAULT_CONFIG);renderAll();toast('↺ Varsayılan yüklendi');}
+window.switchTab=function(id,el){document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));document.getElementById('panel-'+id).classList.add('active');if(id==='reports')loadReports();};
 
 function esc(s){return String(s==null?'':s).replace(/"/g,'&quot;').replace(/</g,'&lt;');}
+function renderFactors(){const tb=document.getElementById('factors-body');tb.innerHTML='';Object.entries(CONFIG.factors).forEach(([key,f])=>{const tr=document.createElement('tr');tr.innerHTML='<td><input value="'+key+'" onchange="renameFactor(\''+key+'\',this.value)" style="font-family:monospace;font-size:.8rem"></td><td><input value="'+esc(f.name.tr)+'" onchange="CONFIG.factors[\''+key+'\'].name.tr=this.value"></td><td><input value="'+esc(f.name.en||'')+'" onchange="CONFIG.factors[\''+key+'\'].name.en=this.value"></td><td><input class="num" type="number" step="any" value="'+f.value+'" onchange="CONFIG.factors[\''+key+'\'].value=parseFloat(this.value)||0"></td><td><input value="'+esc(f.unit||'')+'" onchange="CONFIG.factors[\''+key+'\'].unit=this.value"></td><td><select onchange="CONFIG.factors[\''+key+'\'].scope=parseInt(this.value)">'+[1,2,3].map(s=>'<option value="'+s+'"'+(f.scope===s?' selected':'')+'>K'+s+'</option>').join('')+'</select></td><td><input value="'+esc(f.cat||'')+'" placeholder="3.1" onchange="if(this.value)CONFIG.factors[\''+key+'\'].cat=this.value;else delete CONFIG.factors[\''+key+'\'].cat"></td><td><button class="rowdel" onclick="delFactor(\''+key+'\')">×</button></td>';tb.appendChild(tr);});}
+window.renameFactor=function(oldK,newK){newK=newK.trim();if(!newK||newK===oldK||CONFIG.factors[newK]){renderFactors();return;}const nf={};Object.entries(CONFIG.factors).forEach(([k,v])=>{nf[k===oldK?newK:k]=v;});CONFIG.factors=nf;Object.values(CONFIG.sectors).forEach(sec=>sec.questions.forEach(q=>{if(q.factorKey===oldK)q.factorKey=newK;}));renderFactors();renderSectors();};
+window.addFactor=function(){let i=1,k='yeni_faktor';while(CONFIG.factors[k])k='yeni_faktor_'+(i++);CONFIG.factors[k]={name:{tr:'Yeni faktör',en:'New factor'},value:0,unit:'kgCO2e/birim',scope:1};renderFactors();};
+window.delFactor=function(k){if(!confirm('“'+k+'” silinsin mi?'))return;delete CONFIG.factors[k];renderFactors();};
+function renderSectors(){const box=document.getElementById('sectors-container');box.innerHTML='';Object.entries(CONFIG.sectors).forEach(([skey,sec])=>{const card=document.createElement('div');card.className='card';let html='<h3><span>'+(sec.icon||'📊')+' '+esc(sec.name.tr)+' <span style="font-weight:400;color:var(--muted);font-family:monospace;font-size:.8rem">('+skey+')</span></span><button class="btn del" onclick="delSector(\''+skey+'\')">Sektörü sil</button></h3>';html+='<div class="grid3"><div><label>Ad (TR)</label><input value="'+esc(sec.name.tr)+'" onchange="CONFIG.sectors[\''+skey+'\'].name.tr=this.value"></div><div><label>Ad (EN)</label><input value="'+esc(sec.name.en||'')+'" onchange="CONFIG.sectors[\''+skey+'\'].name.en=this.value"></div><div><label>İkon</label><input value="'+esc(sec.icon||'')+'" onchange="CONFIG.sectors[\''+skey+'\'].icon=this.value"></div></div>';html+='<details open><summary>Sorular ('+sec.questions.length+')</summary><table><thead><tr><th>Soru (TR)</th><th>Soru (EN)</th><th style="width:170px">Bağlı faktör</th><th style="width:110px">Birim</th><th style="width:30px"></th></tr></thead><tbody>';sec.questions.forEach((q,qi)=>{html+='<tr><td><input value="'+esc(q.name.tr)+'" onchange="CONFIG.sectors[\''+skey+'\'].questions['+qi+'].name.tr=this.value"></td><td><input value="'+esc(q.name.en||'')+'" onchange="CONFIG.sectors[\''+skey+'\'].questions['+qi+'].name.en=this.value"></td><td><select onchange="CONFIG.sectors[\''+skey+'\'].questions['+qi+'].factorKey=this.value">'+factorOptions(q.factorKey)+'</select></td><td><input value="'+esc(q.unitLabel?q.unitLabel.tr:'')+'" onchange="setUnitLabel(\''+skey+'\','+qi+',this.value)"></td><td><button class="rowdel" onclick="delQuestion(\''+skey+'\','+qi+')">×</button></td></tr>';});html+='</tbody></table><button class="btn mini" style="margin-top:10px" onclick="addQuestion(\''+skey+'\')">+ Soru ekle</button></details>';card.innerHTML=html;box.appendChild(card);});}
+function factorOptions(sel){return Object.entries(CONFIG.factors).map(([k,f])=>'<option value="'+k+'"'+(k===sel?' selected':'')+'>'+esc(f.name.tr)+' ('+f.value+(f.cat?' · '+f.cat:'')+')</option>').join('');}
+window.setUnitLabel=function(skey,qi,val){CONFIG.sectors[skey].questions[qi].unitLabel={tr:val,en:val};};
+window.addQuestion=function(skey){const firstF=Object.keys(CONFIG.factors)[0];CONFIG.sectors[skey].questions.push({id:'q_'+Date.now(),factorKey:firstF,name:{tr:'Yeni soru',en:'New question'},unitLabel:{tr:'birim/yıl',en:'unit/yr'}});renderSectors();};
+window.delQuestion=function(skey,qi){CONFIG.sectors[skey].questions.splice(qi,1);renderSectors();};
+window.addSector=function(){let i=1,k='sektor';while(CONFIG.sectors[k])k='sektor_'+(i++);CONFIG.sectors[k]={name:{tr:'Yeni Sektör',en:'New Sector'},icon:'📊',questions:[]};renderSectors();};
+window.delSector=function(k){if(!confirm('“'+k+'” sektörü silinsin mi?'))return;delete CONFIG.sectors[k];renderSectors();};
+function renderGeneral(){document.getElementById('g-meth-tr').value=(CONFIG.meta.methodology&&CONFIG.meta.methodology.tr)||'';document.getElementById('g-meth-en').value=(CONFIG.meta.methodology&&CONFIG.meta.methodology.en)||'';document.getElementById('g-notice-tr').value=(CONFIG.meta.notice&&CONFIG.meta.notice.tr)||'';document.getElementById('g-notice-en').value=(CONFIG.meta.notice&&CONFIG.meta.notice.en)||'';const I=CONFIG.intensity||{};document.getElementById('g-int-emp').value=String(I.perEmployee!==false);document.getElementById('g-int-rev').value=String(I.perRevenue!==false);document.getElementById('g-int-out').value=String(I.perOutput!==false);document.getElementById('g-int-base').value=I.revenueBase||1000000;document.getElementById('g-int-baselabel').value=(I.revenueBaseLabel&&I.revenueBaseLabel.tr)||'milyon ₺';document.getElementById('g-tree').value=(CONFIG.benchmarks&&CONFIG.benchmarks.tree_kg_per_year)!=null?CONFIG.benchmarks.tree_kg_per_year:21;document.getElementById('g-car').value=(CONFIG.benchmarks&&CONFIG.benchmarks.car_km_equiv_factor)!=null?CONFIG.benchmarks.car_km_equiv_factor:0.170;document.getElementById('g-version').value=CONFIG.meta.version||'2.0';document.getElementById('ver').textContent='v'+(CONFIG.meta.version||'2.0');}
+function collectGeneral(){CONFIG.meta.methodology={tr:document.getElementById('g-meth-tr').value,en:document.getElementById('g-meth-en').value};CONFIG.meta.notice={tr:document.getElementById('g-notice-tr').value,en:document.getElementById('g-notice-en').value};CONFIG.intensity=CONFIG.intensity||{};CONFIG.intensity.perEmployee=document.getElementById('g-int-emp').value==='true';CONFIG.intensity.perRevenue=document.getElementById('g-int-rev').value==='true';CONFIG.intensity.perOutput=document.getElementById('g-int-out').value==='true';CONFIG.intensity.revenueBase=parseFloat(document.getElementById('g-int-base').value)||1000000;const bl=document.getElementById('g-int-baselabel').value;CONFIG.intensity.revenueBaseLabel={tr:bl,en:bl};CONFIG.benchmarks=CONFIG.benchmarks||{};CONFIG.benchmarks.tree_kg_per_year=parseFloat(document.getElementById('g-tree').value)||21;CONFIG.benchmarks.car_km_equiv_factor=parseFloat(document.getElementById('g-car').value)||0.170;CONFIG.meta.version=document.getElementById('g-version').value||'2.0';}
+window.saveConfig=async function(){collectGeneral();CONFIG.meta.updated=new Date().toISOString().slice(0,10);try{await setDoc(doc(db,'config','current'),CONFIG);mark('Buluta kaydedildi ('+CONFIG.meta.updated+')');renderGeneral();toast('☁️ Buluta kaydedildi — siteye yansıdı');}catch(e){toast('Kaydedilemedi: '+(e.message||e));}};
+window.exportConfig=function(){collectGeneral();const blob=new Blob([JSON.stringify(CONFIG,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='config.json';a.click();toast('⬇ config.json indirildi');};
+window.importConfig=function(ev){const file=ev.target.files[0];if(!file)return;const r=new FileReader();r.onload=e=>{try{const c=JSON.parse(e.target.result);if(!c.factors||!c.sectors)throw 0;CONFIG=c;migrate();renderAll();toast('✔ JSON yüklendi — Buluta kaydet ile yayınlayın');}catch(err){alert('Geçersiz config.');}};r.readAsText(file);ev.target.value='';};
+window.resetConfig=function(){if(!confirm('Varsayılana dönülsün mü? (Buluta kaydedene kadar kalıcı olmaz)'))return;CONFIG=clone(DEFAULT_CONFIG);renderAll();toast('↺ Varsayılan yüklendi');};
 function renderAll(){renderFactors();renderSectors();renderGeneral();}
-load();renderAll();
+
+/* ---- FIRMA RAPORLARI ---- */
+window.loadReports=async function(){const st=document.getElementById('reports-status');const tb=document.getElementById('reports-body');tb.innerHTML='';st.textContent='Yükleniyor…';try{const snap=await getDocs(query(collectionGroup(db,'items'),orderBy('createdAt','desc')));if(snap.empty){st.textContent='Henüz kayıtlı firma raporu yok.';return;}st.textContent=snap.size+' rapor';snap.forEach(d=>{const r=d.data();const dt=r.createdAt&&r.createdAt.toDate?r.createdAt.toDate().toLocaleString('tr-TR'):'';const tr=document.createElement('tr');tr.className='rep-row';tr.innerHTML='<td>'+dt+'</td><td>'+esc(r.company||'')+'</td><td>'+esc(r.userEmail||'')+'</td><td>'+esc(r.sector||'')+'</td><td class="num">'+Math.round(r.total||0).toLocaleString('tr-TR')+'</td><td>'+(r.type==='buyer'?'Alıcı':'Tedarikçi')+'</td>';tb.appendChild(tr);});}catch(e){st.textContent='Yüklenemedi: '+(e.message||e)+' (Firestore indeksi gerekebilir — hata mesajındaki bağlantıya tıklayın.)';}};
 </script>
 </body>
 </html>
