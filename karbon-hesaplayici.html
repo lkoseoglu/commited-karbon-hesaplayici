@@ -580,14 +580,15 @@ body{background:radial-gradient(1200px 500px at 80% -10%,#eaf7f0 0%,transparent 
 <script id="ck-pro-js">(function(){
 function isEN(){var e=document.getElementById('lang-en');return e&&e.classList.contains('active');}
 function apply(){try{
-var h=document.querySelector('.hero');
-if(h){var rb=document.getElementById('ck-freeribbon');if(!rb){rb=document.createElement('div');rb.id='ck-freeribbon';h.appendChild(rb);}var want=isEN()?'FREE':'ÜCRETSİZ';if(rb.textContent!==want)rb.textContent=want;}
+var h=document.querySelector('.hero');if(!h)return;
+var rb=document.getElementById('ck-freeribbon');if(!rb){rb=document.createElement('div');rb.id='ck-freeribbon';h.appendChild(rb);}
+var want=isEN()?'FREE':'ÜCRETSİZ';if(rb.textContent!==want)rb.textContent=want;
 document.querySelectorAll('.hero p, .trust span').forEach(function(el){if(el.querySelector('.free-hl'))return;if(/Ücretsiz|Free/.test(el.textContent))el.innerHTML=el.innerHTML.replace(/(Ücretsiz|Free)/g,'<mark class="free-hl">$1</mark>');});
 }catch(e){}}
-var raf=null;var mo=new MutationObserver(function(){if(raf)return;raf=requestAnimationFrame(function(){raf=null;apply();});});
-function start(){apply();try{mo.observe(document.body,{childList:true,subtree:true,characterData:true});}catch(e){}}
-if(document.readyState!=='loading')start();else document.addEventListener('DOMContentLoaded',start);
-setTimeout(apply,300);setTimeout(apply,1200);
+function bind(){['lang-tr','lang-en'].forEach(function(id){var b=document.getElementById(id);if(b&&!b.__ckb){b.__ckb=1;b.addEventListener('click',function(){setTimeout(apply,30);setTimeout(apply,180);});}});}
+function boot(){bind();apply();}
+if(document.readyState!=='loading')boot();else document.addEventListener('DOMContentLoaded',boot);
+var n=0,iv=setInterval(function(){bind();apply();if(++n>16)clearInterval(iv);},600);
 })();</script>
 </body>
 </html>
