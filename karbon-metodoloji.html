@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Metodoloji &amp; White Paper — KOBİ Karbon Ayak İzi Hesaplayıcı</title>
+<meta name="description" content="Commited KOBİ Karbon Ayak İzi Hesaplayıcı metodolojisi: GHG Protocol, ISO 14064/14067, PACT v3.0 & Pathfinder v2.0, SBTi ve IPCC AR6 ile uyumlu Kapsam 1-2-3 ve cradle-to-gate ürün karbon ayak izi.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --g1:#0a5233; --g2:#12915b; --g3:#1fb673;
+  --ink:#12261d; --muted:#5f6f66; --line:#e6ede9;
+  --bg:#f6faf7; --card:#ffffff;
+  --radius:20px;
+  --shadow:0 10px 34px rgba(10,60,40,.09);
+  --shadow-lg:0 22px 60px rgba(10,60,40,.16);
+  --gold1:#ffd84d; --gold2:#ffb020;
+  --font:'Inter',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:var(--font);color:var(--ink);line-height:1.62;background:radial-gradient(1200px 500px at 80% -10%,#eaf7f0 0%,transparent 60%),var(--bg);-webkit-font-smoothing:antialiased;}
+.wrap{max-width:960px;margin:0 auto;padding:22px 20px 90px}
+.hero{background:linear-gradient(135deg,var(--g1) 0%,var(--g2) 55%,var(--g3) 100%);color:#fff;border-radius:26px;padding:40px 36px 34px;position:relative;overflow:hidden;box-shadow:var(--shadow-lg);margin-bottom:26px;}
+.hero::before{content:"";position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(circle at 18% 120%,rgba(255,255,255,.14),transparent 45%),url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Cpath d='M0 39.5H40M39.5 0V40' stroke='%23ffffff' stroke-opacity='.05'/%3E%3C/svg%3E");}
+.hero .top{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap;position:relative;z-index:1}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:1.02rem;letter-spacing:-.01em}
+.badge{display:inline-flex;align-items:center;gap:7px;background:linear-gradient(135deg,var(--gold1),var(--gold2));color:#3a2a00;font-weight:800;font-size:.8rem;padding:7px 14px;border-radius:999px;box-shadow:0 6px 18px rgba(255,176,32,.4),inset 0 1px 0 rgba(255,255,255,.5)}
+.hero h1{font-size:2.1rem;line-height:1.14;letter-spacing:-.03em;margin:20px 0 8px;font-weight:900;text-shadow:0 2px 12px rgba(0,0,0,.12)}
+.hero .lead{font-size:1.04rem;opacity:.96;max-width:700px;margin:0}
+.hero .meta{margin-top:16px;display:flex;gap:9px;flex-wrap:wrap}
+.chip{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.24);backdrop-filter:blur(6px);color:#fff;font-weight:600;padding:6px 13px;border-radius:999px;font-size:.8rem}
+.hero .actions{margin-top:20px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.btn{display:inline-flex;align-items:center;gap:8px;font-weight:700;font-size:.9rem;border-radius:12px;padding:11px 18px;text-decoration:none;cursor:pointer;border:1px solid transparent;transition:transform .15s,box-shadow .15s}
+.btn.primary{background:#fff;color:var(--g1);box-shadow:0 6px 18px rgba(0,0,0,.14)}
+.btn.primary:hover{transform:translateY(-2px)}
+.btn.ghost{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.3);color:#fff}
+.btn.ghost:hover{background:rgba(255,255,255,.22)}
+.lang{display:inline-flex;gap:4px;background:rgba(0,0,0,.16);padding:4px;border-radius:999px}
+.lang button{background:transparent;border:none;color:rgba(255,255,255,.82);font-weight:700;padding:6px 15px;border-radius:999px;cursor:pointer;font-size:.85rem;transition:.2s}
+.lang button.active{background:#fff;color:var(--g1)}
+.toc{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px 24px;margin-bottom:22px}
+.toc h4{margin:0 0 10px;font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;color:var(--g1)}
+.toc ol{margin:0;padding-left:20px;columns:2;column-gap:26px;font-size:.9rem}
+.toc a{color:var(--ink);text-decoration:none}
+.toc a:hover{color:var(--g2);text-decoration:underline}
+section.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:30px 34px;margin-bottom:20px}
+section.card h2{font-size:1.38rem;letter-spacing:-.02em;margin:0 0 6px;position:relative;padding-bottom:14px}
+section.card h2 .num{color:var(--g3);font-weight:900;margin-right:8px}
+section.card h2::after{content:"";position:absolute;left:0;bottom:0;width:54px;height:4px;border-radius:4px;background:linear-gradient(90deg,var(--g2),var(--g3))}
+section.card h3{font-size:1.04rem;margin:22px 0 8px;color:var(--g1)}
+p{margin:12px 0}
+.muted{color:var(--muted)}
+ul.clean{margin:12px 0;padding-left:20px}
+ul.clean li{margin:7px 0}
+.formula{background:linear-gradient(135deg,#f2fbf6,#eaf7f0);border:1px solid #d7ece0;border-radius:14px;padding:16px 20px;font-size:1.0rem;font-weight:600;color:var(--g1);text-align:center;margin:16px 0}
+.formula small{display:block;font-weight:500;color:var(--muted);font-size:.82rem;margin-top:6px}
+.callout{border-left:4px solid var(--g3);background:#f5fbf8;border-radius:0 12px 12px 0;padding:14px 18px;margin:16px 0;font-size:.94rem}
+.callout.warn{border-left-color:var(--gold2);background:#fff9ec}
+.callout.info{border-left-color:#5b8fd6;background:#f2f7fd}
+.scopes{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:16px 0}
+.scope{border:1px solid var(--line);border-radius:16px;padding:18px;background:linear-gradient(180deg,#fff,#fbfdfc)}
+.scope .dot{width:12px;height:12px;border-radius:50%;display:inline-block;margin-right:8px;vertical-align:middle}
+.scope b{display:block;font-size:1.0rem;margin-bottom:4px}
+.scope p{margin:6px 0 0;font-size:.86rem;color:var(--muted)}
+.s1 .dot{background:#e07a3e}.s2 .dot{background:#f0c419}.s3 .dot{background:#5b8fd6}
+.tablewrap{overflow-x:auto;margin:16px 0;border:1px solid var(--line);border-radius:14px}
+table{width:100%;border-collapse:collapse;font-size:.85rem;min-width:560px}
+thead th{background:#f2f7f4;color:var(--g1);text-align:left;font-size:.72rem;text-transform:uppercase;letter-spacing:.04em;padding:11px 12px;border-bottom:2px solid var(--line)}
+tbody td{padding:9px 12px;border-bottom:1px solid #eef3f0;vertical-align:top}
+tbody tr:hover{background:#f7fcf9}
+td.val{font-variant-numeric:tabular-nums;font-weight:600;white-space:nowrap}
+.sc-tag{display:inline-block;font-size:.7rem;font-weight:800;padding:2px 8px;border-radius:999px}
+.sc-tag.k1{background:#fbe6d8;color:#a4511f}
+.sc-tag.k2{background:#fbf1cf;color:#8a6d00}
+.sc-tag.k3{background:#e0ebfa;color:#345f9e}
+.grp{background:#f4f9f6;font-weight:800;color:var(--g1)}
+.ok{color:#1a7a4a;font-weight:700}.part{color:#b8860b;font-weight:700}.todo{color:#b03a2e;font-weight:700}
+.refs{font-size:.86rem;color:var(--muted)}
+.refs li{margin:6px 0}
+footer{text-align:center;color:var(--muted);font-size:.85rem;margin-top:30px}
+footer a{color:var(--g2);text-decoration:none}
+[data-lang="tr"] .en{display:none}
+[data-lang="en"] .tr{display:none}
+@media(max-width:640px){.hero h1{font-size:1.6rem}.toc ol{columns:1}.scopes{grid-template-columns:1fr}section.card{padding:24px 20px}.wrap{padding:14px 14px 60px}}
+@media print{body{background:#fff}.hero{box-shadow:none}.lang,.hero .actions{display:none}section.card,.toc{box-shadow:none;break-inside:avoid}}
+</style>
+</head>
+<body data-lang="tr">
+<div class="wrap">
+  <div class="hero">
+    <div class="top">
+      <div class="brand">🌱 <span>Commited · KOBİ Karbon Modülü</span></div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <span class="badge">🆓 <span class="tr">%100 Ücretsiz</span><span class="en">100% Free</span></span>
+        <span class="lang"><button id="l-tr" class="active" onclick="setLang('tr')">TR</button><button id="l-en" onclick="setLang('en')">EN</button></span>
+      </div>
+    </div>
+    <h1><span class="tr">Metodoloji &amp; White Paper</span><span class="en">Methodology &amp; White Paper</span></h1>
+    <p class="lead">
+      <span class="tr">KOBİ Karbon Ayak İzi Hesaplayıcı'nın bilimsel temeli: GHG Protocol Kurumsal, Kapsam 2 ve Kapsam 3 standartları, ISO 14064/14067, WBCSD PACT Methodology v3.0 &amp; Pathfinder Framework v2.0, SBTi Kurumsal Net-Sıfır v2.0 ve IPCC AR6 ile uyumlu.</span>
+      <span class="en">The scientific basis of the SME Carbon Footprint Calculator: aligned with the GHG Protocol Corporate, Scope 2 and Scope 3 standards, ISO 14064/14067, WBCSD PACT Methodology v3.0 &amp; Pathfinder Framework v2.0, SBTi Corporate Net-Zero v2.0 and IPCC AR6.</span>
+    </p>
+    <div class="meta">
+      <span class="chip">GHG Protocol</span>
+      <span class="chip">ISO 14064 · 14067</span>
+      <span class="chip">PACT v3.0 · Pathfinder v2.0</span>
+      <span class="chip">IPCC AR6 GWP100</span>
+      <span class="chip"><span class="tr">Sürüm 3.1</span><span class="en">Version 3.1</span></span>
+    </div>
+    <div class="actions">
+      <a class="btn primary" href="karbon-hesaplayici.html">← <span class="tr">Hesaplayıcıya dön</span><span class="en">Back to calculator</span></a>
+      <a class="btn ghost" href="karbon-metodoloji.pdf" download>⬇ <span class="tr">White Paper (PDF)</span><span class="en">White Paper (PDF)</span></a>
+    </div>
+  </div>
+
+  <div class="toc">
+    <h4><span class="tr">İçindekiler</span><span class="en">Contents</span></h4>
+    <ol>
+      <li><a href="#s1"><span class="tr">Amaç ve kapsam</span><span class="en">Purpose &amp; scope</span></a></li>
+      <li><a href="#s2"><span class="tr">Normatif çerçeve ve standartlar</span><span class="en">Normative framework &amp; standards</span></a></li>
+      <li><a href="#s3"><span class="tr">Gazlar ve GWP temeli (AR6)</span><span class="en">Gases &amp; GWP basis (AR6)</span></a></li>
+      <li><a href="#s4"><span class="tr">Kurumsal envanter: Kapsam 1·2·3</span><span class="en">Corporate inventory: Scope 1·2·3</span></a></li>
+      <li><a href="#s5"><span class="tr">Ürün karbon ayak izi (cradle-to-gate)</span><span class="en">Product carbon footprint (cradle-to-gate)</span></a></li>
+      <li><a href="#s6"><span class="tr">Hesaplama yöntemi</span><span class="en">Calculation method</span></a></li>
+      <li><a href="#s7"><span class="tr">Tahsis (allocation)</span><span class="en">Allocation</span></a></li>
+      <li><a href="#s8"><span class="tr">Veri hiyerarşisi ve güvenilirlik (PDS/DQR)</span><span class="en">Data hierarchy &amp; reliability (PDS/DQR)</span></a></li>
+      <li><a href="#s9"><span class="tr">Biyojenik, arazi kullanımı ve uzaklaştırmalar</span><span class="en">Biogenic, land use &amp; removals</span></a></li>
+      <li><a href="#s10"><span class="tr">Elektrik ve sözleşmeli araçlar</span><span class="en">Electricity &amp; contractual instruments</span></a></li>
+      <li><a href="#s11"><span class="tr">Emisyon faktörleri</span><span class="en">Emission factors</span></a></li>
+      <li><a href="#s12"><span class="tr">Sektörler ve faaliyet verisi</span><span class="en">Sectors &amp; activity data</span></a></li>
+      <li><a href="#s13"><span class="tr">Doğrulama ve güvence</span><span class="en">Verification &amp; assurance</span></a></li>
+      <li><a href="#s14"><span class="tr">Hedefler ve karbonsuzlaşma (SBTi)</span><span class="en">Targets &amp; decarbonization (SBTi)</span></a></li>
+      <li><a href="#s15"><span class="tr">Uyum ve önerilen geliştirmeler</span><span class="en">Conformance &amp; recommended upgrades</span></a></li>
+      <li><a href="#s16"><span class="tr">Sınırlamalar ve uyarı</span><span class="en">Limitations &amp; disclaimer</span></a></li>
+      <li><a href="#s17"><span class="tr">Referanslar</span><span class="en">References</span></a></li>
+    </ol>
+  </div>
+
+  <section class="card" id="s1">
+    <h2><span class="num">1</span><span class="tr">Amaç ve kapsam</span><span class="en">Purpose &amp; scope</span></h2>
+    <p class="tr">Bu araç, küçük ve orta ölçekli işletmelerin (KOBİ) kurumsal karbon ayak izini ve ürün bazlı karbon ayak izini (PCF) hızlı, ücretsiz ve standart-uyumlu bir şekilde tahmin etmeleri için tasarlanmıştır. İki tamamlayıcı kullanım vardır: (1) <b>Tedarikçi</b> — kendi faaliyet verisini girerek Kapsam 1·2·3 kurumsal envanterini ve müşterisine sunabileceği cradle-to-gate ürün ayak izini üreten firma; (2) <b>Alıcı</b> — tedarikçilerden gelen doğrulanabilir PCF/emisyon verilerini toplayarak kendi Kapsam 3 (Kategori 1 — Satın alınan mal ve hizmetler) tedarik zinciri emisyonlarını hesaplayan firma.</p>
+    <p class="en">This tool helps small and medium-sized enterprises (SMEs) estimate both their corporate carbon inventory and their product-level carbon footprint (PCF) quickly, for free, and in a standards-aligned way. There are two complementary uses: (1) <b>Supplier</b> — a company that enters its activity data to produce a Scope 1·2·3 corporate inventory and a cradle-to-gate product footprint it can share with its customer; (2) <b>Buyer</b> — a company that aggregates verifiable PCF/emission data from its suppliers to calculate its own Scope 3 (Category 1 — Purchased goods and services) supply-chain emissions.</p>
+    <p class="tr muted">Araç bir tam Yaşam Döngüsü Değerlendirmesi (LCA) veya bağımsız güvence altına alınmış envanter yerine geçmez; farkındalık, ön değerlendirme, sıcak nokta (hotspot) tespiti ve tedarik zinciri veri değişimi için karar-hazırlık düzeyinde bir tahmin sağlar. PCF yalnızca iklim etkisine (kg CO₂e) odaklanır; LCA su, kaynak kullanımı, asidifikasyon gibi ek etkileri de kapsar.</p>
+    <p class="en muted">The tool is not a substitute for a full Life Cycle Assessment (LCA) or an independently assured inventory; it provides a decision-ready estimate for awareness, pre-assessment, hotspot identification and supply-chain data exchange. A PCF focuses only on climate impact (kg CO₂e), whereas an LCA also covers additional impacts such as water, resource use and acidification.</p>
+  </section>
+
+  <section class="card" id="s2">
+    <h2><span class="num">2</span><span class="tr">Normatif çerçeve ve standartlar</span><span class="en">Normative framework &amp; standards</span></h2>
+    <p class="tr">Metodoloji, kurumsal muhasebe için GHG Protocol'ü; ürün ayak izi ve tedarik zinciri veri değişimi için WBCSD PACT &amp; Pathfinder çerçevelerini temel alır ve KOBİ'ler için sadeleştirilmiştir:</p>
+    <p class="en">The methodology builds on the GHG Protocol for corporate accounting and on the WBCSD PACT &amp; Pathfinder frameworks for product footprinting and supply-chain data exchange, streamlined for SMEs:</p>
+    <ul class="clean">
+      <li><b>GHG Protocol</b> — <span class="tr">Corporate Standard, Scope 2 Guidance ve Corporate Value Chain (Scope 3) Standard.</span><span class="en">Corporate Standard, Scope 2 Guidance and Corporate Value Chain (Scope 3) Standard.</span></li>
+      <li><b>ISO 14064-1</b> — <span class="tr">kurumsal sera gazı envanterleri; <b>ISO 14067</b> — ürün karbon ayak izi.</span><span class="en">corporate GHG inventories; <b>ISO 14067</b> — product carbon footprint.</span></li>
+      <li><b>WBCSD PACT Methodology v3.0</b> — <span class="tr">cradle-to-gate PCF'lerin hesaplanması ve değişimi (birincil veri, PDS/DQR, tahsis, doğrulama).</span><span class="en">calculating and exchanging cradle-to-gate PCFs (primary data, PDS/DQR, allocation, verification).</span></li>
+      <li><b>WBCSD Pathfinder Framework v2.0</b> — <span class="tr">ürün yaşam döngüsü emisyonlarının muhasebesi ve değişimi için kılavuz.</span><span class="en">guidance for accounting and exchange of product life-cycle emissions.</span></li>
+      <li><b>SBTi Corporate Net-Zero Standard v2.0</b> — <span class="tr">bilim temelli hedefler ve net-sıfır çerçevesi.</span><span class="en">science-based targets and net-zero framing.</span></li>
+      <li><b>IPCC AR6</b> — <span class="tr">100 yıllık küresel ısınma potansiyelleri (GWP100).</span><span class="en">100-year global warming potentials (GWP100).</span></li>
+    </ul>
+    <div class="callout info tr">İlke: <b>tutarlılık, tamlık, şeffaflık, doğruluk ve ihtiyatlılık (conservativeness)</b> — GHG Protocol'ün beş temel muhasebe ilkesi tüm hesaplamalarda gözetilir.</div>
+    <div class="callout info en">Principles: <b>relevance, completeness, consistency, transparency and accuracy</b> — the GHG Protocol accounting principles are observed throughout, with conservativeness for estimates.</div>
+  </section>
+
+  <section class="card" id="s3">
+    <h2><span class="num">3</span><span class="tr">Gazlar ve GWP temeli (AR6)</span><span class="en">Gases &amp; GWP basis (AR6)</span></h2>
+    <p class="tr">Tüm emisyonlar, yedi Kyoto sera gazını (CO₂, CH₄, N₂O, HFC'ler, PFC'ler, SF₆, NF₃) ortak bir birime — <b>kg CO₂ eşdeğeri (kg CO₂e)</b> — indirger. Dönüştürme için <b>IPCC AR6, 100 yıllık GWP (GWP100), karbon-iklim geri beslemeleri dahil</b> değerleri kullanılır (ör. fosil CH₄ ≈ 29,8; N₂O ≈ 273). PACT v3.0 ile uyumlu olarak hangi IPCC Değerlendirme Raporu'nun (AR) kullanıldığı raporlanır.</p>
+    <p class="en">All emissions are reduced to a common unit — <b>kg CO₂ equivalent (kg CO₂e)</b> — across the seven Kyoto GHGs (CO₂, CH₄, N₂O, HFCs, PFCs, SF₆, NF₃). Conversion uses <b>IPCC AR6, 100-year GWP (GWP100), including carbon-climate feedbacks</b> (e.g. fossil CH₄ ≈ 29.8; N₂O ≈ 273). In line with PACT v3.0, the IPCC Assessment Report (AR) used is disclosed.</p>
+    <div class="callout tr">🔬 Bilimsel not: Emisyon faktörleri zaten kg CO₂e cinsinden verildiğinde GWP faktöre gömülüdür; GWP yalnızca gaz-bazlı faktörlerde ayrıca uygulanır. Modül, faktörleri AR6 GWP100 temeline hizalar (bkz. §15 önerilen güncellemeler).</div>
+    <div class="callout en">🔬 Scientific note: When emission factors are already expressed in kg CO₂e, the GWP is embedded in the factor; GWP is applied separately only for gas-specific factors. The module aligns its factors to the AR6 GWP100 basis (see §15 recommended upgrades).</div>
+  </section>
+
+  <section class="card" id="s4">
+    <h2><span class="num">4</span><span class="tr">Kurumsal envanter: Kapsam 1·2·3</span><span class="en">Corporate inventory: Scope 1·2·3</span></h2>
+    <div class="scopes">
+      <div class="scope s1"><span class="dot"></span><b><span class="tr">Kapsam 1</span><span class="en">Scope 1</span></b>
+        <p class="tr">Doğrudan emisyonlar: sahip olunan/kontrol edilen kaynaklardan yanma ve kaçak emisyonlar (doğal gaz, dizel, benzin, LPG, fuel oil, kömür, soğutucu gaz kaçakları).</p>
+        <p class="en">Direct emissions: combustion and fugitive emissions from owned/controlled sources (natural gas, diesel, gasoline, LPG, fuel oil, coal, refrigerant leaks).</p>
+      </div>
+      <div class="scope s2"><span class="dot"></span><b><span class="tr">Kapsam 2</span><span class="en">Scope 2</span></b>
+        <p class="tr">Dolaylı enerji: satın alınan elektrik, buhar, ısı. Hem <b>konum-bazlı</b> hem <b>pazar-bazlı</b> raporlanır (GHG Protocol Kapsam 2 Kılavuzu).</p>
+        <p class="en">Indirect energy: purchased electricity, steam, heat. Reported both <b>location-based</b> and <b>market-based</b> (GHG Protocol Scope 2 Guidance).</p>
+      </div>
+      <div class="scope s3"><span class="dot"></span><b><span class="tr">Kapsam 3</span><span class="en">Scope 3</span></b>
+        <p class="tr">Değer zinciri: satın alınan mal/hizmet, nakliye, atık, su, iş seyahati, personel ulaşımı. Kalemler GHG Protocol kategori numaralarıyla etiketlenir.</p>
+        <p class="en">Value chain: purchased goods/services, transport, waste, water, business travel, commuting. Items are tagged with GHG Protocol category numbers.</p>
+      </div>
+    </div>
+    <h3 class="tr">Kullanılan Kapsam 3 kategorileri</h3>
+    <h3 class="en">Scope 3 categories used</h3>
+    <ul class="clean">
+      <li><b>3.1</b> — <span class="tr">Satın alınan mal ve hizmetler (hammadde, ambalaj, öğün, çamaşır)</span><span class="en">Purchased goods and services (raw materials, packaging, meals, laundry)</span></li>
+      <li><b>3.4</b> — <span class="tr">Upstream taşımacılık ve dağıtım (karayolu, deniz yükü)</span><span class="en">Upstream transportation and distribution (road, sea freight)</span></li>
+      <li><b>3.5</b> — <span class="tr">Operasyonlarda oluşan atık; su/atık su</span><span class="en">Waste generated in operations; water/wastewater</span></li>
+      <li><b>3.6</b> — <span class="tr">İş seyahati (binek araç, uçuş)</span><span class="en">Business travel (car, flight)</span></li>
+      <li><b>3.7</b> — <span class="tr">Personel işe geliş-gidişi</span><span class="en">Employee commuting</span></li>
+    </ul>
+  </section>
+
+  <section class="card" id="s5">
+    <h2><span class="num">5</span><span class="tr">Ürün karbon ayak izi (cradle-to-gate)</span><span class="en">Product carbon footprint (cradle-to-gate)</span></h2>
+    <p class="tr">Tedarikçi akışında ürün ayak izi, WBCSD PACT v3.0 ve Pathfinder v2.0 ile uyumlu şekilde <b>beşikten-kapıya (cradle-to-gate)</b> kapsamında hesaplanır: hammadde çıkarımından fabrika kapısına kadar tüm upstream emisyonlar. Temel adımlar:</p>
+    <p class="en">In the supplier flow the product footprint is computed on a <b>cradle-to-gate</b> basis, aligned with WBCSD PACT v3.0 and Pathfinder v2.0: all upstream emissions from raw-material extraction up to the factory gate. Core steps:</p>
+    <ul class="clean">
+      <li><b><span class="tr">Fonksiyonel/beyan edilen birim</span><span class="en">Functional/declared unit</span></b> — <span class="tr">emisyonların ölçüldüğü referans (ör. 1 kg kumaş, 1 oda-gece).</span><span class="en">the reference against which emissions are measured (e.g. 1 kg fabric, 1 room-night).</span></li>
+      <li><b><span class="tr">Sistem sınırı</span><span class="en">System boundary</span></b> — <span class="tr">B2B ara ürünler için cradle-to-gate yeterlidir.</span><span class="en">cradle-to-gate is sufficient for B2B intermediate products.</span></li>
+      <li><b>Cut-off</b> — <span class="tr">toplam cradle-to-gate PCF'nin en fazla %5'i gerekçelendirilerek hariç tutulabilir.</span><span class="en">up to 5% of the total cradle-to-gate PCF may be excluded with justification.</span></li>
+      <li><b><span class="tr">Sıcak nokta analizi</span><span class="en">Hotspot analysis</span></b> — <span class="tr">tipik olarak toplamın %70-90'ı birkaç kalemden gelir; azaltım bunlara odaklanır.</span><span class="en">typically 70-90% of the total traces to a few items; reduction focuses there.</span></li>
+    </ul>
+    <div class="callout tr">🔗 Alıcı akışı, tedarikçilerden gelen cradle-to-gate PCF toplamlarını Kapsam 3.1 altında birleştirir; böylece ikincil (ortalama) verinin yerini giderek birincil (tedarikçiye özgü) veri alır.</div>
+    <div class="callout en">🔗 The buyer flow aggregates suppliers' cradle-to-gate PCF totals under Scope 3.1, progressively replacing secondary (average) data with primary (supplier-specific) data.</div>
+  </section>
+
+  <section class="card" id="s6">
+    <h2><span class="num">6</span><span class="tr">Hesaplama yöntemi</span><span class="en">Calculation method</span></h2>
+    <p class="tr">Her faaliyet kalemi için emisyon, faaliyet verisi × emisyon faktörü (× gerekiyorsa GWP) şeklinde hesaplanır:</p>
+    <p class="en">For each activity item, the emission is activity data × emission factor (× GWP where required):</p>
+    <div class="formula">E<sub><span class="tr">kalem</span><span class="en">item</span></sub> = <span class="tr">Faaliyet verisi</span><span class="en">Activity data</span> × <span class="tr">Emisyon faktörü</span><span class="en">Emission factor</span> <span style="opacity:.7">(× GWP)</span>
+      <small class="tr">Örn. 120.000 kWh × 0,442 kgCO₂e/kWh = 53.040 kgCO₂e</small>
+      <small class="en">e.g. 120,000 kWh × 0.442 kgCO₂e/kWh = 53,040 kgCO₂e</small>
+    </div>
+    <p class="tr">Toplam ayak izi kapsamlara göre toplanır ve yüzde dağılımıyla raporlanır:</p>
+    <p class="en">The total footprint is summed by scope and reported with a percentage breakdown:</p>
+    <div class="formula"><span class="tr">Toplam</span><span class="en">Total</span> = Σ E<sub>S1</sub> + Σ E<sub>S2</sub> + Σ E<sub>S3</sub></div>
+    <p class="tr">Faaliyet-bazlı yöntem (fiziksel tüketim × faktör) tercih edilir; harcama-bazlı (spend-based) tahmin yalnızca faaliyet verisi yoksa geçici olarak kullanılmalıdır. Yoğunluk metrikleri karşılaştırılabilirlik için hesaplanır (çalışan, ciro, üretim başına).</p>
+    <p class="en">The activity-based method (physical consumption × factor) is preferred; spend-based estimation should only be a temporary fallback when activity data is unavailable. Intensity metrics are computed for comparability (per employee, revenue, output).</p>
+  </section>
+
+  <section class="card" id="s7">
+    <h2><span class="num">7</span><span class="tr">Tahsis (allocation)</span><span class="en">Allocation</span></h2>
+    <p class="tr">Bir süreç birden çok ürün (yan ürün) üretiyorsa emisyonlar ISO 14067 / GHG Protocol ve PACT v3.0 hiyerarşisine göre paylaştırılır:</p>
+    <p class="en">Where a process yields multiple products (co-products), emissions are apportioned following the ISO 14067 / GHG Protocol and PACT v3.0 hierarchy:</p>
+    <ul class="clean">
+      <li><span class="tr"><b>1. Tahsisten kaçın</b> — süreç alt-bölümleme veya sistem genişletme ile.</span><span class="en"><b>1. Avoid allocation</b> — via process subdivision or system expansion.</span></li>
+      <li><span class="tr"><b>2. Ürün Kategori Kuralları (PCR) / sektörel kılavuzu önceliklendir.</b></span><span class="en"><b>2. Prioritize Product Category Rules (PCR) / sectoral guidance.</b></span></li>
+      <li><span class="tr"><b>3. Fiziksel ilişki</b> (kütle, enerji) ile paylaştır.</span><span class="en"><b>3. Physical relationship</b> (mass, energy) allocation.</span></li>
+      <li><span class="tr"><b>4. Ekonomik değer</b> oranına göre paylaştır (son çare).</span><span class="en"><b>4. Economic value</b> ratio allocation (last resort).</span></li>
+    </ul>
+    <p class="muted tr">Atık ve geri dönüşüm emisyonları için EU atık direktifi/cut-off yaklaşımı esas alınır.</p>
+    <p class="muted en">Waste and recycling emissions follow the EU waste directive / cut-off approach.</p>
+  </section>
+
+  <section class="card" id="s8">
+    <h2><span class="num">8</span><span class="tr">Veri hiyerarşisi ve güvenilirlik (PDS/DQR)</span><span class="en">Data hierarchy &amp; reliability (PDS/DQR)</span></h2>
+    <p class="tr">Veri kalitesi bilimsel güvenilirliğin çekirdeğidir. <b>Birincil veri</b> (firmaya/tedarikçiye özgü, süreç-bazlı ölçüm) her zaman <b>ikincil veriye</b> (Ecoinvent, DEFRA, GaBi gibi veritabanı ortalamaları) tercih edilir. PACT v3.0 uyarınca:</p>
+    <p class="en">Data quality is the core of scientific reliability. <b>Primary data</b> (company-/supplier-specific, process-based measurement) is always preferred over <b>secondary data</b> (database averages such as Ecoinvent, DEFRA, GaBi). Per PACT v3.0:</p>
+    <ul class="clean">
+      <li><b>Primary Data Share (PDS)</b> — <span class="tr">PCF'nin ne kadarının birincil veriye dayandığı (biyojenik CO₂ alımı hariç) hesaplanır ve raporlanır.</span><span class="en">the share of the PCF based on primary data (excluding biogenic CO₂ uptake) is calculated and reported.</span></li>
+      <li><b>Data Quality Rating (DQR)</b> — <span class="tr">2027'den itibaren, temsililik (teknolojik, zamansal, coğrafi), güvenilirlik ve tamlık göstergeleriyle 1–5 ölçeğinde değerlendirilir.</span><span class="en">from 2027, assessed on a 1–5 scale via representativeness (technological, temporal, geographical), reliability and completeness indicators.</span></li>
+      <li><span class="tr"><b>En kötü durum varsayılanı:</b> upstream PDS/DQR bilinmiyorsa %0 PDS ve DQR 5 uygulanır (ihtiyatlılık).</span><span class="en"><b>Worst-case default:</b> if upstream PDS/DQR are unknown, apply 0% PDS and DQR 5 (conservativeness).</span></li>
+    </ul>
+    <div class="callout tr">Mevcut araç her girdiyi <b>"ölçüm" / "tahmin"</b> olarak işaretler ve toplam emisyonun ölçüm-bazlı payını bir "veri kalitesi" göstergesiyle sunar — bu, PDS'in pratik bir ön adımıdır. §15, tam PDS/DQR raporlamasına geçiş için önerileri listeler.</div>
+    <div class="callout en">The current tool flags each input as <b>"measured" / "estimated"</b> and reports the measured share via a "data quality" indicator — a practical precursor to PDS. §15 lists the steps to full PDS/DQR reporting.</div>
+  </section>
+
+  <section class="card" id="s9">
+    <h2><span class="num">9</span><span class="tr">Biyojenik karbon, arazi kullanımı ve uzaklaştırmalar</span><span class="en">Biogenic carbon, land use &amp; removals</span></h2>
+    <p class="tr">Bilimsel bütünlük için, fosil ve biyojenik akışlar ayrı raporlanır. PACT v3.0 ve yaklaşan GHG Protocol Land Sector and Removals Standard (LSRS) uyarınca:</p>
+    <p class="en">For scientific integrity, fossil and biogenic flows are reported separately. Per PACT v3.0 and the forthcoming GHG Protocol Land Sector and Removals Standard (LSRS):</p>
+    <ul class="clean">
+      <li><span class="tr"><b>Biyojenik emisyonlar ve uzaklaştırmalar (removals)</b> ayrı kalemler olarak raporlanır; net değere gömülmez.</span><span class="en"><b>Biogenic emissions and removals</b> are reported as separate line items, not netted into the total.</span></li>
+      <li><span class="tr"><b>Arazi kullanımı değişikliği (LUC/dLUC)</b> emisyonları ayrıca hesaplanır ve etiketlenir.</span><span class="en"><b>Land-use change (LUC/dLUC)</b> emissions are accounted and labelled separately.</span></li>
+      <li><span class="tr">Kalıcı depolama için zaman ufku 100 yıldır; karbon uzaklaştırma iddiaları fiziksel envanterden ayrı tutulur.</span><span class="en">The time horizon for permanent storage is 100 years; removal claims are kept separate from the physical inventory.</span></li>
+    </ul>
+  </section>
+
+  <section class="card" id="s10">
+    <h2><span class="num">10</span><span class="tr">Elektrik ve sözleşmeli araçlar</span><span class="en">Electricity &amp; contractual instruments</span></h2>
+    <p class="tr"><b>Konum-bazlı</b> yöntem bölgesel ortalama şebeke faktörünü (Türkiye için ~0,442 kgCO₂e/kWh) kullanır. <b>Pazar-bazlı</b> yöntem sözleşmeli araçları — Yenilenebilir Enerji Sertifikaları (REC), Menşe Garantileri (GO/YEK-G) — yansıtır; sertifikalı/yeşil elektrik için faktör 0 kabul edilir. Her iki değer de raporlanır; grafik ve toplam pazar-bazlı değeri kullanır.</p>
+    <p class="en">The <b>location-based</b> method uses the regional average grid factor (~0.442 kgCO₂e/kWh for Turkey). The <b>market-based</b> method reflects contractual instruments — Renewable Energy Certificates (RECs), Guarantees of Origin (GOs) — with a factor of 0 for certified/green electricity. Both values are reported; the chart and total use the market-based value.</p>
+    <div class="callout warn tr">Sözleşmeli araçların geçerli sayılması için GHG Protocol Kapsam 2 Kalite Kriterleri (kaynak eşleştirme, düşük çift sayım riski, coğrafi geçerlilik) karşılanmalıdır.</div>
+    <div class="callout warn en">For contractual instruments to count, the GHG Protocol Scope 2 Quality Criteria (sourcing match, low double-counting risk, geographic validity) must be met.</div>
+  </section>
+
+  <section class="card" id="s11">
+    <h2><span class="num">11</span><span class="tr">Emisyon faktörleri</span><span class="en">Emission factors</span></h2>
+    <p class="tr">Varsayılan faktörler ağırlıklı olarak <b>DEFRA/DESNZ 2024</b> dönüşüm faktörlerine, şebeke elektriği için <b>Türkiye ulusal ortalamasına</b> ve hammadde için yaşam döngüsü veritabanı ortalamalarına dayanır. Her faktör kaynağı, yılı ve GWP temeli (AR6 GWP100) ile izlenebilir olmalıdır. Değerler yönetim panelinden güncellenir. v3.x varsayılanları (kgCO₂e / birim):</p>
+    <p class="en">Default factors are mostly based on <b>DEFRA/DESNZ 2024</b> conversion factors, on the <b>Turkey national average</b> for grid electricity, and on life-cycle database averages for raw materials. Each factor should be traceable by source, year and GWP basis (AR6 GWP100). Values are updated from the admin panel. v3.x defaults (kgCO₂e / unit):</p>
+    <div class="tablewrap">
+      <table>
+        <thead><tr>
+          <th><span class="tr">Kalem</span><span class="en">Item</span></th>
+          <th><span class="tr">Birim</span><span class="en">Unit</span></th>
+          <th><span class="tr">Faktör</span><span class="en">Factor</span></th>
+          <th><span class="tr">Kapsam</span><span class="en">Scope</span></th>
+        </tr></thead>
+        <tbody>
+          <tr class="grp"><td colspan="4"><span class="tr">Kapsam 1 — Doğrudan</span><span class="en">Scope 1 — Direct</span></td></tr>
+          <tr><td><span class="tr">Doğal gaz</span><span class="en">Natural gas</span></td><td>m³</td><td class="val">2.02</td><td><span class="sc-tag k1">1</span></td></tr>
+          <tr><td><span class="tr">Motorin (dizel)</span><span class="en">Diesel</span></td><td>L</td><td class="val">2.68</td><td><span class="sc-tag k1">1</span></td></tr>
+          <tr><td><span class="tr">Benzin</span><span class="en">Gasoline</span></td><td>L</td><td class="val">2.31</td><td><span class="sc-tag k1">1</span></td></tr>
+          <tr><td><span class="tr">LPG / Tüp gaz</span><span class="en">LPG</span></td><td>kg</td><td class="val">2.98</td><td><span class="sc-tag k1">1</span></td></tr>
+          <tr><td>Fuel oil</td><td>L</td><td class="val">3.15</td><td><span class="sc-tag k1">1</span></td></tr>
+          <tr><td><span class="tr">Kömür</span><span class="en">Coal</span></td><td>kg</td><td class="val">2.42</td><td><span class="sc-tag k1">1</span></td></tr>
+          <tr><td><span class="tr">Soğutucu gaz kaçağı (R410A)</span><span class="en">Refrigerant leak (R410A)</span></td><td>kg</td><td class="val">2088*</td><td><span class="sc-tag k1">1</span></td></tr>
+          <tr class="grp"><td colspan="4"><span class="tr">Kapsam 2 — Enerji</span><span class="en">Scope 2 — Energy</span></td></tr>
+          <tr><td><span class="tr">Elektrik (şebeke)</span><span class="en">Electricity (grid)</span></td><td>kWh</td><td class="val">0.442</td><td><span class="sc-tag k2">2</span></td></tr>
+          <tr><td><span class="tr">Yeşil/sertifikalı elektrik</span><span class="en">Certified renewable electricity</span></td><td>kWh</td><td class="val">0</td><td><span class="sc-tag k2">2</span></td></tr>
+          <tr><td><span class="tr">Satın alınan buhar/ısı</span><span class="en">Purchased steam/heat</span></td><td>kWh</td><td class="val">0.27</td><td><span class="sc-tag k2">2</span></td></tr>
+          <tr class="grp"><td colspan="4"><span class="tr">Kapsam 3 — Değer zinciri</span><span class="en">Scope 3 — Value chain</span></td></tr>
+          <tr><td><span class="tr">Pamuklu kumaş/iplik</span><span class="en">Cotton fabric/yarn</span></td><td>kg</td><td class="val">16.5</td><td><span class="sc-tag k3">3.1</span></td></tr>
+          <tr><td><span class="tr">Polyester kumaş/iplik</span><span class="en">Polyester fabric/yarn</span></td><td>kg</td><td class="val">9.5</td><td><span class="sc-tag k3">3.1</span></td></tr>
+          <tr><td><span class="tr">Yün</span><span class="en">Wool</span></td><td>kg</td><td class="val">24</td><td><span class="sc-tag k3">3.1</span></td></tr>
+          <tr><td><span class="tr">Boya / kimyasal</span><span class="en">Dye / chemical</span></td><td>kg</td><td class="val">3.4</td><td><span class="sc-tag k3">3.1</span></td></tr>
+          <tr><td><span class="tr">Karton ambalaj</span><span class="en">Cardboard packaging</span></td><td>kg</td><td class="val">0.94</td><td><span class="sc-tag k3">3.1</span></td></tr>
+          <tr><td><span class="tr">Plastik ambalaj</span><span class="en">Plastic packaging</span></td><td>kg</td><td class="val">2.7</td><td><span class="sc-tag k3">3.1</span></td></tr>
+          <tr><td><span class="tr">Servis edilen öğün</span><span class="en">Meal served</span></td><td><span class="tr">öğün</span><span class="en">meal</span></td><td class="val">1.9</td><td><span class="sc-tag k3">3.1</span></td></tr>
+          <tr><td><span class="tr">Çamaşır (kuru ağırlık)</span><span class="en">Laundry (dry weight)</span></td><td>kg</td><td class="val">0.9</td><td><span class="sc-tag k3">3.1</span></td></tr>
+          <tr><td><span class="tr">Karayolu yük taşıma</span><span class="en">Road freight</span></td><td>ton·km</td><td class="val">0.107</td><td><span class="sc-tag k3">3.4</span></td></tr>
+          <tr><td><span class="tr">Deniz yük taşıma</span><span class="en">Sea freight</span></td><td>ton·km</td><td class="val">0.016</td><td><span class="sc-tag k3">3.4</span></td></tr>
+          <tr><td><span class="tr">Şebeke suyu</span><span class="en">Mains water</span></td><td>m³</td><td class="val">0.344</td><td><span class="sc-tag k3">3.5</span></td></tr>
+          <tr><td><span class="tr">Atık su arıtma</span><span class="en">Wastewater treatment</span></td><td>m³</td><td class="val">0.708</td><td><span class="sc-tag k3">3.5</span></td></tr>
+          <tr><td><span class="tr">Atık (düzenli depolama)</span><span class="en">Waste (landfill)</span></td><td>kg</td><td class="val">0.458</td><td><span class="sc-tag k3">3.5</span></td></tr>
+          <tr><td><span class="tr">Atık (geri dönüşüm)</span><span class="en">Waste (recycled)</span></td><td>kg</td><td class="val">0.021</td><td><span class="sc-tag k3">3.5</span></td></tr>
+          <tr><td><span class="tr">Binek araç (iş seyahati)</span><span class="en">Car (business travel)</span></td><td>km</td><td class="val">0.17</td><td><span class="sc-tag k3">3.6</span></td></tr>
+          <tr><td><span class="tr">Uçuş (yolcu·km)</span><span class="en">Flight (passenger·km)</span></td><td>km</td><td class="val">0.15</td><td><span class="sc-tag k3">3.6</span></td></tr>
+          <tr><td><span class="tr">Personel ulaşımı</span><span class="en">Employee commuting</span></td><td>km</td><td class="val">0.15</td><td><span class="sc-tag k3">3.7</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="muted tr">* R410A değeri (2088) IPCC AR4 GWP100'e karşılık gelir. AR6 hizası için önerilen değer ≈ 2256'dır (bkz. §15). Diğer faktörler kg CO₂e cinsindendir ve CO₂, CH₄, N₂O'yu AR6 GWP100 ile birleştirir.</p>
+    <p class="muted en">* The R410A value (2088) corresponds to IPCC AR4 GWP100. For AR6 alignment the recommended value is ≈ 2256 (see §15). Other factors are in kg CO₂e, combining CO₂, CH₄ and N₂O at AR6 GWP100.</p>
+  </section>
+
+  <section class="card" id="s12">
+    <h2><span class="num">12</span><span class="tr">Sektörler ve faaliyet verisi</span><span class="en">Sectors &amp; activity data</span></h2>
+    <p class="tr">Araç iki sektör için özelleştirilmiş soru setleri sunar; kullanıcı yalnızca bildiği alanları doldurur.</p>
+    <p class="en">The tool offers question sets tailored to two sectors; the user fills only the fields they know.</p>
+    <ul class="clean">
+      <li>🧵 <b><span class="tr">Tekstil Üretimi</span><span class="en">Textile Manufacturing</span></b> — <span class="tr">22 soru</span><span class="en">22 questions</span></li>
+      <li>🏨 <b><span class="tr">Turizm / Konaklama</span><span class="en">Tourism / Accommodation</span></b> — <span class="tr">18 soru</span><span class="en">18 questions</span></li>
+    </ul>
+    <p class="tr">Faaliyet verisi kategorileri: enerji (elektrik, buhar), yakıtlar, hammadde ve ambalaj (pamuk, polyester, yün, boya/kimyasal, karton, plastik), hizmet (öğün, çamaşır), taşımacılık ve su/atık.</p>
+    <p class="en">Activity-data categories: energy (electricity, steam), fuels, raw materials &amp; packaging (cotton, polyester, wool, dye/chemical, cardboard, plastic), services (meals, laundry), transport and water/waste.</p>
+  </section>
+
+  <section class="card" id="s13">
+    <h2><span class="num">13</span><span class="tr">Doğrulama ve güvence</span><span class="en">Verification &amp; assurance</span></h2>
+    <p class="tr">PACT v3.0, değişilen PCF'nin bağımsız üçüncü tarafça doğrulanmasını öngörür. Doğrulama yol haritası kısa vadede <b>metodoloji uygunluğu</b> ve <b>sonuç testi</b>, uzun vadede program yönetişimi sertifikasyonunu kapsar. KOBİ araç için pratik güvence adımları:</p>
+    <p class="en">PACT v3.0 requires the exchanged PCF to be verified by an independent third party. The verification roadmap covers, short-term, <b>methodology conformance</b> and <b>results testing</b>, and long-term, program-governance certification. Practical assurance steps for the SME tool:</p>
+    <ul class="clean">
+      <li><span class="tr">Girdi kaynaklarını ve dönüşüm/tahsis kurallarını belgeleyin (şeffaflık).</span><span class="en">Document input sources and conversion/allocation rules (transparency).</span></li>
+      <li><span class="tr">Ölçüm-bazlı veri oranını (PDS öncüsü) artırarak denetime hazırlık sağlayın.</span><span class="en">Raise the measured-data share (PDS precursor) to build audit-readiness.</span></li>
+      <li><span class="tr">Resmi raporlama öncesi bağımsız sınırlı/makul güvence alın.</span><span class="en">Obtain independent limited/reasonable assurance before official reporting.</span></li>
+    </ul>
+  </section>
+
+  <section class="card" id="s14">
+    <h2><span class="num">14</span><span class="tr">Hedefler ve karbonsuzlaşma (SBTi)</span><span class="en">Targets &amp; decarbonization (SBTi)</span></h2>
+    <p class="tr">Envanter, azaltım için bir başlangıçtır. SBTi Kurumsal Net-Sıfır Standardı v2.0'a göre şirketler yakın vadeli ve uzun vadeli bilim temelli hedefler belirler; net-sıfır, mutlak emisyonlarda derin indirim (tipik olarak ≥%90) ve kalan artık emisyonların kalıcı uzaklaştırma ile nötralize edilmesi anlamına gelir. Emisyonlar ile uzaklaştırmalar ayrı izlenir (LSRS). Bu araç, hedef belirlemenin ön koşulu olan sağlam bir taban envanteri üretir.</p>
+    <p class="en">An inventory is the starting point for reduction. Under the SBTi Corporate Net-Zero Standard v2.0, companies set near-term and long-term science-based targets; net-zero means deep absolute reductions (typically ≥90%) with permanent removal of residual emissions. Emissions and removals are tracked separately (LSRS). This tool produces the robust baseline inventory that target-setting requires.</p>
+  </section>
+
+  <section class="card" id="s15">
+    <h2><span class="num">15</span><span class="tr">Uyum ve önerilen geliştirmeler</span><span class="en">Conformance &amp; recommended upgrades</span></h2>
+    <p class="tr">Aracın mevcut durumunun standartlara göre değerlendirmesi ve bilimsel sağlamlığı artırmak için önerilen adımlar:</p>
+    <p class="en">Assessment of the tool's current status against the standards, and recommended steps to increase scientific robustness:</p>
+    <div class="tablewrap">
+      <table>
+        <thead><tr>
+          <th><span class="tr">Konu</span><span class="en">Topic</span></th>
+          <th><span class="tr">Mevcut durum</span><span class="en">Current status</span></th>
+          <th><span class="tr">Önerilen geliştirme</span><span class="en">Recommended upgrade</span></th>
+        </tr></thead>
+        <tbody>
+          <tr><td>GWP</td><td class="part"><span class="tr">Karışık AR (ör. R410A = AR4)</span><span class="en">Mixed AR (e.g. R410A = AR4)</span></td><td><span class="tr">Tüm faktörleri AR6 GWP100'e hizala (R410A ≈ 2256); faktör başına AR sürümünü sakla.</span><span class="en">Align all factors to AR6 GWP100 (R410A ≈ 2256); store AR version per factor.</span></td></tr>
+          <tr><td><span class="tr">Kapsam 2</span><span class="en">Scope 2</span></td><td class="ok"><span class="tr">Konum + pazar-bazlı ✓</span><span class="en">Location + market-based ✓</span></td><td><span class="tr">REC/GO kalite kriterleri kontrol listesi ekle.</span><span class="en">Add REC/GO quality-criteria checklist.</span></td></tr>
+          <tr><td><span class="tr">Veri kalitesi</span><span class="en">Data quality</span></td><td class="part"><span class="tr">İkili ölçüm/tahmin</span><span class="en">Binary measured/estimated</span></td><td><span class="tr">Primary Data Share (%) hesapla; 2027 için DQR (1–5) matrisi ekle.</span><span class="en">Compute Primary Data Share (%); add DQR (1–5) matrix for 2027.</span></td></tr>
+          <tr><td><span class="tr">Ürün PCF</span><span class="en">Product PCF</span></td><td class="part"><span class="tr">Birim ayak izi var</span><span class="en">Unit footprint present</span></td><td><span class="tr">Fonksiyonel birim + cradle-to-gate sınırı + ≤%5 cut-off'u açıkça uygula (PACT v3.0).</span><span class="en">Explicitly apply functional unit + cradle-to-gate boundary + ≤5% cut-off (PACT v3.0).</span></td></tr>
+          <tr><td><span class="tr">Biyojenik/LUC</span><span class="en">Biogenic/LUC</span></td><td class="todo"><span class="tr">Ayrık değil</span><span class="en">Not separated</span></td><td><span class="tr">Biyojenik emisyon/uzaklaştırma ve LUC için ayrı satırlar ekle (LSRS).</span><span class="en">Add separate lines for biogenic emissions/removals and LUC (LSRS).</span></td></tr>
+          <tr><td><span class="tr">Tahsis</span><span class="en">Allocation</span></td><td class="todo"><span class="tr">Örtük</span><span class="en">Implicit</span></td><td><span class="tr">Çok-ürünlü süreçler için tahsis hiyerarşisini uygula ve belgele.</span><span class="en">Apply and document the allocation hierarchy for multi-product processes.</span></td></tr>
+          <tr><td><span class="tr">Doğrulama</span><span class="en">Verification</span></td><td class="part"><span class="tr">Rapor kodu / dışa aktarma</span><span class="en">Report code / export</span></td><td><span class="tr">PACT veri modeli alanları + üçüncü taraf doğrulama iş akışı.</span><span class="en">PACT data-model fields + third-party verification workflow.</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout warn tr">Not: Yukarıdaki geliştirmelerin bir kısmı (özellikle GWP faktör güncellemeleri ve hesaplama motoru değişiklikleri) canlı sonuçları etkiler; yayına almadan önce onay alınmalıdır.</div>
+    <div class="callout warn en">Note: some upgrades above (especially GWP factor updates and calculation-engine changes) affect live results; they should be approved before deployment.</div>
+  </section>
+
+  <section class="card" id="s16">
+    <h2><span class="num">16</span><span class="tr">Sınırlamalar ve uyarı</span><span class="en">Limitations &amp; disclaimer</span></h2>
+    <div class="callout warn tr">⚠️ Emisyon faktörleri VARSAYILAN referans değerlerdir. Resmi raporlama öncesi güncel IPCC / DEFRA / Türkiye Ulusal Envanter değerleriyle doğrulayın. Bu araç tam LCA değil, temel seviye tahmin sağlar.</div>
+    <div class="callout warn en">⚠️ Emission factors are DEFAULT reference values. Verify before official reporting against current IPCC / DEFRA / Turkey National Inventory values. This is a basic estimate, not a full LCA.</div>
+    <ul class="clean">
+      <li class="tr">Sonuçlar girilen verinin doğruluğuna bağlıdır; eksik alanlar sıfır kabul edilir ve ayak izini olduğundan düşük gösterebilir.</li>
+      <li class="en">Results depend on the accuracy of the entered data; missing fields are treated as zero and may understate the footprint.</li>
+      <li class="tr">İkincil (ortalama) faktörler gerçek tedarikçi verisinden sapabilir; birincil veriyle değiştirin.</li>
+      <li class="en">Secondary (average) factors can deviate from real supplier data; replace with primary data.</li>
+      <li class="tr">Araç zorunlu düzenleyici raporlama (ör. CBAM, TSRS, CSRD) yerine geçmez; bu süreçlerde bağımsız doğrulama gerekir.</li>
+      <li class="en">The tool does not replace mandatory regulatory reporting (e.g. CBAM, TSRS, CSRD); such processes require independent assurance.</li>
+    </ul>
+  </section>
+
+  <section class="card" id="s17">
+    <h2><span class="num">17</span><span class="tr">Referanslar</span><span class="en">References</span></h2>
+    <ul class="refs clean">
+      <li>WBCSD — <i>PACT Methodology v3.0: Methodology for Calculating and Exchanging Cradle-to-Gate Product Carbon Footprints (PCFs)</i>.</li>
+      <li>WBCSD — <i>Pathfinder Framework v2.0: Guidance for the Accounting and Exchange of Product Life Cycle Emissions</i>.</li>
+      <li>GHG Protocol (WRI/WBCSD) — <i>Corporate Standard</i>; <i>Corporate Value Chain (Scope 3) Standard</i>; <i>Scope 2 Guidance</i>; <i>Land Sector and Removals Standard (LSRS)</i>.</li>
+      <li>ISO — <i>14064-1</i> (corporate GHG inventories); <i>14067</i> (product carbon footprint); <i>14040/14044</i> (LCA).</li>
+      <li>SBTi — <i>Corporate Net-Zero Standard v2.0</i> (2026).</li>
+      <li>IPCC — <i>Sixth Assessment Report (AR6)</i>, 100-year GWP incl. carbon-climate feedbacks.</li>
+      <li>UK DEFRA / DESNZ — <i>Greenhouse gas reporting: conversion factors 2024</i>.</li>
+      <li>Normative — <i>Emissions Calculation Methodology</i>; <i>Product Carbon Footprint Super Guide</i>; The Climate Choice — <i>Getting Started with Carbon Accounting for Suppliers</i>.</li>
+      <li><span class="tr">Türkiye Ulusal Sera Gazı Envanteri / şebeke elektriği emisyon faktörü (ulusal ortalama).</span><span class="en">Turkey National Greenhouse Gas Inventory / grid electricity emission factor (national average).</span></li>
+    </ul>
+  </section>
+
+  <footer>
+    <p>© <span id="yr"></span> Commited Danışmanlık A.Ş. · <span class="tr">KOBİ Karbon Modülü v3.1 · Ücretsiz</span><span class="en">SME Carbon Module v3.1 · Free</span><br>
+    <a href="karbon-hesaplayici.html"><span class="tr">Hesaplayıcıya dön</span><span class="en">Back to calculator</span></a> · <a href="https://www.commitedevents.app">commitedevents.app</a></p>
+  </footer>
+</div>
+<script>
+function setLang(l){
+  document.body.setAttribute('data-lang', l);
+  document.documentElement.lang = l;
+  document.getElementById('l-tr').classList.toggle('active', l==='tr');
+  document.getElementById('l-en').classList.toggle('active', l==='en');
+  try{ localStorage.setItem('ckMethodLang', l); }catch(e){}
+}
+(function(){
+  var saved='tr'; try{ saved=localStorage.getItem('ckMethodLang')||'tr'; }catch(e){}
+  setLang(saved);
+  document.getElementById('yr').textContent=new Date().getFullYear();
+})();
+</script>
+</body>
+</html>
