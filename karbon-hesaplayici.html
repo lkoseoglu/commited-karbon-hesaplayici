@@ -6,6 +6,7 @@
 <title>KOBİ Karbon Ayak İzi Hesaplayıcı</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
   :root{
     --green:#12915b; --green-d:#0b5d3b; --green-h1:#0d5c3a; --green-h2:#17a06a;
@@ -257,9 +258,10 @@
     <div class="methnote" id="meth-note"></div>
     <div class="notice" id="factor-notice"></div>
     <div class="btn-row no-print">
-      <button class="btn" id="save-btn" onclick="saveReport()" data-t="saveCloud">Bulut'a kaydet</button>
+      <button class="btn" id="pdf-btn" onclick="exportPDF()" data-t="pdfBtn">PDF rapor indir</button>
+      <button class="btn sec" id="save-btn" onclick="saveReport()" data-t="saveCloud">Bulut'a kaydet</button>
       <button class="btn sec" onclick="exportExcel()" data-t="exportXlsx">Excel indir</button>
-      <button class="btn ghost" onclick="window.print()" data-t="printBtn">Yazdır / PDF</button>
+      <button class="btn ghost" onclick="window.print()" data-t="printBtn">Yazdır</button>
     </div>
     <p class="sub no-print" id="save-hint" style="font-size:.82rem;margin-top:8px"></p>
   </div>
@@ -432,7 +434,8 @@ const UI = {
   buyerFormHint:{tr:"Her tedarikçiden aldığınız raporun toplam emisyonunu (kg CO₂e) girin.",en:"Enter each supplier's total reported emissions (kg CO₂e)."},
   buyerCompany:{tr:"Firmanızın adı",en:"Your company name"},supName:{tr:"Tedarikçi adı",en:"Supplier name"},supEmis:{tr:"Emisyon (kg CO₂e)",en:"Emissions (kg CO₂e)"},addSupplier:{tr:"Tedarikçi ekle",en:"Add supplier"},
   resultTitle:{tr:"Karbon Ayak İzi Raporu",en:"Carbon Footprint Report"},metricsTitle:{tr:"Yoğunluk metrikleri",en:"Intensity metrics"},breakdownTitle:{tr:"Kapsam bazında dağılım",en:"Breakdown by scope"},
-  printBtn:{tr:"Yazdır / PDF",en:"Print / PDF"},exportXlsx:{tr:"Excel indir",en:"Download Excel"},exportAllXlsx:{tr:"Tümünü Excel'e aktar",en:"Export all to Excel"},editBtn:{tr:"Girdileri düzenle",en:"Edit inputs"},saveCloud:{tr:"Bulut'a kaydet",en:"Save to cloud"},
+  printBtn:{tr:"Yazdır",en:"Print"},exportXlsx:{tr:"Excel indir",en:"Download Excel"},exportAllXlsx:{tr:"Tümünü Excel'e aktar",en:"Export all to Excel"},editBtn:{tr:"Girdileri düzenle",en:"Edit inputs"},saveCloud:{tr:"Bulut'a kaydet",en:"Save to cloud"},
+  pdfBtn:{tr:"PDF rapor indir",en:"Download PDF report"},pdfMaking:{tr:"PDF hazırlanıyor…",en:"Preparing PDF…"},pdfReportSub:{tr:"GHG Protocol tabanlı karbon ayak izi raporu",en:"GHG Protocol-based carbon footprint report"},pdfBreakdown:{tr:"Kapsam bazında dağılım",en:"Breakdown by scope"},pdfCats:{tr:"Kapsam 3 kategorileri",en:"Scope 3 categories"},pdfFree:{tr:"%100 ÜCRETSİZ",en:"100% FREE"},pdfGenerated:{tr:"Rapor tarihi",en:"Report date"},pdfFreeTool:{tr:"Ücretsiz araç",en:"Free tool"},pdfFail:{tr:"PDF oluşturulamadı. Lütfen 'Yazdır' ile tarayıcıdan PDF alın.",en:"PDF failed. Please use 'Print' to save as PDF."},
   totalUnit:{tr:"kg CO₂e / yıl (pazar-bazlı)",en:"kg CO₂e / yr (market-based)"},
   s1:{tr:"Kapsam 1 · Doğrudan",en:"Scope 1 · Direct"},s2:{tr:"Kapsam 2 · Enerji",en:"Scope 2 · Energy"},s3:{tr:"Kapsam 3 · Diğer",en:"Scope 3 · Other"},
   s2loc:{tr:"konum-bazlı",en:"location-based"},scope2noteTxt:{tr:"Kapsam 2 çift raporlanır. Grafik ve toplam pazar-bazlı değeri kullanır.",en:"Scope 2 is dual-reported. Chart/total use market-based."},
@@ -537,58 +540,100 @@ function updateSaveUi(){const btn=document.getElementById('save-btn');const hint
 window.saveReport=async function(){const hint=document.getElementById('save-hint');if(!currentUser){openLogin();return;}if(!db||!lastResult)return;hint.textContent=t('saving');try{const payload=Object.assign({},lastResult,{createdAt:serverTimestamp(),userEmail:currentUser.email||''});await addDoc(collection(db,'reports',currentUser.uid,'items'),payload);hint.textContent=t('savedOk');}catch(e){hint.textContent=(lang==='tr'?'Kaydedilemedi: ':'Save failed: ')+(e.message||e);}};
 window.openReports=async function(){show('screen-reports');const list=document.getElementById('reports-list');const empty=document.getElementById('reports-empty');list.innerHTML='';empty.style.display='none';window._allReports=[];if(!currentUser){empty.textContent=t('saveNeedLogin');empty.style.display='';return;}try{const snap=await getDocs(query(collection(db,'reports',currentUser.uid,'items'),orderBy('createdAt','desc')));if(snap.empty){empty.textContent=t('noReports');empty.style.display='';return;}const all=[];snap.forEach(docSnap=>{const d=docSnap.data();const dt=d.createdAt&&d.createdAt.toDate?d.createdAt.toDate().toLocaleString(lang==='tr'?'tr-TR':'en-US'):'';d._date=dt;all.push(d);const el=document.createElement('div');el.className='rep-item';el.innerHTML='<div><b>'+fmt(d.total||0)+'</b> kg CO₂e<br><span class="fieldnote">'+((d.company||'')+' · '+(d.sector||'')+' · '+dt)+'</span></div><span>›</span>';el.onclick=()=>{lastResult=d;renderResult(d);show('screen-result');};list.appendChild(el);});window._allReports=all;}catch(e){empty.textContent=(lang==='tr'?'Yüklenemedi: ':'Load failed: ')+(e.message||e);empty.style.display='';}};
 
+/* ---- PDF RAPOR ---- */
+let _pdfFontCache=null;
+async function fetchPdfFonts(){
+  if(_pdfFontCache) return _pdfFontCache;
+  const b64=async(u)=>{const buf=await fetch(u).then(r=>{if(!r.ok)throw new Error('font '+r.status);return r.arrayBuffer();});const bytes=new Uint8Array(buf);let bin='';const ch=0x8000;for(let i=0;i<bytes.length;i+=ch){bin+=String.fromCharCode.apply(null,bytes.subarray(i,i+ch));}return btoa(bin);};
+  const base='https://cdn.jsdelivr.net/npm/dejavu-fonts-ttf@2.37.3/ttf/';
+  const [reg,bold]=await Promise.all([b64(base+'DejaVuSans.ttf'),b64(base+'DejaVuSans-Bold.ttf')]);
+  _pdfFontCache={reg,bold};return _pdfFontCache;
+}
+window.exportPDF=async function(){
+  if(!lastResult)return;
+  const r=lastResult, btn=document.getElementById('pdf-btn'), old=btn?btn.textContent:'';
+  if(btn){btn.textContent=t('pdfMaking');btn.disabled=true;}
+  try{
+    if(!window.jspdf||!window.jspdf.jsPDF) throw new Error('jsPDF');
+    const {jsPDF}=window.jspdf; const doc=new jsPDF({unit:'mm',format:'a4'});
+    const f=await fetchPdfFonts();
+    doc.addFileToVFS('DejaVuSans.ttf',f.reg);doc.addFont('DejaVuSans.ttf','DejaVu','normal');
+    doc.addFileToVFS('DejaVuSans-Bold.ttf',f.bold);doc.addFont('DejaVuSans-Bold.ttf','DejaVu','bold');
+    const FN='DejaVu', M=14, W=210, cw=W-2*M; let y=0;
+    const sani=(s)=>(''+(s==null?'':s)).replace(/₺/g,'TL').replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}⬀-⯿️]/gu,'').replace(/\s+/g,' ').trim();
+    const F=(st,sz,c)=>{doc.setFont(FN,st);doc.setFontSize(sz);const col=c||[30,38,29];doc.setTextColor(col[0],col[1],col[2]);};
+    const T=(s,x,yy,o)=>doc.text(sani(s),x,yy,o);
+    const GREEN=[11,93,59], MINT=[233,247,239], GRAY=[95,111,102], LGRAY=[140,150,143];
+    const C1=[240,138,93], C2=[244,192,78], C3=[63,159,184];
+    const dateStr=new Date().toLocaleDateString(lang==='tr'?'tr-TR':'en-US');
+    /* HEADER */
+    doc.setFillColor(GREEN[0],GREEN[1],GREEN[2]);doc.roundedRect(M,12,cw,26,3,3,'F');
+    F('bold',17,[255,255,255]);T(t('resultTitle'),M+8,24);
+    F('normal',9.5,[214,232,223]);T(t('pdfReportSub'),M+8,31.5);
+    F('bold',12,[255,255,255]);T('commited',W-M-8,21,{align:'right'});
+    F('normal',8,[214,232,223]);T('commitedevents.app',W-M-8,26.5,{align:'right'});
+    F('bold',7.5,[190,224,205]);T(t('pdfFree'),W-M-8,32,{align:'right'});
+    y=46;
+    /* META */
+    const meta=[]; if(r.company)meta.push(r.company); meta.push(r.sector); if(r.year)meta.push(''+r.year);
+    if(r.type==='supplier'&&r.profile){const emp=parseFloat(r.profile.employees)||0;if(emp>0)meta.push(t('sizeLabel')+': '+sizeClass(emp));if(r.profile.market){const mf=((CONFIG.profile.fields.find(x=>x.id==='market')||{}).options)||[];const mo=mf.find(o=>o.value===r.profile.market);if(mo)meta.push(t('marketLabel')+': '+L(mo.label));}}
+    if(r.type==='buyer'&&r.supplierCount!=null)meta.push(r.supplierCount+' '+t('supplierWord'));
+    F('bold',9.5,GREEN);const metaLines=doc.splitTextToSize(sani(meta.join('   ·   ')),cw);doc.text(metaLines.slice(0,2),M,y);y+=(Math.min(metaLines.length,2)-1)*5;
+    y+=6;
+    /* TOTAL BOX */
+    doc.setFillColor(MINT[0],MINT[1],MINT[2]);doc.roundedRect(M,y,cw,24,3,3,'F');
+    F('bold',8,GREEN);T((t('totalLbl')||'').toUpperCase(),M+8,y+8);
+    F('bold',22,GREEN);const numStr=fmt(r.total);T(numStr,M+8,y+18.5);const nw=doc.getTextWidth(sani(numStr));
+    F('normal',10,GRAY);T('kg CO₂e / '+(lang==='tr'?'yıl':'yr'),M+8+nw+3,y+18.5);
+    if(r.total>=1000){F('bold',13,GREEN);T(fmt(r.total/1000)+' t CO₂e',W-M-8,y+15,{align:'right'});}
+    y+=32;
+    /* SCOPE BARS (supplier) */
+    if(r.type!=='buyer'){
+      F('bold',11.5,[30,38,29]);T(t('pdfBreakdown'),M,y);y+=6.5;
+      const rows=[[r.s1,C1,t('s1')],[r.s2mkt,C2,t('s2')],[r.s3,C3,t('s3')]];
+      const maxv=Math.max(r.s1,r.s2mkt,r.s3,1);
+      rows.forEach(([v,col,name])=>{
+        const pct=r.total>0?Math.round(v/r.total*100):0;
+        F('normal',9.5,[40,48,40]);T(name,M,y);
+        F('bold',9.5,[40,48,40]);T(fmt(v)+' kg  ('+pct+'%)',W-M,y,{align:'right'});
+        y+=2;
+        doc.setFillColor(238,244,240);doc.roundedRect(M,y,cw,4.2,2,2,'F');
+        const w=Math.max(1.2,(v/maxv)*cw);doc.setFillColor(col[0],col[1],col[2]);doc.roundedRect(M,y,w,4.2,2,2,'F');
+        y+=8.5;
+      });
+      F('normal',7.6,LGRAY);T(t('s2loc')+': '+fmt(r.s2loc)+' kg  ·  '+t('scope2noteTxt'),M,y);y+=8;
+      /* SCOPE 3 CATS */
+      const ck=Object.keys(r.cats||{}).sort();
+      if(ck.length){F('bold',10.5,[30,38,29]);T(t('pdfCats'),M,y);y+=5.5;const cc=CONFIG.scope3cats||{};ck.forEach(c=>{const nm=cc[c]?L(cc[c]):'';F('normal',8.7,[70,80,72]);T(c+' · '+nm,M+2,y);F('bold',8.7,[40,48,40]);T(fmt(r.cats[c])+' kg',W-M,y,{align:'right'});y+=5.2;});y+=3;}
+    } else {
+      F('bold',11.5,[30,38,29]);T(t('buyerScope3'),M,y);y+=6.5;
+      (r.items||[]).forEach((it,i)=>{F('normal',9.2,[40,48,40]);T((i+1)+'. '+it.name,M+2,y);F('bold',9.2,[40,48,40]);T(fmt(it.emis)+' kg',W-M,y,{align:'right'});y+=5.6;});y+=3;
+    }
+    /* INTENSITY */
+    if(r.type==='supplier'&&CONFIG.intensity){
+      const p=r.profile||{},mets=[];const emp=parseFloat(p.employees)||0,rev=parseFloat(p.revenue)||0,out=parseFloat(p.output)||0;
+      if(CONFIG.intensity.perEmployee&&emp>0)mets.push([fmt(r.total/emp)+' kg',t('perEmployee')]);
+      if(CONFIG.intensity.perRevenue&&rev>0){const base=CONFIG.intensity.revenueBase||1000000;mets.push([fmt(r.total/(rev/base))+' kg',t('perRevenue')+' '+L(CONFIG.intensity.revenueBaseLabel)]);}
+      if(CONFIG.intensity.perOutput&&out>0)mets.push([fmt1(r.total/out)+' kg',t('perOutput')]);
+      if(mets.length){F('bold',10.5,[30,38,29]);T(t('metricsTitle'),M,y);y+=5.5;const n=mets.length,gap=4,bw=(cw-(n-1)*gap)/n,bh=16;mets.forEach((m,i)=>{const x=M+i*(bw+gap);doc.setFillColor(246,250,247);doc.setDrawColor(224,235,228);doc.roundedRect(x,y,bw,bh,2.5,2.5,'FD');F('bold',12,GREEN);T(m[0],x+bw/2,y+7.5,{align:'center'});F('normal',7.3,GRAY);const sm=doc.splitTextToSize(sani(m[1]),bw-4);doc.text(sm.slice(0,2),x+bw/2,y+12,{align:'center'});});y+=bh+6;}
+    }
+    /* DATA QUALITY */
+    if(r.type==='supplier'&&dqOn()){const pp=r.measuredPct||0;F('bold',10.5,[30,38,29]);T(t('dqTitle'),M,y);y+=5;doc.setFillColor(213,231,220);doc.roundedRect(M,y,cw,5,2.5,2.5,'F');doc.setFillColor(19,160,101);doc.roundedRect(M,y,Math.max(1.2,cw*pp/100),5,2.5,2.5,'F');y+=9;F('normal',8,GRAY);const dqt=doc.splitTextToSize(sani(t('dqText').replace('{p}',pp)),cw);doc.text(dqt,M,y);y+=dqt.length*4+3;}
+    /* EQUIV */
+    const trees=r.total/((CONFIG.benchmarks&&CONFIG.benchmarks.tree_kg_per_year)||21);const km=r.total/((CONFIG.benchmarks&&CONFIG.benchmarks.car_km_equiv_factor)||0.170);
+    F('normal',8.6,GRAY);T('≈ '+fmt(trees)+' '+t('equivTree')+'    ·    '+fmt(km)+' '+t('equivCar'),M,y);
+    /* FOOTER */
+    const notice=doc.splitTextToSize(sani(L(CONFIG.meta.notice)),cw);
+    doc.setDrawColor(230,237,233);doc.line(M,270,W-M,270);
+    F('normal',7,LGRAY);doc.text(notice.slice(0,3),M,274);
+    F('bold',7.5,GRAY);T('commitedevents.app · KOBİ Karbon Modülü v'+((CONFIG.meta&&CONFIG.meta.version)||'3')+' · '+t('pdfFreeTool'),M,291);
+    F('normal',7.5,LGRAY);T(t('pdfGenerated')+': '+dateStr,W-M,291,{align:'right'});
+    doc.save('karbon-raporu-'+((r.company||'firma')+'').replace(/\s+/g,'_')+'.pdf');
+  }catch(e){console.warn('PDF',e);alert(t('pdfFail'));}
+  finally{if(btn){btn.textContent=old;btn.disabled=false;}}
+};
+
 applyStatic();renderAuthBar();renderIntroActions();
 </script>
-
-<!-- ck-pro-upgrade: profesyonel arayuz + Ucretsiz vurgusu -->
-<style id="ck-pro">
-:root{--pro-g1:#0a5233;--pro-g2:#12915b;--pro-g3:#1fb673;--pro-ink:#0f2a1e;--pro-shadow:0 10px 34px rgba(10,60,40,.10);--pro-shadow-lg:0 22px 60px rgba(10,60,40,.18);}
-body{background:radial-gradient(1200px 500px at 80% -10%,#eaf7f0 0%,transparent 60%),var(--bg,#f6faf7);}
-.hero{background:linear-gradient(135deg,var(--pro-g1) 0%,var(--pro-g2) 55%,var(--pro-g3) 100%)!important;padding:34px 34px 30px!important;box-shadow:var(--pro-shadow-lg)!important;border-radius:24px!important;}
-.hero::before{content:"";position:absolute;inset:0;background-image:radial-gradient(circle at 18% 120%,rgba(255,255,255,.14),transparent 45%),url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Cpath d='M0 39.5H40M39.5 0V40' stroke='%23ffffff' stroke-opacity='.05'/%3E%3C/svg%3E");opacity:.9;pointer-events:none;}
-.hero h1{font-size:2.15rem!important;letter-spacing:-.03em!important;text-shadow:0 2px 12px rgba(0,0,0,.12);margin-top:10px!important;}
-.hero p{font-size:1.04rem!important;opacity:.96;max-width:640px;}
-.freebadge{display:inline-flex!important;align-items:center;gap:8px;background:linear-gradient(135deg,#ffd84d,#ffb020)!important;color:#3a2a00!important;font-weight:800!important;font-size:.86rem!important;letter-spacing:.02em;padding:8px 16px!important;border-radius:999px!important;box-shadow:0 6px 18px rgba(255,176,32,.4),inset 0 1px 0 rgba(255,255,255,.5);border:none!important;position:relative;animation:ckpulse 2.6s ease-in-out infinite;}
-@keyframes ckpulse{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}
-.trust{gap:10px!important;margin-top:16px!important;}
-.trust span{background:rgba(255,255,255,.14)!important;backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.22)!important;color:#fff!important;font-weight:600;padding:7px 13px!important;border-radius:999px!important;font-size:.83rem!important;box-shadow:0 2px 8px rgba(0,0,0,.08);}
-.ck-lang{margin-top:16px!important;background:rgba(0,0,0,.14);padding:4px;border-radius:999px;display:inline-flex;gap:4px;}
-.ck-lang button{background:transparent!important;border:none!important;color:rgba(255,255,255,.8)!important;font-weight:700;padding:6px 16px!important;border-radius:999px!important;transition:.2s;}
-.ck-lang button.active{background:#fff!important;color:var(--pro-g1)!important;box-shadow:0 2px 8px rgba(0,0,0,.15);}
-.ck-card{border-radius:22px!important;box-shadow:var(--pro-shadow)!important;border:1px solid #eef3f0!important;padding:30px!important;}
-.ck-card h2{font-size:1.32rem!important;position:relative;padding-bottom:14px;letter-spacing:-.02em;}
-.ck-card h2::after{content:"";position:absolute;left:0;bottom:0;width:52px;height:4px;border-radius:4px;background:linear-gradient(90deg,var(--pro-g2),var(--pro-g3));}
-.ck-modes{display:grid!important;grid-template-columns:1fr 1fr;gap:18px!important;}
-.ck-mode{position:relative;border:1.5px solid #e6ede9!important;border-radius:18px!important;padding:24px 22px!important;background:linear-gradient(180deg,#ffffff,#fbfdfc)!important;transition:transform .22s ease,box-shadow .22s ease,border-color .22s ease;overflow:hidden;cursor:pointer;}
-.ck-mode::before{content:"";position:absolute;left:0;top:0;height:100%;width:4px;background:linear-gradient(180deg,var(--pro-g2),var(--pro-g3));transform:scaleY(0);transform-origin:top;transition:.25s;}
-.ck-mode:hover{transform:translateY(-4px);box-shadow:var(--pro-shadow-lg);border-color:var(--pro-g3)!important;}
-.ck-mode:hover::before{transform:scaleY(1);}
-.ck-mode .em{display:inline-flex!important;align-items:center;justify-content:center;width:52px;height:52px;font-size:26px;border-radius:14px;background:linear-gradient(135deg,#e7f7ee,#d4f0e1)!important;box-shadow:inset 0 1px 0 #fff, 0 4px 12px rgba(18,145,91,.14);margin-bottom:14px;}
-.ck-mode b{font-size:1.05rem!important;display:block;margin-bottom:6px;color:var(--pro-ink);letter-spacing:-.01em;}
-.ck-mode span:not(.em){color:var(--muted,#5f6f66);font-size:.92rem;line-height:1.5;}
-.ck-mode::after{content:"→";position:absolute;right:20px;bottom:18px;font-size:1.15rem;color:var(--pro-g2);opacity:0;transform:translateX(-6px);transition:.25s;font-weight:700;}
-.ck-mode:hover::after{opacity:1;transform:translateX(0);}
-.btn{border-radius:12px!important;font-weight:700!important;transition:transform .15s,box-shadow .15s,filter .15s;}
-.btn:not(.sec){background:linear-gradient(135deg,var(--pro-g2),var(--pro-g3))!important;border:none!important;box-shadow:0 6px 18px rgba(18,145,91,.28)!important;color:#fff!important;}
-.btn:not(.sec):hover{transform:translateY(-2px);filter:brightness(1.05);box-shadow:0 10px 26px rgba(18,145,91,.36)!important;}
-.btn.sec{background:#fff!important;border:1.5px solid #dbe7e0!important;color:var(--pro-g1)!important;}
-.btn.sec:hover{border-color:var(--pro-g2)!important;background:#f4fbf7!important;}
-.free-hl{background:linear-gradient(120deg,#ffe89a,#ffd84d)!important;color:#3a2a00!important;padding:0 6px;border-radius:6px;font-weight:800;box-decoration-break:clone;-webkit-box-decoration-break:clone;}
-#ck-freeribbon{position:absolute;top:18px;right:-42px;transform:rotate(45deg);background:linear-gradient(135deg,#ffd84d,#ffb020);color:#3a2a00;font-weight:800;font-size:.72rem;letter-spacing:.06em;padding:6px 52px;box-shadow:0 6px 16px rgba(0,0,0,.18);z-index:3;}
-@media(max-width:640px){.ck-modes{grid-template-columns:1fr!important}.hero h1{font-size:1.7rem!important}}
-</style>
-<script id="ck-pro-js">(function(){
-function isEN(){var e=document.getElementById('lang-en');return e&&e.classList.contains('active');}
-function apply(){try{
-var h=document.querySelector('.hero');if(!h)return;
-var rb=document.getElementById('ck-freeribbon');if(!rb){rb=document.createElement('div');rb.id='ck-freeribbon';h.appendChild(rb);}
-var want=isEN()?'FREE':'ÜCRETSİZ';if(rb.textContent!==want)rb.textContent=want;
-document.querySelectorAll('.hero p, .trust span').forEach(function(el){if(el.querySelector('.free-hl'))return;if(/Ücretsiz|Free/.test(el.textContent))el.innerHTML=el.innerHTML.replace(/(Ücretsiz|Free)/g,'<mark class="free-hl">$1</mark>');});
-}catch(e){}}
-function bind(){['lang-tr','lang-en'].forEach(function(id){var b=document.getElementById(id);if(b&&!b.__ckb){b.__ckb=1;b.addEventListener('click',function(){setTimeout(apply,30);setTimeout(apply,180);});}});}
-function boot(){bind();apply();}
-if(document.readyState!=='loading')boot();else document.addEventListener('DOMContentLoaded',boot);
-var n=0,iv=setInterval(function(){bind();apply();if(++n>16)clearInterval(iv);},600);
-})();</script>
 </body>
 </html>
