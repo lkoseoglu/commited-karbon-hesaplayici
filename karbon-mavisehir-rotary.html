@@ -369,7 +369,7 @@ async function loadFirebaseSdk(){
    ========================================================= */
 const COL          = "rotary_mavisehir";        // skorboard koleksiyonu
 const COL_DONATE   = "rotary_mavisehir_bagis";  // bağış talepleri koleksiyonu
-const ADMIN_EMAIL  = "commitedapp@gmail.com";   // bağış talebi bu adrese gider
+ const ADMIN_EMAIL   = "levent.koseoglu@commited.app"; // bagis talebi bu adrese gider
 const MAIL_ENDPOINT= "https://formsubmit.co/ajax/" + ADMIN_EMAIL; // ücretsiz form->e-posta servisi
 const PAGE_URL     = "https://www.commitedevents.app/maviehir-rotary-kulubu-karbon-ayak-zi-hesaplaycs";
 const TREE_KG_YEAR = 21;                        // bir ağacın yılda soğurduğu kg CO2
@@ -787,6 +787,7 @@ document.getElementById('donateBtn').onclick=async()=>{
       body: JSON.stringify({
         _subject:'🌳 Ağaç bağış talebi — '+name+' ('+count+' ağaç)',
         _template:'table',
+        _cc:'aslimusal@egesis.com.tr',
         name, email, telefon:phone||'-',
         'Bagis adedi':count,
         'Ayak izi (ton CO2e/yil)': rec.footprint!=null? rec.footprint : '-',
