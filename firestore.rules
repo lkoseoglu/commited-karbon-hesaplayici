@@ -12,6 +12,14 @@ service cloud.firestore {
         && request.resource.data.uid == request.auth.uid;
     }
 
+    // Mavisehir Rotary agac bagis talepleri
+    // Uye yalnizca kendi talebini olusturur; listeleme/okuma sadece admin.
+    match /rotary_mavisehir_bagis/{docId} {
+      allow create: if request.auth != null
+        && request.resource.data.uid == request.auth.uid;
+      allow read, update, delete: if isAdmin();
+    }
+
     function isSignedIn() {
       return request.auth != null;
     }
