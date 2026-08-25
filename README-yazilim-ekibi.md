@@ -74,3 +74,52 @@ commitedevents.app (Squarespace) sitesine gömülmek üzere hazırlanmış, sunu
 - Alıcı modunda tedarikçi raporu (JSON) içe aktarma ile otomatik toplama.
 - Config'i uzak `fetch` ile yükleme + basit şifreli admin.
 - Verilerin isteğe bağlı olarak bir tabloya/CRM'e kaydı.
+
+---
+
+## Mavişehir Rotary kişisel hesaplayıcı (`karbon-mavisehir-rotary.html`) — v2 notları
+
+Bu dosya, kurumsal hesaplayıcıdan bağımsız, **kişisel** karbon ayak izi modülüdür ve
+GitHub Pages üzerinden `commitedevents.app`'e iframe ile gömülür.
+
+### v2 ile gelenler
+- **Kişiye özel öneriler:** kullanıcının kendi verisiyle simüle edilip en çok kazandıran 3 adım listelenir.
+- **"Ne olurdu?" simülatörü:** araç/uçuş/ev enerjisi/tüketim kaydırıcıları + beslenme ve yeşil elektrik seçimi; ayak izi, skor ve ağaç karşılığı anlık güncellenir.
+- **Komite sıralaması:** skorboard'a üçüncü sekme. Komite artık serbest metin değil, `COMMITTEES` dizisinden gelen açılır liste.
+- **Gelişim takibi:** her kayıtta kullanıcının dokümanına `history[]` eklenir (son 24 ölçüm), Skorboard sekmesinde çubuk grafik olarak gösterilir.
+- **Paylaşım kartı:** 1080×1080 canvas ile markalı skor kartı; indir / WhatsApp / LinkedIn / native paylaşım.
+- **Ağaç bağışı:** ayak izini dengeleyecek ağaç sayısı + bağış talebi formu. Talep hem Firestore'a (`rotary_mavisehir_bagis`) yazılır hem de FormSubmit ile admin e-postasına gider; ikisi de başarısız olursa `mailto:` bağlantısı sunulur.
+- **Sağlamlaştırma:** Firebase config artık başka dosyadan regex ile çekilmiyor, doğrudan gömülü. Firebase SDK **dinamik** import edilir — CDN engellenirse hesaplayıcı yine çalışır, sadece giriş/skorboard kapanır. Boş/aşırı girdi uyarısı eklendi. Sayfa yüksekliğini `postMessage` ile üst pencereye bildirir.
+
+### Ayarların yeri
+`<script type="module">` bloğunun başındaki **AYARLAR** kutusu:
+`COL`, `COL_DONATE`, `ADMIN_EMAIL`, `MAIL_ENDPOINT`, `PAGE_URL`, `TREE_KG_YEAR`, `firebaseConfig`, `COMMITTEES`.
+
+### Bağış e-postası — ilk kurulum
+`MAIL_ENDPOINT` varsayılan olarak FormSubmit kullanır. İlk gönderimde FormSubmit,
+`ADMIN_EMAIL` adresine bir **aktivasyon** e-postası yollar; oradaki bağlantıya bir kez tıklanmadan
+sonraki talepler iletilmez. Aktivasyondan sonra FormSubmit size rastgele bir kod verir;
+e-posta adresini gizlemek için `MAIL_ENDPOINT`'i
+`https://formsubmit.co/ajax/<verilen-kod>` olarak güncelleyin.
+
+### Squarespace iframe — otomatik yükseklik
+Sayfa, içerik yüksekliği değiştikçe üst pencereye mesaj gönderir. Code Block'taki iframe'i
+şu şekilde sararsanız iframe içerikle birlikte büyüyüp küçülür (mobilde alt taraf kesilmez):
+
+```html
+<iframe id="karbonFrame"
+  src="https://lkoseoglu.github.io/commited-karbon-hesaplayici/karbon-mavisehir-rotary.html"
+  style="width:100%;height:1600px;border:0;display:block" title="Karbon Ayak İzi Hesaplayıcısı"></iframe>
+<script>
+window.addEventListener('message', function(e){
+  if(e.data && e.data.type === 'commited-carbon-height'){
+    var f = document.getElementById('karbonFrame');
+    if(f) f.style.height = (e.data.height + 24) + 'px';
+  }
+});
+</script>
+```
+
+### Firestore kuralları
+`firestore.rules` içine `rotary_mavisehir_bagis` koleksiyonu eklendi (üye kendi talebini yazar,
+yalnız admin okur). Kuralları Firebase konsolundan **yayınlamayı** unutmayın.
