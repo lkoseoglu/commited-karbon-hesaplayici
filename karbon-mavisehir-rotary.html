@@ -879,6 +879,7 @@ async function loadBoard(){
   try{
     const snap=await getDocs(query(collection(db,COL), orderBy('score','desc'), limit(300)));
     lbCache=snap.docs.map(d=>d.data());
+          lbCache=lbCache.map(d=>({...d, score: (d.footprint==null||d.footprint==='')? (d.score||0) : scoreOf(+d.footprint)}));
     renderStats(); renderBoard();
   }catch(e){ document.getElementById('lbBody').innerHTML='<tr><td colspan="4" class="mini">Sıralama yüklenemedi.</td></tr>'; }
 }
