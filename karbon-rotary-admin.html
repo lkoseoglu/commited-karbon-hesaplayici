@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>Mavişehir Rotary — Ağaç Bağışı Talepleri (Yönetim)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{--rotary:#17458F; --rotary-d:#0f2f66; --gold:#F7A81B; --ink:#12261d; --muted:#5c6b7a;
+      --line:#e5eaf1; --bg:#f4f7fc; --card:#ffffff; --radius:16px;
+      --font:'Inter',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;font-family:var(--font);background:var(--bg);color:var(--ink);line-height:1.5}
+.wrap{max-width:1120px;margin:0 auto;padding:22px 18px 80px}
+.hero{background:linear-gradient(135deg,var(--rotary-d) 0%,var(--rotary) 60%,#2f66c0 100%);color:#fff;border-radius:24px;padding:26px 28px;box-shadow:0 22px 60px rgba(20,50,100,.16)}
+.hero h1{margin:8px 0 6px;font-size:1.55rem;font-weight:900;letter-spacing:-.01em}
+.hero p{margin:0;opacity:.92;font-size:.95rem}
+.brand{font-size:.86rem;font-weight:700;opacity:.85}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.btn{border:0;border-radius:12px;padding:10px 16px;font-weight:700;cursor:pointer;font-size:.94rem;font-family:inherit}
+.btn.primary{background:var(--gold);color:#3a2a00}
+.btn.sec{background:#fff;border:1px solid var(--line);color:var(--ink)}
+.btn.sm{padding:6px 10px;font-size:.82rem;border-radius:9px}
+.card{background:var(--card);border-radius:var(--radius);padding:20px;margin-top:16px;box-shadow:0 10px 34px rgba(20,50,100,.09)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+.stat{background:#fbfdff;border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.stat b{display:block;font-size:1.7rem;font-weight:900;color:var(--rotary);line-height:1.2}
+.stat span{font-size:.8rem;color:var(--muted)}
+table{width:100%;border-collapse:collapse;font-size:.9rem}
+th,td{padding:11px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:700}
+tbody tr:hover{background:#fafcff}
+.pill{display:inline-block;padding:3px 10px;border-radius:99px;font-size:.72rem;font-weight:800;white-space:nowrap}
+.s-yeni{background:#fff3d6;color:#8a5b00}
+.s-iletisim{background:#e0ecff;color:#12457f}
+.s-dikildi{background:#dcf5e4;color:#136b31}
+.mini{font-size:.79rem;color:var(--muted)}
+.search{padding:9px 12px;border:1px solid var(--line);border-radius:10px;min-width:240px;font-family:inherit;font-size:.9rem}
+.hidden{display:none!important}
+.scrollx{overflow-x:auto}
+.note{max-width:260px}
+h2{margin:0 0 14px;font-size:1.05rem;font-weight:800}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hero">
+    <div class="brand">☀️ Mavişehir Rotary Kulübü × Commited</div>
+    <h1>🌳 Ağaç Bağışı Talepleri</h1>
+    <p>Yönetim ekranı — kayıtları yalnızca yetkili hesaplar görebilir.</p>
+    <div class="row" style="margin-top:14px">
+      <button class="btn primary" id="loginBtn">Google ile giriş</button>
+      <span id="who" class="brand hidden"></span>
+      <button class="btn sec sm hidden" id="logoutBtn">Çıkış</button>
+    </div>
+  </div>
+
+  <div id="denied" class="card hidden">
+    <b>Bu hesap yetkili değil.</b>
+    <div class="mini">Bağış kayıtlarını görmek için yetkili bir hesapla giriş yapman gerekiyor.</div>
+  </div>
+
+  <div id="loading" class="card hidden mini">Kayıtlar yükleniyor…</div>
+
+  <div id="panel" class="hidden">
+    <div class="card">
+      <div class="stats">
+        <div class="stat"><b id="k_total">0</b><span>Toplam talep</span></div>
+        <div class="stat"><b id="k_trees">0</b><span>Talep edilen ağaç</span></div>
+        <div class="stat"><b id="k_open">0</b><span>Bekleyen</span></div>
+        <div class="stat"><b id="k_done">0</b><span>Dikildi</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="row" style="justify-content:space-between;margin-bottom:12px">
+        <h2 style="margin:0">Talepler</h2>
+        <div class="row">
+          <input type="search" class="search" id="q" placeholder="Ad, e-posta veya komite ara…">
+          <button class="btn sec sm" id="csvBtn">⬇️ CSV indir</button>
+          <button class="btn sec sm" id="refreshBtn">↻ Yenile</button>
+        </div>
+      </div>
+      <div class="scrollx">
+        <table>
+          <thead><tr>
+            <th>Tarih</th><th>Üye</th><th>İletişim</th><th>Ağaç</th><th>Ayak izi</th><th>Not</th><th>Durum</th>
+          </tr></thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+      <div id="empty" class="mini hidden" style="padding:14px 4px">Henüz bağış talebi yok.</div>
+    </div>
+  </div>
+
+  <p class="mini" style="text-align:center;margin-top:28px">
+    Mavişehir Rotary Kulübü · Sürdürülebilir Dünya Komitesi · commitedevents.app
+  </p>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged,
+         setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, collection, getDocs, query, orderBy, limit, doc, updateDoc }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+/* ==========================================================
+   AYARLAR
+   ========================================================== */
+const COL_DONATE = "rotary_mavisehir_bagis";
+const ADMINS = ["levent.koseoglu@commited.app","commitedapp@gmail.com",
+                "lkoseoglu@hotmail.com","aslimusal@egesis.com.tr"];
+const firebaseConfig = {
+  apiKey: "AIzaSyA908koeADcOLR2ROU6R7fARAqjC1v-inc",
+  authDomain: "kobi-karbon-hesaplama.firebaseapp.com",
+  projectId: "kobi-karbon-hesaplama",
+  storageBucket: "kobi-karbon-hesaplama.firebasestorage.app",
+  messagingSenderId: "148732593523",
+  appId: "1:148732593523:web:505abef73a48a29469b106"
+};
+
+const app  = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db   = getFirestore(app);
+setPersistence(auth, browserLocalPersistence).catch(()=>{});
+
+const $ = id => document.getElementById(id);
+const LABEL = { yeni:'Yeni', iletisim:'İletişime geçildi', dikildi:'Dikildi' };
+let all = [];
+
+$('loginBtn').onclick = async () => {
+  try { await signInWithPopup(auth, new GoogleAuthProvider()); }
+  catch(e){ alert('Giriş yapılamadı: ' + e.message); }
+};
+$('logoutBtn').onclick = () => signOut(auth);
+$('refreshBtn').onclick = () => load();
+$('q').oninput = render;
+
+onAuthStateChanged(auth, async u => {
+  const mail = (u && u.email || '').toLowerCase();
+  const ok = !!u && ADMINS.indexOf(mail) !== -1;
+  $('loginBtn').classList.toggle('hidden', !!u);
+  $('who').classList.toggle('hidden', !u);
+  $('logoutBtn').classList.toggle('hidden', !u);
+  if (u) $('who').textContent = 'Merhaba, ' + (u.displayName || mail);
+  $('denied').classList.toggle('hidden', !(u && !ok));
+  $('panel').classList.toggle('hidden', !ok);
+  if (ok) await load();
+});
+
+async function load(){
+  $('loading').classList.remove('hidden');
+  try {
+    const snap = await getDocs(query(collection(db, COL_DONATE), orderBy('createdAt','desc'), limit(500)));
+    all = snap.docs.map(d => Object.assign({ id: d.id }, d.data()));
+  } catch(e){
+    all = [];
+    alert('Kayıtlar okunamadı: ' + e.message + '\n(Firestore kuralları yayınlanmış olmalı.)');
+  }
+  $('loading').classList.add('hidden');
+  render();
+}
+
+function fmt(ts){
+  const d = new Date(Number(ts) || 0);
+  if (isNaN(d.getTime()) || !ts) return '-';
+  return d.toLocaleDateString('tr-TR') + ' ' +
+         d.toLocaleTimeString('tr-TR', { hour:'2-digit', minute:'2-digit' });
+}
+function esc(s){
+  return String(s == null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function render(){
+  const term = ($('q').value || '').toLowerCase().trim();
+  const list = all.filter(r => !term ||
+    ((r.name||'') + ' ' + (r.email||'') + ' ' + (r.committee||'')).toLowerCase().indexOf(term) !== -1);
+
+  $('k_total').textContent = all.length;
+  $('k_trees').textContent = all.reduce((a,r) => a + (Number(r.trees)||0), 0);
+  $('k_open').textContent  = all.filter(r => (r.status||'yeni') !== 'dikildi').length;
+  $('k_done').textContent  = all.filter(r => r.status === 'dikildi').length;
+  $('empty').classList.toggle('hidden', list.length > 0);
+
+  $('rows').innerHTML = list.map(r => {
+    const st = r.status || 'yeni';
+    return '<tr>' +
+      '<td class="mini">' + fmt(r.createdAt) + '</td>' +
+      '<td><b>' + esc(r.name || 'Üye') + '</b><div class="mini">' + esc(r.committee || '-') + '</div></td>' +
+      '<td class="mini">' + esc(r.email || '-') + '<br>' + esc(r.phone || '-') + '</td>' +
+      '<td><b>' + esc(r.trees) + '</b></td>' +
+      '<td class="mini">' + (r.footprint == null ? '-' : esc(r.footprint) + ' t') + '</td>' +
+      '<td class="mini note">' + esc(r.note || '-') + '</td>' +
+      '<td><span class="pill s-' + st + '">' + LABEL[st] + '</span>' +
+        '<div class="row" style="margin-top:7px;gap:4px">' +
+          '<button class="btn sec sm" data-id="' + r.id + '" data-st="iletisim" title="İletişime geçildi">📞</button>' +
+          '<button class="btn sec sm" data-id="' + r.id + '" data-st="dikildi" title="Dikildi">🌳</button>' +
+          '<button class="btn sec sm" data-id="' + r.id + '" data-st="yeni" title="Yeni olarak işaretle">↺</button>' +
+        '</div></td></tr>';
+  }).join('');
+
+  Array.prototype.forEach.call(document.querySelectorAll('#rows button[data-id]'), b => {
+    b.onclick = () => setStatus(b.getAttribute('data-id'), b.getAttribute('data-st'));
+  });
+}
+
+async function setStatus(id, st){
+  try {
+    await updateDoc(doc(db, COL_DONATE, id), { status: st, statusAt: Date.now() });
+    const r = all.filter(x => x.id === id)[0];
+    if (r) r.status = st;
+    render();
+  } catch(e){ alert('Güncellenemedi: ' + e.message); }
+}
+
+$('csvBtn').onclick = () => {
+  const head = ['Tarih','Ad','E-posta','Telefon','Komite','Agac','AyakIzi','Not','Durum'];
+  const rows = all.map(r => [fmt(r.createdAt), r.name, r.email, r.phone, r.committee,
+                             r.trees, r.footprint, r.note, (r.status||'yeni')]);
+  const csv = [head].concat(rows)
+    .map(a => a.map(v => '"' + String(v == null ? '' : v).replace(/"/g,'""') + '"').join(';'))
+    .join('\n');
+  const url = URL.createObjectURL(new Blob(['﻿' + csv], { type:'text/csv;charset=utf-8' }));
+  const a = document.createElement('a');
+  a.href = url; a.download = 'rotary-agac-bagis.csv'; a.click();
+  URL.revokeObjectURL(url);
+};
+</script>
+</body>
+</html>
