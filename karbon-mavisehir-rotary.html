@@ -446,7 +446,7 @@ const FLY_S=0.25, FLY_M=0.7, FLY_L=2.5;
 function num(id){ const el=document.getElementById(id); const v=el?parseFloat(el.value):NaN; return isNaN(v)?0:Math.max(0,v); }
 function val(id){ const el=document.getElementById(id); return el?el.value:''; }
 function tlToKwh(tl){ if(tl<=0) return 0; const t1Cost=ELEC_T1_KWH*ELEC_T1_PRICE; if(tl<=t1Cost) return tl/ELEC_T1_PRICE; return ELEC_T1_KWH+(tl-t1Cost)/ELEC_T2_PRICE; }
-function scoreOf(total){ return Math.max(0,Math.min(1000,Math.round(1000*(1-(total-1)/(12-1))))); }
+  const SCORE_BEST=1.5, SCORE_K=4; /* Yesil Skor: 1.5t=1000, 5.5t=500 (TR ortalama), sifira yapismaz */ function scoreOf(total){ const t=Math.max(SCORE_BEST,Number(total)||0); return Math.max(1,Math.min(1000,Math.round(1000*SCORE_K/(SCORE_K+(t-SCORE_BEST))))); }
 
 /* Ham girdileri tek yerden okur — simülatör de bunu kullanır */
 function readInputs(){
@@ -496,9 +496,9 @@ function computeFrom(i, mod){
 function compute(){ return computeFrom(readInputs()); }
 
 function rankOf(score){
-  if(score>=850) return '⚙️🏆 Altın Çark';
-  if(score>=650) return '🌲 Orman';
-  if(score>=400) return '🌳 Ağaç';
+  if(score>=750) return '⚙️🏆 Altın Çark';
+  if(score>=550) return '🌲 Orman';
+  if(score>=350) return '🌳 Ağaç';
   return '🌱 Fidan';
 }
 const PLEDGES=[
@@ -828,6 +828,7 @@ document.getElementById('saveBtn').onclick=async()=>{
     try{ await signInWithPopup(auth,new GoogleAuthProvider()); await loadMyDoc(); }catch(e){ msg.textContent='Giriş yapılmadı.'; return; }
   }
   const r=lastResult;
+      if(!r.committee){ msg.textContent='Kaydetmeden önce komiteni seç.'; const sel=document.getElementById('f_committee'); if(sel){ sel.scrollIntoView({block:'center'}); sel.focus(); } return; }
   const pledges=PLEDGES.filter(p=>{ const el=document.getElementById(p.id); return el&&el.checked; }).map(p=>p.id);
   const firstFootprint=(myDoc&&myDoc.firstFootprint)||r.total;
   const pts=pointsOf(r,firstFootprint,pledges);
