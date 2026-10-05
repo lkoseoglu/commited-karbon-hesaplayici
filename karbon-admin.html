@@ -97,6 +97,7 @@
 
   <div class="tabs">
     <div class="tab active" onclick="switchTab('factors',this)">Emisyon Faktörleri</div>
+    <div class="tab" onclick="switchTab('spend',this)">Harcama Faktörleri</div>
     <div class="tab" onclick="switchTab('sectors',this)">Sektörler &amp; Sorular</div>
     <div class="tab" onclick="switchTab('general',this)">Genel &amp; Metodoloji</div>
     <div class="tab" onclick="switchTab('reports',this)">Firma Raporları</div>
@@ -107,6 +108,15 @@
     <p class="hint">Kapsam: 1=doğrudan yakıt, 2=satın alınan enerji, 3=diğer/tedarik zinciri. K3 kat. yalnız Kapsam 3 için GHG Protocol kategori numarasıdır (3.1/3.4/3.5/3.6/3.7/3.9).</p>
     <table><thead><tr><th>Anahtar</th><th>Ad (TR)</th><th>Ad (EN)</th><th style="width:80px">Değer</th><th style="width:95px">Birim</th><th style="width:78px">Kapsam</th><th style="width:70px">K3 kat.</th><th style="width:30px"></th></tr></thead><tbody id="factors-body"></tbody></table>
     <button class="btn mini" style="margin-top:12px" onclick="addFactor()">+ Faktör ekle</button>
+  </div>
+
+  <div class="panel" id="panel-spend">
+    <h2>Harcama Bazlı Faktörler (Kapsam 3.1 tarama)</h2>
+    <p class="hint">Alıcı modülünde "harcama bazlı tahmin" yöntemi bu faktörleri kullanır: harcama (₺) ÷ USD kuru × faktör (kgCO₂e/USD). Varsayılanlar EPA Supply Chain GHG Emission Factors v1.3 (2022 USD, alıcı fiyatı) referansıyla türetilmiştir. Anahtarlar Excel şablonundaki kategori kodlarıdır — değiştirirseniz eski şablonlar eşleşmez.</p>
+    <div class="card grid2"><div><label>Varsayılan USD kuru (1 USD = ? ₺)</label><input class="num" type="number" step="any" id="g-usd"></div><div><label>Aykırı yoğunluk eşiği (medyanın kaç katı)</label><input class="num" type="number" step="any" id="g-outlier"></div></div>
+    <div class="card grid2"><div><label>Tedarikçi ayak izinde elektriğin payı (senaryo, 0-1)</label><input class="num" type="number" step="any" id="g-green"></div><div><label>Geri dönüşümlü muadil tipik azalma (senaryo, 0-1)</label><input class="num" type="number" step="any" id="g-recyc"></div></div>
+    <table><thead><tr><th>Anahtar (kod)</th><th>Ad (TR)</th><th>Ad (EN)</th><th style="width:110px">kgCO₂e/USD</th><th style="width:30px"></th></tr></thead><tbody id="spend-body"></tbody></table>
+    <button class="btn mini" style="margin-top:12px" onclick="addSpendFactor()">+ Kategori ekle</button>
   </div>
 
   <div class="panel" id="panel-sectors">
@@ -171,97 +181,1450 @@ window.doLogout=async function(){try{await signOut(auth);}catch(e){}};
 
 /* ---- DEFAULT CONFIG (config.default.json v2 ile aynı) ---- */
 const DEFAULT_CONFIG = {
-  "meta":{"version":"3.0","updated":"2026-07-27",
-    "methodology":{"tr":"GHG Protocol Kurumsal Standardı temel alınmıştır; KOBİ'ler için sadeleştirilmiştir. Faaliyet-verisi esas alınır. Kapsam 2 hem konum-bazlı hem pazar-bazlı raporlanır. Kapsam 3 kalemleri GHG Protocol kategori numaralarıyla etiketlenmiştir. Her girdi için veri kalitesi (ölçüm/tahmin) işaretlenebilir.","en":"Based on the GHG Protocol Corporate Standard, streamlined for SMEs. Uses activity data. Scope 2 reported location- and market-based. Scope 3 items tagged with GHG Protocol category numbers. Data quality (measured/estimate) per input."},
-    "notice":{"tr":"Emisyon faktörleri VARSAYILAN referans değerlerdir. Resmi raporlama öncesi güncel IPCC / DEFRA / Türkiye Ulusal Envanter değerleriyle doğrulayın. Bu araç tam LCA değil, temel seviye tahmin sağlar.","en":"Emission factors are DEFAULT reference values. Verify before official reporting. This is a basic estimate, not a full LCA."}},
-  "profile":{"fields":[
-    {"id":"employees","name":{"tr":"Çalışan sayısı (TZE)","en":"Employees (FTE)"},"type":"number","hint":{"tr":"Yoğunluk için","en":"For intensity"}},
-    {"id":"revenue","name":{"tr":"Yıllık ciro","en":"Annual revenue"},"type":"number","unit":{"tr":"₺/yıl","en":"₺/yr"},"hint":{"tr":"Yoğunluk için","en":"For intensity"}},
-    {"id":"output","name":{"tr":"Yıllık üretim/çıktı (ops.)","en":"Annual output (opt.)"},"type":"number","unit":{"tr":"birim/yıl","en":"units/yr"},"hint":{"tr":"ör. kg kumaş, oda-gece","en":"e.g. kg fabric"}},
-    {"id":"market","name":{"tr":"Pazar","en":"Market"},"type":"select","options":[
-      {"value":"domestic","label":{"tr":"Yurtiçi","en":"Domestic"}},
-      {"value":"export","label":{"tr":"İhracat ağırlıklı","en":"Export-focused"}},
-      {"value":"both","label":{"tr":"Karma","en":"Mixed"}}]}],
-    "sizeClasses":[{"max":10,"label":{"tr":"Mikro (<10)","en":"Micro (<10)"}},{"max":50,"label":{"tr":"Küçük (10-50)","en":"Small (10-50)"}},{"max":500,"label":{"tr":"Orta (50-500)","en":"Medium (50-500)"}},{"max":100000000,"label":{"tr":"Büyük (500+)","en":"Large (500+)"}}]},
-  "intensity":{"perEmployee":true,"perRevenue":true,"revenueBase":1000000,"revenueBaseLabel":{"tr":"milyon ₺","en":"million ₺"},"perOutput":true},
-  "dataQuality":{"enabled":true},
-  "factors":{
-    "electricity_kwh":{"name":{"tr":"Elektrik (şebeke)","en":"Electricity (grid)"},"value":0.442,"unit":"kgCO2e/kWh","scope":2},
-    "electricity_green_kwh":{"name":{"tr":"Yeşil/sertifikalı elektrik","en":"Certified renewable electricity"},"value":0.0,"unit":"kgCO2e/kWh","scope":2,"marketAdjust":true},
-    "natural_gas_m3":{"name":{"tr":"Doğal gaz","en":"Natural gas"},"value":2.02,"unit":"kgCO2e/m³","scope":1},
-    "diesel_l":{"name":{"tr":"Motorin (dizel)","en":"Diesel"},"value":2.68,"unit":"kgCO2e/L","scope":1},
-    "gasoline_l":{"name":{"tr":"Benzin","en":"Gasoline"},"value":2.31,"unit":"kgCO2e/L","scope":1},
-    "lpg_kg":{"name":{"tr":"LPG / Tüp gaz","en":"LPG"},"value":2.98,"unit":"kgCO2e/kg","scope":1},
-    "fuel_oil_l":{"name":{"tr":"Fuel oil","en":"Fuel oil"},"value":3.15,"unit":"kgCO2e/L","scope":1},
-    "coal_kg":{"name":{"tr":"Kömür","en":"Coal"},"value":2.42,"unit":"kgCO2e/kg","scope":1},
-    "refrigerant_r410a_kg":{"name":{"tr":"Soğutucu gaz kaçağı (R410A)","en":"Refrigerant leak (R410A)"},"value":2088.0,"unit":"kgCO2e/kg","scope":1},
-    "steam_kwh":{"name":{"tr":"Satın alınan buhar/ısı","en":"Purchased steam/heat"},"value":0.27,"unit":"kgCO2e/kWh","scope":2},
-    "cotton_kg":{"name":{"tr":"Pamuklu kumaş/iplik","en":"Cotton fabric/yarn"},"value":16.5,"unit":"kgCO2e/kg","scope":3,"cat":"3.1"},
-    "polyester_kg":{"name":{"tr":"Polyester kumaş/iplik","en":"Polyester fabric/yarn"},"value":9.5,"unit":"kgCO2e/kg","scope":3,"cat":"3.1"},
-    "wool_kg":{"name":{"tr":"Yün","en":"Wool"},"value":24.0,"unit":"kgCO2e/kg","scope":3,"cat":"3.1"},
-    "dye_chemical_kg":{"name":{"tr":"Boya / kimyasal","en":"Dye / chemical"},"value":3.4,"unit":"kgCO2e/kg","scope":3,"cat":"3.1"},
-    "cardboard_kg":{"name":{"tr":"Karton ambalaj","en":"Cardboard packaging"},"value":0.94,"unit":"kgCO2e/kg","scope":3,"cat":"3.1"},
-    "plastic_kg":{"name":{"tr":"Plastik ambalaj","en":"Plastic packaging"},"value":2.7,"unit":"kgCO2e/kg","scope":3,"cat":"3.1"},
-    "meal_unit":{"name":{"tr":"Servis edilen öğün","en":"Meal served"},"value":1.9,"unit":"kgCO2e/öğün","scope":3,"cat":"3.1"},
-    "laundry_kg":{"name":{"tr":"Çamaşır (kuru ağırlık)","en":"Laundry (dry weight)"},"value":0.9,"unit":"kgCO2e/kg","scope":3,"cat":"3.1"},
-    "freight_road_tkm":{"name":{"tr":"Karayolu yük taşıma","en":"Road freight"},"value":0.107,"unit":"kgCO2e/ton·km","scope":3,"cat":"3.4"},
-    "freight_sea_tkm":{"name":{"tr":"Deniz yük taşıma","en":"Sea freight"},"value":0.016,"unit":"kgCO2e/ton·km","scope":3,"cat":"3.4"},
-    "water_m3":{"name":{"tr":"Şebeke suyu","en":"Mains water"},"value":0.344,"unit":"kgCO2e/m³","scope":3,"cat":"3.5"},
-    "wastewater_m3":{"name":{"tr":"Atık su arıtma","en":"Wastewater treatment"},"value":0.708,"unit":"kgCO2e/m³","scope":3,"cat":"3.5"},
-    "waste_landfill_kg":{"name":{"tr":"Atık (düzenli depolama)","en":"Waste (landfill)"},"value":0.458,"unit":"kgCO2e/kg","scope":3,"cat":"3.5"},
-    "waste_recycled_kg":{"name":{"tr":"Atık (geri dönüşüm)","en":"Waste (recycled)"},"value":0.021,"unit":"kgCO2e/kg","scope":3,"cat":"3.5"},
-    "car_km":{"name":{"tr":"Binek araç (iş seyahati)","en":"Car (business travel)"},"value":0.170,"unit":"kgCO2e/km","scope":3,"cat":"3.6"},
-    "flight_km":{"name":{"tr":"Uçuş (yolcu·km)","en":"Flight (passenger·km)"},"value":0.150,"unit":"kgCO2e/km","scope":3,"cat":"3.6"},
-    "commute_km":{"name":{"tr":"Personel ulaşımı","en":"Employee commuting"},"value":0.150,"unit":"kgCO2e/km","scope":3,"cat":"3.7"}
+ "meta": {
+  "version": "3.1",
+  "updated": "2026-10-05",
+  "methodology": {
+   "tr": "GHG Protocol Kurumsal Standardı temel alınmıştır; KOBİ'ler için sadeleştirilmiştir. Faaliyet-verisi esas alınır. Kapsam 2 hem konum-bazlı hem pazar-bazlı raporlanır. Kapsam 3 kalemleri GHG Protocol kategori numaralarıyla etiketlenmiştir. Her girdi için veri kalitesi (ölçüm/tahmin) işaretlenebilir. Alıcı modülünde Kapsam 3.1 hibrit yöntemle hesaplanır: tedarikçiye özgü veri (tahsisatlı), faaliyet/malzeme verisi veya harcama bazlı (EEIO) tahmin. Her satır 1-5 veri kalitesi puanı ve belirsizlik aralığı taşır; kapsanmayan satın alma harcaması portföy yoğunluğuyla ekstrapole edilir.",
+   "en": "Based on the GHG Protocol Corporate Standard, streamlined for SMEs. Uses activity data. Scope 2 reported location- and market-based. Scope 3 items tagged with GHG Protocol category numbers. Data quality (measured/estimate) per input. In the buyer module Scope 3.1 uses a hybrid approach: supplier-specific data (allocated), activity/material data, or spend-based (EEIO) estimation. Each line carries a 1-5 data quality score and an uncertainty range; uncovered procurement spend is extrapolated using portfolio intensity."
   },
-  "sectors":{
-    "textile":{"name":{"tr":"Tekstil Üretimi","en":"Textile Manufacturing"},"icon":"🧵","questions":[
-      {"id":"t_elec","factorKey":"electricity_kwh","name":{"tr":"Yıllık elektrik tüketimi (toplam)","en":"Annual electricity use (total)"},"unitLabel":{"tr":"kWh/yıl","en":"kWh/yr"}},
-      {"id":"t_elec_green","factorKey":"electricity_green_kwh","name":{"tr":"Bunun yeşil/sertifikalı olan kısmı","en":"Of which certified renewable"},"unitLabel":{"tr":"kWh/yıl","en":"kWh/yr"}},
-      {"id":"t_gas","factorKey":"natural_gas_m3","name":{"tr":"Doğal gaz tüketimi","en":"Natural gas use"},"unitLabel":{"tr":"m³/yıl","en":"m³/yr"}},
-      {"id":"t_coal","factorKey":"coal_kg","name":{"tr":"Kömür (kazan/ısıtma)","en":"Coal (boiler)"},"unitLabel":{"tr":"kg/yıl","en":"kg/yr"}},
-      {"id":"t_diesel","factorKey":"diesel_l","name":{"tr":"Araç filosu — motorin","en":"Fleet — diesel"},"unitLabel":{"tr":"L/yıl","en":"L/yr"}},
-      {"id":"t_gasoline","factorKey":"gasoline_l","name":{"tr":"Araç filosu — benzin","en":"Fleet — gasoline"},"unitLabel":{"tr":"L/yıl","en":"L/yr"}},
-      {"id":"t_refrig","factorKey":"refrigerant_r410a_kg","name":{"tr":"Soğutucu gaz dolumu (kaçak)","en":"Refrigerant refill (leak)"},"unitLabel":{"tr":"kg/yıl","en":"kg/yr"}},
-      {"id":"t_steam","factorKey":"steam_kwh","name":{"tr":"Satın alınan buhar/ısı","en":"Purchased steam/heat"},"unitLabel":{"tr":"kWh/yıl","en":"kWh/yr"}},
-      {"id":"t_cotton","factorKey":"cotton_kg","name":{"tr":"İşlenen pamuk (hammadde)","en":"Cotton processed"},"unitLabel":{"tr":"kg/yıl","en":"kg/yr"}},
-      {"id":"t_poly","factorKey":"polyester_kg","name":{"tr":"İşlenen polyester (hammadde)","en":"Polyester processed"},"unitLabel":{"tr":"kg/yıl","en":"kg/yr"}},
-      {"id":"t_wool","factorKey":"wool_kg","name":{"tr":"İşlenen yün (hammadde)","en":"Wool processed"},"unitLabel":{"tr":"kg/yıl","en":"kg/yr"}},
-      {"id":"t_dye","factorKey":"dye_chemical_kg","name":{"tr":"Boya / kimyasal kullanımı","en":"Dye / chemical used"},"unitLabel":{"tr":"kg/yıl","en":"kg/yr"}},
-      {"id":"t_card","factorKey":"cardboard_kg","name":{"tr":"Karton ambalaj","en":"Cardboard packaging"},"unitLabel":{"tr":"kg/yıl","en":"kg/yr"}},
-      {"id":"t_plastic","factorKey":"plastic_kg","name":{"tr":"Plastik ambalaj","en":"Plastic packaging"},"unitLabel":{"tr":"kg/yıl","en":"kg/yr"}},
-      {"id":"t_water","factorKey":"water_m3","name":{"tr":"Su tüketimi","en":"Water use"},"unitLabel":{"tr":"m³/yıl","en":"m³/yr"}},
-      {"id":"t_waste","factorKey":"waste_landfill_kg","name":{"tr":"Atık — düzenli depolama","en":"Waste — landfill"},"unitLabel":{"tr":"kg/yıl","en":"kg/yr"}},
-      {"id":"t_waste_rec","factorKey":"waste_recycled_kg","name":{"tr":"Atık — geri dönüşüm","en":"Waste — recycled"},"unitLabel":{"tr":"kg/yıl","en":"kg/yr"}},
-      {"id":"t_freight","factorKey":"freight_road_tkm","name":{"tr":"Ürün sevkiyatı — karayolu","en":"Shipping — road"},"unitLabel":{"tr":"ton·km/yıl","en":"tonne·km/yr"}},
-      {"id":"t_freight_sea","factorKey":"freight_sea_tkm","name":{"tr":"Ürün sevkiyatı — deniz","en":"Shipping — sea"},"unitLabel":{"tr":"ton·km/yıl","en":"tonne·km/yr"}},
-      {"id":"t_car","factorKey":"car_km","name":{"tr":"İş seyahati — araç","en":"Business travel — car"},"unitLabel":{"tr":"km/yıl","en":"km/yr"}},
-      {"id":"t_flight","factorKey":"flight_km","name":{"tr":"İş seyahati — uçuş (yolcu·km)","en":"Business travel — flight"},"unitLabel":{"tr":"km/yıl","en":"km/yr"}},
-      {"id":"t_commute","factorKey":"commute_km","name":{"tr":"Personel ulaşımı (toplam)","en":"Employee commuting (total)"},"unitLabel":{"tr":"km/yıl","en":"km/yr"}}
-    ]},
-    "tourism":{"name":{"tr":"Turizm / Konaklama","en":"Tourism / Hospitality"},"icon":"🏨","questions":[
-      {"id":"h_elec","factorKey":"electricity_kwh","name":{"tr":"Yıllık elektrik tüketimi (toplam)","en":"Annual electricity use (total)"},"unitLabel":{"tr":"kWh/yıl","en":"kWh/yr"}},
-      {"id":"h_elec_green","factorKey":"electricity_green_kwh","name":{"tr":"Bunun yeşil/sertifikalı olan kısmı","en":"Of which certified renewable"},"unitLabel":{"tr":"kWh/yıl","en":"kWh/yr"}},
-      {"id":"h_gas","factorKey":"natural_gas_m3","name":{"tr":"Doğal gaz tüketimi","en":"Natural gas use"},"unitLabel":{"tr":"m³/yıl","en":"m³/yr"}},
-      {"id":"h_lpg","factorKey":"lpg_kg","name":{"tr":"LPG / tüp gaz (mutfak vb.)","en":"LPG (kitchen etc.)"},"unitLabel":{"tr":"kg/yıl","en":"kg/yr"}},
-      {"id":"h_diesel","factorKey":"diesel_l","name":{"tr":"Jeneratör/servis aracı — motorin","en":"Generator/shuttle — diesel"},"unitLabel":{"tr":"L/yıl","en":"L/yr"}},
-      {"id":"h_gasoline","factorKey":"gasoline_l","name":{"tr":"Servis aracı — benzin","en":"Shuttle — gasoline"},"unitLabel":{"tr":"L/yıl","en":"L/yr"}},
-      {"id":"h_refrig","factorKey":"refrigerant_r410a_kg","name":{"tr":"Soğutucu gaz dolumu (kaçak)","en":"Refrigerant refill (leak)"},"unitLabel":{"tr":"kg/yıl","en":"kg/yr"}},
-      {"id":"h_water","factorKey":"water_m3","name":{"tr":"Su tüketimi","en":"Water use"},"unitLabel":{"tr":"m³/yıl","en":"m³/yr"}},
-      {"id":"h_wastewater","factorKey":"wastewater_m3","name":{"tr":"Atık su","en":"Wastewater"},"unitLabel":{"tr":"m³/yıl","en":"m³/yr"}},
-      {"id":"h_meals","factorKey":"meal_unit","name":{"tr":"Servis edilen öğün sayısı","en":"Meals served"},"unitLabel":{"tr":"öğün/yıl","en":"meals/yr"}},
-      {"id":"h_laundry","factorKey":"laundry_kg","name":{"tr":"Çamaşırhane (kuru ağırlık)","en":"Laundry (dry weight)"},"unitLabel":{"tr":"kg/yıl","en":"kg/yr"}},
-      {"id":"h_card","factorKey":"cardboard_kg","name":{"tr":"Karton ambalaj","en":"Cardboard packaging"},"unitLabel":{"tr":"kg/yıl","en":"kg/yr"}},
-      {"id":"h_plastic","factorKey":"plastic_kg","name":{"tr":"Plastik / tek kullanımlık","en":"Plastic / single-use"},"unitLabel":{"tr":"kg/yıl","en":"kg/yr"}},
-      {"id":"h_waste","factorKey":"waste_landfill_kg","name":{"tr":"Atık — düzenli depolama","en":"Waste — landfill"},"unitLabel":{"tr":"kg/yıl","en":"kg/yr"}},
-      {"id":"h_waste_rec","factorKey":"waste_recycled_kg","name":{"tr":"Atık — geri dönüşüm","en":"Waste — recycled"},"unitLabel":{"tr":"kg/yıl","en":"kg/yr"}},
-      {"id":"h_car","factorKey":"car_km","name":{"tr":"İş seyahati — araç","en":"Business travel — car"},"unitLabel":{"tr":"km/yıl","en":"km/yr"}},
-      {"id":"h_flight","factorKey":"flight_km","name":{"tr":"İş seyahati — uçuş (yolcu·km)","en":"Business travel — flight"},"unitLabel":{"tr":"km/yıl","en":"km/yr"}},
-      {"id":"h_commute","factorKey":"commute_km","name":{"tr":"Personel ulaşımı (toplam)","en":"Employee commuting (total)"},"unitLabel":{"tr":"km/yıl","en":"km/yr"}}
-    ]}
+  "notice": {
+   "tr": "Emisyon faktörleri VARSAYILAN referans değerlerdir. Resmi raporlama öncesi güncel IPCC / DEFRA / Türkiye Ulusal Envanter değerleriyle doğrulayın. Bu araç tam LCA değil, temel seviye tahmin sağlar.",
+   "en": "Emission factors are DEFAULT reference values. Verify before official reporting. This is a basic estimate, not a full LCA."
+  }
+ },
+ "profile": {
+  "fields": [
+   {
+    "id": "employees",
+    "name": {
+     "tr": "Çalışan sayısı (TZE)",
+     "en": "Employees (FTE)"
+    },
+    "type": "number",
+    "hint": {
+     "tr": "Yoğunluk için",
+     "en": "For intensity"
+    }
+   },
+   {
+    "id": "revenue",
+    "name": {
+     "tr": "Yıllık ciro",
+     "en": "Annual revenue"
+    },
+    "type": "number",
+    "unit": {
+     "tr": "₺/yıl",
+     "en": "₺/yr"
+    },
+    "hint": {
+     "tr": "Yoğunluk için",
+     "en": "For intensity"
+    }
+   },
+   {
+    "id": "output",
+    "name": {
+     "tr": "Yıllık üretim/çıktı (ops.)",
+     "en": "Annual output (opt.)"
+    },
+    "type": "number",
+    "unit": {
+     "tr": "birim/yıl",
+     "en": "units/yr"
+    },
+    "hint": {
+     "tr": "ör. kg kumaş, oda-gece",
+     "en": "e.g. kg fabric"
+    }
+   },
+   {
+    "id": "market",
+    "name": {
+     "tr": "Pazar",
+     "en": "Market"
+    },
+    "type": "select",
+    "options": [
+     {
+      "value": "domestic",
+      "label": {
+       "tr": "Yurtiçi",
+       "en": "Domestic"
+      }
+     },
+     {
+      "value": "export",
+      "label": {
+       "tr": "İhracat ağırlıklı",
+       "en": "Export-focused"
+      }
+     },
+     {
+      "value": "both",
+      "label": {
+       "tr": "Karma",
+       "en": "Mixed"
+      }
+     }
+    ]
+   }
+  ],
+  "sizeClasses": [
+   {
+    "max": 10,
+    "label": {
+     "tr": "Mikro (<10)",
+     "en": "Micro (<10)"
+    }
+   },
+   {
+    "max": 50,
+    "label": {
+     "tr": "Küçük (10-50)",
+     "en": "Small (10-50)"
+    }
+   },
+   {
+    "max": 500,
+    "label": {
+     "tr": "Orta (50-500)",
+     "en": "Medium (50-500)"
+    }
+   },
+   {
+    "max": 100000000,
+    "label": {
+     "tr": "Büyük (500+)",
+     "en": "Large (500+)"
+    }
+   }
+  ]
+ },
+ "intensity": {
+  "perEmployee": true,
+  "perRevenue": true,
+  "revenueBase": 1000000,
+  "revenueBaseLabel": {
+   "tr": "milyon ₺",
+   "en": "million ₺"
   },
-  "scope3cats":{"3.1":{"tr":"Satın alınan mal ve hizmetler","en":"Purchased goods & services"},"3.4":{"tr":"Yukarı yön taşıma ve dağıtım","en":"Upstream transport"},"3.5":{"tr":"Operasyonda oluşan atık ve su","en":"Waste & water in operations"},"3.6":{"tr":"İş seyahatleri","en":"Business travel"},"3.7":{"tr":"Personel ulaşımı","en":"Employee commuting"},"3.9":{"tr":"Aşağı yön taşıma","en":"Downstream transport"}},
-  "benchmarks":{"tree_kg_per_year":21,"car_km_equiv_factor":0.170}
+  "perOutput": true
+ },
+ "dataQuality": {
+  "enabled": true
+ },
+ "factors": {
+  "electricity_kwh": {
+   "name": {
+    "tr": "Elektrik (şebeke)",
+    "en": "Electricity (grid)"
+   },
+   "value": 0.442,
+   "unit": "kgCO2e/kWh",
+   "scope": 2
+  },
+  "electricity_green_kwh": {
+   "name": {
+    "tr": "Yeşil/sertifikalı elektrik",
+    "en": "Certified renewable electricity"
+   },
+   "value": 0.0,
+   "unit": "kgCO2e/kWh",
+   "scope": 2,
+   "marketAdjust": true
+  },
+  "natural_gas_m3": {
+   "name": {
+    "tr": "Doğal gaz",
+    "en": "Natural gas"
+   },
+   "value": 2.02,
+   "unit": "kgCO2e/m³",
+   "scope": 1
+  },
+  "diesel_l": {
+   "name": {
+    "tr": "Motorin (dizel)",
+    "en": "Diesel"
+   },
+   "value": 2.68,
+   "unit": "kgCO2e/L",
+   "scope": 1
+  },
+  "gasoline_l": {
+   "name": {
+    "tr": "Benzin",
+    "en": "Gasoline"
+   },
+   "value": 2.31,
+   "unit": "kgCO2e/L",
+   "scope": 1
+  },
+  "lpg_kg": {
+   "name": {
+    "tr": "LPG / Tüp gaz",
+    "en": "LPG"
+   },
+   "value": 2.98,
+   "unit": "kgCO2e/kg",
+   "scope": 1
+  },
+  "fuel_oil_l": {
+   "name": {
+    "tr": "Fuel oil",
+    "en": "Fuel oil"
+   },
+   "value": 3.15,
+   "unit": "kgCO2e/L",
+   "scope": 1
+  },
+  "coal_kg": {
+   "name": {
+    "tr": "Kömür",
+    "en": "Coal"
+   },
+   "value": 2.42,
+   "unit": "kgCO2e/kg",
+   "scope": 1
+  },
+  "refrigerant_r410a_kg": {
+   "name": {
+    "tr": "Soğutucu gaz kaçağı (R410A)",
+    "en": "Refrigerant leak (R410A)"
+   },
+   "value": 2088.0,
+   "unit": "kgCO2e/kg",
+   "scope": 1
+  },
+  "steam_kwh": {
+   "name": {
+    "tr": "Satın alınan buhar/ısı",
+    "en": "Purchased steam/heat"
+   },
+   "value": 0.27,
+   "unit": "kgCO2e/kWh",
+   "scope": 2
+  },
+  "cotton_kg": {
+   "name": {
+    "tr": "Pamuklu kumaş/iplik",
+    "en": "Cotton fabric/yarn"
+   },
+   "value": 16.5,
+   "unit": "kgCO2e/kg",
+   "scope": 3,
+   "cat": "3.1"
+  },
+  "polyester_kg": {
+   "name": {
+    "tr": "Polyester kumaş/iplik",
+    "en": "Polyester fabric/yarn"
+   },
+   "value": 9.5,
+   "unit": "kgCO2e/kg",
+   "scope": 3,
+   "cat": "3.1"
+  },
+  "wool_kg": {
+   "name": {
+    "tr": "Yün",
+    "en": "Wool"
+   },
+   "value": 24.0,
+   "unit": "kgCO2e/kg",
+   "scope": 3,
+   "cat": "3.1"
+  },
+  "dye_chemical_kg": {
+   "name": {
+    "tr": "Boya / kimyasal",
+    "en": "Dye / chemical"
+   },
+   "value": 3.4,
+   "unit": "kgCO2e/kg",
+   "scope": 3,
+   "cat": "3.1"
+  },
+  "cardboard_kg": {
+   "name": {
+    "tr": "Karton ambalaj",
+    "en": "Cardboard packaging"
+   },
+   "value": 0.94,
+   "unit": "kgCO2e/kg",
+   "scope": 3,
+   "cat": "3.1"
+  },
+  "plastic_kg": {
+   "name": {
+    "tr": "Plastik ambalaj",
+    "en": "Plastic packaging"
+   },
+   "value": 2.7,
+   "unit": "kgCO2e/kg",
+   "scope": 3,
+   "cat": "3.1"
+  },
+  "meal_unit": {
+   "name": {
+    "tr": "Servis edilen öğün",
+    "en": "Meal served"
+   },
+   "value": 1.9,
+   "unit": "kgCO2e/öğün",
+   "scope": 3,
+   "cat": "3.1"
+  },
+  "laundry_kg": {
+   "name": {
+    "tr": "Çamaşır (kuru ağırlık)",
+    "en": "Laundry (dry weight)"
+   },
+   "value": 0.9,
+   "unit": "kgCO2e/kg",
+   "scope": 3,
+   "cat": "3.1"
+  },
+  "freight_road_tkm": {
+   "name": {
+    "tr": "Karayolu yük taşıma",
+    "en": "Road freight"
+   },
+   "value": 0.107,
+   "unit": "kgCO2e/ton·km",
+   "scope": 3,
+   "cat": "3.4"
+  },
+  "freight_sea_tkm": {
+   "name": {
+    "tr": "Deniz yük taşıma",
+    "en": "Sea freight"
+   },
+   "value": 0.016,
+   "unit": "kgCO2e/ton·km",
+   "scope": 3,
+   "cat": "3.4"
+  },
+  "water_m3": {
+   "name": {
+    "tr": "Şebeke suyu",
+    "en": "Mains water"
+   },
+   "value": 0.344,
+   "unit": "kgCO2e/m³",
+   "scope": 3,
+   "cat": "3.5"
+  },
+  "wastewater_m3": {
+   "name": {
+    "tr": "Atık su arıtma",
+    "en": "Wastewater treatment"
+   },
+   "value": 0.708,
+   "unit": "kgCO2e/m³",
+   "scope": 3,
+   "cat": "3.5"
+  },
+  "waste_landfill_kg": {
+   "name": {
+    "tr": "Atık (düzenli depolama)",
+    "en": "Waste (landfill)"
+   },
+   "value": 0.458,
+   "unit": "kgCO2e/kg",
+   "scope": 3,
+   "cat": "3.5"
+  },
+  "waste_recycled_kg": {
+   "name": {
+    "tr": "Atık (geri dönüşüm)",
+    "en": "Waste (recycled)"
+   },
+   "value": 0.021,
+   "unit": "kgCO2e/kg",
+   "scope": 3,
+   "cat": "3.5"
+  },
+  "car_km": {
+   "name": {
+    "tr": "Binek araç (iş seyahati)",
+    "en": "Car (business travel)"
+   },
+   "value": 0.17,
+   "unit": "kgCO2e/km",
+   "scope": 3,
+   "cat": "3.6"
+  },
+  "flight_km": {
+   "name": {
+    "tr": "Uçuş (yolcu·km)",
+    "en": "Flight (passenger·km)"
+   },
+   "value": 0.15,
+   "unit": "kgCO2e/km",
+   "scope": 3,
+   "cat": "3.6"
+  },
+  "commute_km": {
+   "name": {
+    "tr": "Personel ulaşımı",
+    "en": "Employee commuting"
+   },
+   "value": 0.15,
+   "unit": "kgCO2e/km",
+   "scope": 3,
+   "cat": "3.7"
+  },
+  "steel_kg": {
+   "name": {
+    "tr": "Çelik (ortalama)",
+    "en": "Steel (average)"
+   },
+   "value": 1.85,
+   "unit": "kgCO2e/kg",
+   "scope": 3,
+   "cat": "3.1"
+  },
+  "steel_recycled_kg": {
+   "name": {
+    "tr": "Çelik (hurda/EAF bazlı)",
+    "en": "Steel (scrap/EAF)"
+   },
+   "value": 0.7,
+   "unit": "kgCO2e/kg",
+   "scope": 3,
+   "cat": "3.1"
+  },
+  "stainless_steel_kg": {
+   "name": {
+    "tr": "Paslanmaz çelik",
+    "en": "Stainless steel"
+   },
+   "value": 2.9,
+   "unit": "kgCO2e/kg",
+   "scope": 3,
+   "cat": "3.1"
+  },
+  "aluminium_kg": {
+   "name": {
+    "tr": "Alüminyum (birincil ağırlıklı)",
+    "en": "Aluminium (primary-weighted)"
+   },
+   "value": 11.5,
+   "unit": "kgCO2e/kg",
+   "scope": 3,
+   "cat": "3.1"
+  },
+  "aluminium_recycled_kg": {
+   "name": {
+    "tr": "Alüminyum (geri dönüşümlü)",
+    "en": "Aluminium (recycled)"
+   },
+   "value": 1.4,
+   "unit": "kgCO2e/kg",
+   "scope": 3,
+   "cat": "3.1"
+  },
+  "copper_kg": {
+   "name": {
+    "tr": "Bakır",
+    "en": "Copper"
+   },
+   "value": 4.0,
+   "unit": "kgCO2e/kg",
+   "scope": 3,
+   "cat": "3.1"
+  },
+  "cement_kg": {
+   "name": {
+    "tr": "Çimento",
+    "en": "Cement"
+   },
+   "value": 0.9,
+   "unit": "kgCO2e/kg",
+   "scope": 3,
+   "cat": "3.1"
+  },
+  "glass_kg": {
+   "name": {
+    "tr": "Cam",
+    "en": "Glass"
+   },
+   "value": 0.85,
+   "unit": "kgCO2e/kg",
+   "scope": 3,
+   "cat": "3.1"
+  },
+  "paper_kg": {
+   "name": {
+    "tr": "Kağıt (birincil)",
+    "en": "Paper (virgin)"
+   },
+   "value": 1.1,
+   "unit": "kgCO2e/kg",
+   "scope": 3,
+   "cat": "3.1"
+  },
+  "paper_recycled_kg": {
+   "name": {
+    "tr": "Kağıt (geri dönüşümlü)",
+    "en": "Paper (recycled)"
+   },
+   "value": 0.7,
+   "unit": "kgCO2e/kg",
+   "scope": 3,
+   "cat": "3.1"
+  },
+  "plastic_recycled_kg": {
+   "name": {
+    "tr": "Plastik (geri dönüşümlü)",
+    "en": "Plastic (recycled)"
+   },
+   "value": 1.0,
+   "unit": "kgCO2e/kg",
+   "scope": 3,
+   "cat": "3.1"
+  },
+  "wood_kg": {
+   "name": {
+    "tr": "Ahşap / kereste",
+    "en": "Wood / timber"
+   },
+   "value": 0.45,
+   "unit": "kgCO2e/kg",
+   "scope": 3,
+   "cat": "3.1"
+  },
+  "leather_kg": {
+   "name": {
+    "tr": "Deri",
+    "en": "Leather"
+   },
+   "value": 17.0,
+   "unit": "kgCO2e/kg",
+   "scope": 3,
+   "cat": "3.1"
+  },
+  "rubber_kg": {
+   "name": {
+    "tr": "Kauçuk",
+    "en": "Rubber"
+   },
+   "value": 2.9,
+   "unit": "kgCO2e/kg",
+   "scope": 3,
+   "cat": "3.1"
+  },
+  "freight_rail_tkm": {
+   "name": {
+    "tr": "Demiryolu yük taşıma",
+    "en": "Rail freight"
+   },
+   "value": 0.028,
+   "unit": "kgCO2e/ton·km",
+   "scope": 3,
+   "cat": "3.4"
+  },
+  "freight_air_tkm": {
+   "name": {
+    "tr": "Hava kargo",
+    "en": "Air freight"
+   },
+   "value": 0.8,
+   "unit": "kgCO2e/ton·km",
+   "scope": 3,
+   "cat": "3.4"
+  }
+ },
+ "sectors": {
+  "textile": {
+   "name": {
+    "tr": "Tekstil Üretimi",
+    "en": "Textile Manufacturing"
+   },
+   "icon": "🧵",
+   "questions": [
+    {
+     "id": "t_elec",
+     "factorKey": "electricity_kwh",
+     "name": {
+      "tr": "Yıllık elektrik tüketimi (toplam)",
+      "en": "Annual electricity use (total)"
+     },
+     "unitLabel": {
+      "tr": "kWh/yıl",
+      "en": "kWh/yr"
+     }
+    },
+    {
+     "id": "t_elec_green",
+     "factorKey": "electricity_green_kwh",
+     "name": {
+      "tr": "Bunun yeşil/sertifikalı olan kısmı",
+      "en": "Of which certified renewable"
+     },
+     "unitLabel": {
+      "tr": "kWh/yıl",
+      "en": "kWh/yr"
+     }
+    },
+    {
+     "id": "t_gas",
+     "factorKey": "natural_gas_m3",
+     "name": {
+      "tr": "Doğal gaz tüketimi",
+      "en": "Natural gas use"
+     },
+     "unitLabel": {
+      "tr": "m³/yıl",
+      "en": "m³/yr"
+     }
+    },
+    {
+     "id": "t_coal",
+     "factorKey": "coal_kg",
+     "name": {
+      "tr": "Kömür (kazan/ısıtma)",
+      "en": "Coal (boiler)"
+     },
+     "unitLabel": {
+      "tr": "kg/yıl",
+      "en": "kg/yr"
+     }
+    },
+    {
+     "id": "t_diesel",
+     "factorKey": "diesel_l",
+     "name": {
+      "tr": "Araç filosu — motorin",
+      "en": "Fleet — diesel"
+     },
+     "unitLabel": {
+      "tr": "L/yıl",
+      "en": "L/yr"
+     }
+    },
+    {
+     "id": "t_gasoline",
+     "factorKey": "gasoline_l",
+     "name": {
+      "tr": "Araç filosu — benzin",
+      "en": "Fleet — gasoline"
+     },
+     "unitLabel": {
+      "tr": "L/yıl",
+      "en": "L/yr"
+     }
+    },
+    {
+     "id": "t_refrig",
+     "factorKey": "refrigerant_r410a_kg",
+     "name": {
+      "tr": "Soğutucu gaz dolumu (kaçak)",
+      "en": "Refrigerant refill (leak)"
+     },
+     "unitLabel": {
+      "tr": "kg/yıl",
+      "en": "kg/yr"
+     }
+    },
+    {
+     "id": "t_steam",
+     "factorKey": "steam_kwh",
+     "name": {
+      "tr": "Satın alınan buhar/ısı",
+      "en": "Purchased steam/heat"
+     },
+     "unitLabel": {
+      "tr": "kWh/yıl",
+      "en": "kWh/yr"
+     }
+    },
+    {
+     "id": "t_cotton",
+     "factorKey": "cotton_kg",
+     "name": {
+      "tr": "İşlenen pamuk (hammadde)",
+      "en": "Cotton processed"
+     },
+     "unitLabel": {
+      "tr": "kg/yıl",
+      "en": "kg/yr"
+     }
+    },
+    {
+     "id": "t_poly",
+     "factorKey": "polyester_kg",
+     "name": {
+      "tr": "İşlenen polyester (hammadde)",
+      "en": "Polyester processed"
+     },
+     "unitLabel": {
+      "tr": "kg/yıl",
+      "en": "kg/yr"
+     }
+    },
+    {
+     "id": "t_wool",
+     "factorKey": "wool_kg",
+     "name": {
+      "tr": "İşlenen yün (hammadde)",
+      "en": "Wool processed"
+     },
+     "unitLabel": {
+      "tr": "kg/yıl",
+      "en": "kg/yr"
+     }
+    },
+    {
+     "id": "t_dye",
+     "factorKey": "dye_chemical_kg",
+     "name": {
+      "tr": "Boya / kimyasal kullanımı",
+      "en": "Dye / chemical used"
+     },
+     "unitLabel": {
+      "tr": "kg/yıl",
+      "en": "kg/yr"
+     }
+    },
+    {
+     "id": "t_card",
+     "factorKey": "cardboard_kg",
+     "name": {
+      "tr": "Karton ambalaj",
+      "en": "Cardboard packaging"
+     },
+     "unitLabel": {
+      "tr": "kg/yıl",
+      "en": "kg/yr"
+     }
+    },
+    {
+     "id": "t_plastic",
+     "factorKey": "plastic_kg",
+     "name": {
+      "tr": "Plastik ambalaj",
+      "en": "Plastic packaging"
+     },
+     "unitLabel": {
+      "tr": "kg/yıl",
+      "en": "kg/yr"
+     }
+    },
+    {
+     "id": "t_water",
+     "factorKey": "water_m3",
+     "name": {
+      "tr": "Su tüketimi",
+      "en": "Water use"
+     },
+     "unitLabel": {
+      "tr": "m³/yıl",
+      "en": "m³/yr"
+     }
+    },
+    {
+     "id": "t_waste",
+     "factorKey": "waste_landfill_kg",
+     "name": {
+      "tr": "Atık — düzenli depolama",
+      "en": "Waste — landfill"
+     },
+     "unitLabel": {
+      "tr": "kg/yıl",
+      "en": "kg/yr"
+     }
+    },
+    {
+     "id": "t_waste_rec",
+     "factorKey": "waste_recycled_kg",
+     "name": {
+      "tr": "Atık — geri dönüşüm",
+      "en": "Waste — recycled"
+     },
+     "unitLabel": {
+      "tr": "kg/yıl",
+      "en": "kg/yr"
+     }
+    },
+    {
+     "id": "t_freight",
+     "factorKey": "freight_road_tkm",
+     "name": {
+      "tr": "Ürün sevkiyatı — karayolu",
+      "en": "Shipping — road"
+     },
+     "unitLabel": {
+      "tr": "ton·km/yıl",
+      "en": "tonne·km/yr"
+     }
+    },
+    {
+     "id": "t_freight_sea",
+     "factorKey": "freight_sea_tkm",
+     "name": {
+      "tr": "Ürün sevkiyatı — deniz",
+      "en": "Shipping — sea"
+     },
+     "unitLabel": {
+      "tr": "ton·km/yıl",
+      "en": "tonne·km/yr"
+     }
+    },
+    {
+     "id": "t_car",
+     "factorKey": "car_km",
+     "name": {
+      "tr": "İş seyahati — araç",
+      "en": "Business travel — car"
+     },
+     "unitLabel": {
+      "tr": "km/yıl",
+      "en": "km/yr"
+     }
+    },
+    {
+     "id": "t_flight",
+     "factorKey": "flight_km",
+     "name": {
+      "tr": "İş seyahati — uçuş (yolcu·km)",
+      "en": "Business travel — flight"
+     },
+     "unitLabel": {
+      "tr": "km/yıl",
+      "en": "km/yr"
+     }
+    },
+    {
+     "id": "t_commute",
+     "factorKey": "commute_km",
+     "name": {
+      "tr": "Personel ulaşımı (toplam)",
+      "en": "Employee commuting (total)"
+     },
+     "unitLabel": {
+      "tr": "km/yıl",
+      "en": "km/yr"
+     }
+    }
+   ]
+  },
+  "tourism": {
+   "name": {
+    "tr": "Turizm / Konaklama",
+    "en": "Tourism / Hospitality"
+   },
+   "icon": "🏨",
+   "questions": [
+    {
+     "id": "h_elec",
+     "factorKey": "electricity_kwh",
+     "name": {
+      "tr": "Yıllık elektrik tüketimi (toplam)",
+      "en": "Annual electricity use (total)"
+     },
+     "unitLabel": {
+      "tr": "kWh/yıl",
+      "en": "kWh/yr"
+     }
+    },
+    {
+     "id": "h_elec_green",
+     "factorKey": "electricity_green_kwh",
+     "name": {
+      "tr": "Bunun yeşil/sertifikalı olan kısmı",
+      "en": "Of which certified renewable"
+     },
+     "unitLabel": {
+      "tr": "kWh/yıl",
+      "en": "kWh/yr"
+     }
+    },
+    {
+     "id": "h_gas",
+     "factorKey": "natural_gas_m3",
+     "name": {
+      "tr": "Doğal gaz tüketimi",
+      "en": "Natural gas use"
+     },
+     "unitLabel": {
+      "tr": "m³/yıl",
+      "en": "m³/yr"
+     }
+    },
+    {
+     "id": "h_lpg",
+     "factorKey": "lpg_kg",
+     "name": {
+      "tr": "LPG / tüp gaz (mutfak vb.)",
+      "en": "LPG (kitchen etc.)"
+     },
+     "unitLabel": {
+      "tr": "kg/yıl",
+      "en": "kg/yr"
+     }
+    },
+    {
+     "id": "h_diesel",
+     "factorKey": "diesel_l",
+     "name": {
+      "tr": "Jeneratör/servis aracı — motorin",
+      "en": "Generator/shuttle — diesel"
+     },
+     "unitLabel": {
+      "tr": "L/yıl",
+      "en": "L/yr"
+     }
+    },
+    {
+     "id": "h_gasoline",
+     "factorKey": "gasoline_l",
+     "name": {
+      "tr": "Servis aracı — benzin",
+      "en": "Shuttle — gasoline"
+     },
+     "unitLabel": {
+      "tr": "L/yıl",
+      "en": "L/yr"
+     }
+    },
+    {
+     "id": "h_refrig",
+     "factorKey": "refrigerant_r410a_kg",
+     "name": {
+      "tr": "Soğutucu gaz dolumu (kaçak)",
+      "en": "Refrigerant refill (leak)"
+     },
+     "unitLabel": {
+      "tr": "kg/yıl",
+      "en": "kg/yr"
+     }
+    },
+    {
+     "id": "h_water",
+     "factorKey": "water_m3",
+     "name": {
+      "tr": "Su tüketimi",
+      "en": "Water use"
+     },
+     "unitLabel": {
+      "tr": "m³/yıl",
+      "en": "m³/yr"
+     }
+    },
+    {
+     "id": "h_wastewater",
+     "factorKey": "wastewater_m3",
+     "name": {
+      "tr": "Atık su",
+      "en": "Wastewater"
+     },
+     "unitLabel": {
+      "tr": "m³/yıl",
+      "en": "m³/yr"
+     }
+    },
+    {
+     "id": "h_meals",
+     "factorKey": "meal_unit",
+     "name": {
+      "tr": "Servis edilen öğün sayısı",
+      "en": "Meals served"
+     },
+     "unitLabel": {
+      "tr": "öğün/yıl",
+      "en": "meals/yr"
+     }
+    },
+    {
+     "id": "h_laundry",
+     "factorKey": "laundry_kg",
+     "name": {
+      "tr": "Çamaşırhane (kuru ağırlık)",
+      "en": "Laundry (dry weight)"
+     },
+     "unitLabel": {
+      "tr": "kg/yıl",
+      "en": "kg/yr"
+     }
+    },
+    {
+     "id": "h_card",
+     "factorKey": "cardboard_kg",
+     "name": {
+      "tr": "Karton ambalaj",
+      "en": "Cardboard packaging"
+     },
+     "unitLabel": {
+      "tr": "kg/yıl",
+      "en": "kg/yr"
+     }
+    },
+    {
+     "id": "h_plastic",
+     "factorKey": "plastic_kg",
+     "name": {
+      "tr": "Plastik / tek kullanımlık",
+      "en": "Plastic / single-use"
+     },
+     "unitLabel": {
+      "tr": "kg/yıl",
+      "en": "kg/yr"
+     }
+    },
+    {
+     "id": "h_waste",
+     "factorKey": "waste_landfill_kg",
+     "name": {
+      "tr": "Atık — düzenli depolama",
+      "en": "Waste — landfill"
+     },
+     "unitLabel": {
+      "tr": "kg/yıl",
+      "en": "kg/yr"
+     }
+    },
+    {
+     "id": "h_waste_rec",
+     "factorKey": "waste_recycled_kg",
+     "name": {
+      "tr": "Atık — geri dönüşüm",
+      "en": "Waste — recycled"
+     },
+     "unitLabel": {
+      "tr": "kg/yıl",
+      "en": "kg/yr"
+     }
+    },
+    {
+     "id": "h_car",
+     "factorKey": "car_km",
+     "name": {
+      "tr": "İş seyahati — araç",
+      "en": "Business travel — car"
+     },
+     "unitLabel": {
+      "tr": "km/yıl",
+      "en": "km/yr"
+     }
+    },
+    {
+     "id": "h_flight",
+     "factorKey": "flight_km",
+     "name": {
+      "tr": "İş seyahati — uçuş (yolcu·km)",
+      "en": "Business travel — flight"
+     },
+     "unitLabel": {
+      "tr": "km/yıl",
+      "en": "km/yr"
+     }
+    },
+    {
+     "id": "h_commute",
+     "factorKey": "commute_km",
+     "name": {
+      "tr": "Personel ulaşımı (toplam)",
+      "en": "Employee commuting (total)"
+     },
+     "unitLabel": {
+      "tr": "km/yıl",
+      "en": "km/yr"
+     }
+    }
+   ]
+  }
+ },
+ "scope3cats": {
+  "3.1": {
+   "tr": "Satın alınan mal ve hizmetler",
+   "en": "Purchased goods & services"
+  },
+  "3.4": {
+   "tr": "Yukarı yön taşıma ve dağıtım",
+   "en": "Upstream transport"
+  },
+  "3.5": {
+   "tr": "Operasyonda oluşan atık ve su",
+   "en": "Waste & water in operations"
+  },
+  "3.6": {
+   "tr": "İş seyahatleri",
+   "en": "Business travel"
+  },
+  "3.7": {
+   "tr": "Personel ulaşımı",
+   "en": "Employee commuting"
+  },
+  "3.9": {
+   "tr": "Aşağı yön taşıma",
+   "en": "Downstream transport"
+  }
+ },
+ "benchmarks": {
+  "tree_kg_per_year": 21,
+  "car_km_equiv_factor": 0.17
+ },
+ "spendBase": {
+  "currency": "TRY",
+  "usdRate": 49.0,
+  "source": {
+   "tr": "Harcama bazlı faktörler EPA Supply Chain GHG Emission Factors v1.3 (2022 USD, alıcı fiyatı) referans alınarak türetilmiştir.",
+   "en": "Spend-based factors derived from EPA Supply Chain GHG Emission Factors v1.3 (2022 USD, purchaser price)."
+  },
+  "note": {
+   "tr": "Harcama bazlı yöntem tarama (screening) amaçlıdır: fiyat farklılıkları ve kur etkisi nedeniyle belirsizliği yüksektir. Önemli tedarikçiler için birincil veriye geçin.",
+   "en": "The spend-based method is for screening only: price and FX differences make it highly uncertain. Move key suppliers to primary data."
+  }
+ },
+ "spendFactors": {
+  "steel": {
+   "name": {
+    "tr": "Demir-çelik ve metal ürünler",
+    "en": "Iron, steel & metal products"
+   },
+   "value": 2.4,
+   "unit": "kgCO2e/USD"
+  },
+  "aluminium": {
+   "name": {
+    "tr": "Alüminyum ve demir dışı metaller",
+    "en": "Aluminium & non-ferrous metals"
+   },
+   "value": 1.6,
+   "unit": "kgCO2e/USD"
+  },
+  "cement": {
+   "name": {
+    "tr": "Çimento, kireç, hazır beton",
+    "en": "Cement, lime & concrete"
+   },
+   "value": 3.6,
+   "unit": "kgCO2e/USD"
+  },
+  "construction": {
+   "name": {
+    "tr": "İnşaat, tadilat ve taahhüt işleri",
+    "en": "Construction & contracting"
+   },
+   "value": 0.35,
+   "unit": "kgCO2e/USD"
+  },
+  "chemicals": {
+   "name": {
+    "tr": "Kimyasal, boya, yapıştırıcı",
+    "en": "Chemicals, paint & adhesives"
+   },
+   "value": 0.85,
+   "unit": "kgCO2e/USD"
+  },
+  "plastics": {
+   "name": {
+    "tr": "Plastik ve kauçuk ürünler",
+    "en": "Plastic & rubber products"
+   },
+   "value": 0.6,
+   "unit": "kgCO2e/USD"
+  },
+  "paper": {
+   "name": {
+    "tr": "Kağıt, karton ve ambalaj",
+    "en": "Paper, board & packaging"
+   },
+   "value": 0.55,
+   "unit": "kgCO2e/USD"
+  },
+  "textile": {
+   "name": {
+    "tr": "Tekstil, kumaş, hazır giyim",
+    "en": "Textiles, fabric & apparel"
+   },
+   "value": 0.45,
+   "unit": "kgCO2e/USD"
+  },
+  "leather": {
+   "name": {
+    "tr": "Deri ve ayakkabı",
+    "en": "Leather & footwear"
+   },
+   "value": 0.5,
+   "unit": "kgCO2e/USD"
+  },
+  "wood": {
+   "name": {
+    "tr": "Ahşap ürünler ve mobilya",
+    "en": "Wood products & furniture"
+   },
+   "value": 0.45,
+   "unit": "kgCO2e/USD"
+  },
+  "glass": {
+   "name": {
+    "tr": "Cam ve seramik ürünler",
+    "en": "Glass & ceramics"
+   },
+   "value": 0.9,
+   "unit": "kgCO2e/USD"
+  },
+  "food": {
+   "name": {
+    "tr": "Gıda ve içecek ürünleri",
+    "en": "Food & beverage products"
+   },
+   "value": 0.45,
+   "unit": "kgCO2e/USD"
+  },
+  "agriculture": {
+   "name": {
+    "tr": "Tarım ve hayvancılık ürünleri",
+    "en": "Agricultural & livestock products"
+   },
+   "value": 0.9,
+   "unit": "kgCO2e/USD"
+  },
+  "electronics": {
+   "name": {
+    "tr": "Elektronik, bilgisayar, donanım",
+    "en": "Electronics, computers & hardware"
+   },
+   "value": 0.35,
+   "unit": "kgCO2e/USD"
+  },
+  "machinery": {
+   "name": {
+    "tr": "Makine, ekipman, yedek parça",
+    "en": "Machinery, equipment & spare parts"
+   },
+   "value": 0.4,
+   "unit": "kgCO2e/USD"
+  },
+  "vehicles": {
+   "name": {
+    "tr": "Araç ve araç parçaları",
+    "en": "Vehicles & vehicle parts"
+   },
+   "value": 0.35,
+   "unit": "kgCO2e/USD"
+  },
+  "fuel": {
+   "name": {
+    "tr": "Akaryakıt ve petrol ürünleri",
+    "en": "Fuel & petroleum products"
+   },
+   "value": 1.85,
+   "unit": "kgCO2e/USD"
+  },
+  "freight_road": {
+   "name": {
+    "tr": "Karayolu taşıma hizmeti",
+    "en": "Road freight services"
+   },
+   "value": 1.0,
+   "unit": "kgCO2e/USD"
+  },
+  "freight_sea": {
+   "name": {
+    "tr": "Deniz taşıma hizmeti",
+    "en": "Sea freight services"
+   },
+   "value": 0.7,
+   "unit": "kgCO2e/USD"
+  },
+  "freight_air": {
+   "name": {
+    "tr": "Hava kargo hizmeti",
+    "en": "Air freight services"
+   },
+   "value": 1.3,
+   "unit": "kgCO2e/USD"
+  },
+  "warehouse": {
+   "name": {
+    "tr": "Depolama ve lojistik hizmeti",
+    "en": "Warehousing & logistics services"
+   },
+   "value": 0.4,
+   "unit": "kgCO2e/USD"
+  },
+  "hotel": {
+   "name": {
+    "tr": "Konaklama hizmeti",
+    "en": "Accommodation services"
+   },
+   "value": 0.3,
+   "unit": "kgCO2e/USD"
+  },
+  "catering": {
+   "name": {
+    "tr": "Yiyecek-içecek / catering",
+    "en": "Catering & food services"
+   },
+   "value": 0.45,
+   "unit": "kgCO2e/USD"
+  },
+  "cleaning": {
+   "name": {
+    "tr": "Temizlik ve tesis yönetimi",
+    "en": "Cleaning & facility management"
+   },
+   "value": 0.2,
+   "unit": "kgCO2e/USD"
+  },
+  "maintenance": {
+   "name": {
+    "tr": "Bakım, onarım, teknik servis",
+    "en": "Maintenance & repair services"
+   },
+   "value": 0.25,
+   "unit": "kgCO2e/USD"
+  },
+  "it_services": {
+   "name": {
+    "tr": "Yazılım, BT ve bulut hizmetleri",
+    "en": "Software, IT & cloud services"
+   },
+   "value": 0.11,
+   "unit": "kgCO2e/USD"
+  },
+  "consulting": {
+   "name": {
+    "tr": "Danışmanlık ve profesyonel hizmetler",
+    "en": "Consulting & professional services"
+   },
+   "value": 0.12,
+   "unit": "kgCO2e/USD"
+  },
+  "legal": {
+   "name": {
+    "tr": "Hukuk, mali müşavirlik, denetim",
+    "en": "Legal, accounting & audit"
+   },
+   "value": 0.09,
+   "unit": "kgCO2e/USD"
+  },
+  "marketing": {
+   "name": {
+    "tr": "Reklam, ajans, basım",
+    "en": "Advertising, agency & printing"
+   },
+   "value": 0.15,
+   "unit": "kgCO2e/USD"
+  },
+  "office": {
+   "name": {
+    "tr": "Ofis malzemesi ve kırtasiye",
+    "en": "Office supplies & stationery"
+   },
+   "value": 0.45,
+   "unit": "kgCO2e/USD"
+  },
+  "finance": {
+   "name": {
+    "tr": "Finans ve sigorta hizmetleri",
+    "en": "Financial & insurance services"
+   },
+   "value": 0.08,
+   "unit": "kgCO2e/USD"
+  },
+  "other": {
+   "name": {
+    "tr": "Diğer / sınıflandırılmamış",
+    "en": "Other / unclassified"
+   },
+   "value": 0.45,
+   "unit": "kgCO2e/USD"
+  }
+ },
+ "purchaseMaterials": [
+  "cotton_kg",
+  "polyester_kg",
+  "wool_kg",
+  "leather_kg",
+  "dye_chemical_kg",
+  "cardboard_kg",
+  "paper_kg",
+  "paper_recycled_kg",
+  "plastic_kg",
+  "plastic_recycled_kg",
+  "steel_kg",
+  "steel_recycled_kg",
+  "stainless_steel_kg",
+  "aluminium_kg",
+  "aluminium_recycled_kg",
+  "copper_kg",
+  "cement_kg",
+  "glass_kg",
+  "wood_kg",
+  "rubber_kg",
+  "meal_unit",
+  "laundry_kg"
+ ],
+ "freightModes": [
+  "freight_road_tkm",
+  "freight_rail_tkm",
+  "freight_sea_tkm",
+  "freight_air_tkm"
+ ],
+ "dqScale": [
+  {
+   "score": 1,
+   "unc": 10,
+   "label": {
+    "tr": "Doğrulanmış tedarikçi verisi",
+    "en": "Verified supplier data"
+   }
+  },
+  {
+   "score": 2,
+   "unc": 20,
+   "label": {
+    "tr": "Tedarikçi beyanı (doğrulanmamış)",
+    "en": "Supplier-reported (unverified)"
+   }
+  },
+  {
+   "score": 3,
+   "unc": 35,
+   "label": {
+    "tr": "Malzeme miktarı × sektör faktörü",
+    "en": "Activity data × average factor"
+   }
+  },
+  {
+   "score": 4,
+   "unc": 50,
+   "label": {
+    "tr": "Vekil (proxy) faktör",
+    "en": "Proxy factor"
+   }
+  },
+  {
+   "score": 5,
+   "unc": 80,
+   "label": {
+    "tr": "Harcama bazlı tahmin (EEIO)",
+    "en": "Spend-based estimate (EEIO)"
+   }
+  }
+ ],
+ "buyerScenario": {
+  "greenElecShare": 0.25,
+  "recycledCutPct": 0.35,
+  "topN": 5,
+  "modeShiftFrom": "freight_road_tkm",
+  "modeShiftTo": "freight_sea_tkm",
+  "recycledPairs": {
+   "steel_kg": "steel_recycled_kg",
+   "aluminium_kg": "aluminium_recycled_kg",
+   "paper_kg": "paper_recycled_kg",
+   "cardboard_kg": "paper_recycled_kg",
+   "plastic_kg": "plastic_recycled_kg"
+  },
+  "outlierMultiple": 3
+ }
 };
 
 let CONFIG=null;
@@ -296,11 +1659,39 @@ window.addSector=function(){let i=1,k='sektor';while(CONFIG.sectors[k])k='sektor
 window.delSector=function(k){if(!confirm('“'+k+'” sektörü silinsin mi?'))return;delete CONFIG.sectors[k];renderSectors();};
 function renderGeneral(){document.getElementById('g-meth-tr').value=(CONFIG.meta.methodology&&CONFIG.meta.methodology.tr)||'';document.getElementById('g-meth-en').value=(CONFIG.meta.methodology&&CONFIG.meta.methodology.en)||'';document.getElementById('g-notice-tr').value=(CONFIG.meta.notice&&CONFIG.meta.notice.tr)||'';document.getElementById('g-notice-en').value=(CONFIG.meta.notice&&CONFIG.meta.notice.en)||'';const I=CONFIG.intensity||{};document.getElementById('g-int-emp').value=String(I.perEmployee!==false);document.getElementById('g-int-rev').value=String(I.perRevenue!==false);document.getElementById('g-int-out').value=String(I.perOutput!==false);document.getElementById('g-int-base').value=I.revenueBase||1000000;document.getElementById('g-int-baselabel').value=(I.revenueBaseLabel&&I.revenueBaseLabel.tr)||'milyon ₺';document.getElementById('g-tree').value=(CONFIG.benchmarks&&CONFIG.benchmarks.tree_kg_per_year)!=null?CONFIG.benchmarks.tree_kg_per_year:21;document.getElementById('g-car').value=(CONFIG.benchmarks&&CONFIG.benchmarks.car_km_equiv_factor)!=null?CONFIG.benchmarks.car_km_equiv_factor:0.170;document.getElementById('g-version').value=CONFIG.meta.version||'2.0';document.getElementById('ver').textContent='v'+(CONFIG.meta.version||'2.0');}
 function collectGeneral(){CONFIG.meta.methodology={tr:document.getElementById('g-meth-tr').value,en:document.getElementById('g-meth-en').value};CONFIG.meta.notice={tr:document.getElementById('g-notice-tr').value,en:document.getElementById('g-notice-en').value};CONFIG.intensity=CONFIG.intensity||{};CONFIG.intensity.perEmployee=document.getElementById('g-int-emp').value==='true';CONFIG.intensity.perRevenue=document.getElementById('g-int-rev').value==='true';CONFIG.intensity.perOutput=document.getElementById('g-int-out').value==='true';CONFIG.intensity.revenueBase=parseFloat(document.getElementById('g-int-base').value)||1000000;const bl=document.getElementById('g-int-baselabel').value;CONFIG.intensity.revenueBaseLabel={tr:bl,en:bl};CONFIG.benchmarks=CONFIG.benchmarks||{};CONFIG.benchmarks.tree_kg_per_year=parseFloat(document.getElementById('g-tree').value)||21;CONFIG.benchmarks.car_km_equiv_factor=parseFloat(document.getElementById('g-car').value)||0.170;CONFIG.meta.version=document.getElementById('g-version').value||'2.0';}
-window.saveConfig=async function(){collectGeneral();CONFIG.meta.updated=new Date().toISOString().slice(0,10);try{await setDoc(doc(db,'config','current'),CONFIG);mark('Buluta kaydedildi ('+CONFIG.meta.updated+')');renderGeneral();toast('☁️ Buluta kaydedildi — siteye yansıdı');}catch(e){toast('Kaydedilemedi: '+(e.message||e));}};
+window.saveConfig=async function(){collectGeneral();collectSpend();CONFIG.meta.updated=new Date().toISOString().slice(0,10);try{await setDoc(doc(db,'config','current'),CONFIG);mark('Buluta kaydedildi ('+CONFIG.meta.updated+')');renderGeneral();toast('☁️ Buluta kaydedildi — siteye yansıdı');}catch(e){toast('Kaydedilemedi: '+(e.message||e));}};
 window.exportConfig=function(){collectGeneral();const blob=new Blob([JSON.stringify(CONFIG,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='config.json';a.click();toast('⬇ config.json indirildi');};
 window.importConfig=function(ev){const file=ev.target.files[0];if(!file)return;const r=new FileReader();r.onload=e=>{try{const c=JSON.parse(e.target.result);if(!c.factors||!c.sectors)throw 0;CONFIG=c;migrate();renderAll();toast('✔ JSON yüklendi — Buluta kaydet ile yayınlayın');}catch(err){alert('Geçersiz config.');}};r.readAsText(file);ev.target.value='';};
 window.resetConfig=function(){if(!confirm('Varsayılana dönülsün mü? (Buluta kaydedene kadar kalıcı olmaz)'))return;CONFIG=clone(DEFAULT_CONFIG);renderAll();toast('↺ Varsayılan yüklendi');};
-function renderAll(){renderFactors();renderSectors();renderGeneral();}
+function renderSpend(){
+  CONFIG.spendFactors=CONFIG.spendFactors||{};CONFIG.spendBase=CONFIG.spendBase||{};CONFIG.buyerScenario=CONFIG.buyerScenario||{};
+  const g=(id,v)=>{const e=document.getElementById(id);if(e)e.value=v;};
+  g('g-usd',CONFIG.spendBase.usdRate!=null?CONFIG.spendBase.usdRate:49);
+  g('g-outlier',CONFIG.buyerScenario.outlierMultiple!=null?CONFIG.buyerScenario.outlierMultiple:3);
+  g('g-green',CONFIG.buyerScenario.greenElecShare!=null?CONFIG.buyerScenario.greenElecShare:0.25);
+  g('g-recyc',CONFIG.buyerScenario.recycledCutPct!=null?CONFIG.buyerScenario.recycledCutPct:0.35);
+  const tb=document.getElementById('spend-body');if(!tb)return;tb.innerHTML='';
+  Object.entries(CONFIG.spendFactors).forEach(([key,f])=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML='<td><input value="'+key+'" onchange="renameSpend(\''+key+'\',this.value)" style="font-family:monospace;font-size:.8rem"></td>'+
+      '<td><input value="'+esc((f.name&&f.name.tr)||'')+'" onchange="CONFIG.spendFactors[\''+key+'\'].name.tr=this.value"></td>'+
+      '<td><input value="'+esc((f.name&&f.name.en)||'')+'" onchange="CONFIG.spendFactors[\''+key+'\'].name.en=this.value"></td>'+
+      '<td><input class="num" type="number" step="any" value="'+f.value+'" onchange="CONFIG.spendFactors[\''+key+'\'].value=parseFloat(this.value)||0"></td>'+
+      '<td><button class="rowdel" onclick="delSpend(\''+key+'\')">×</button></td>';
+    tb.appendChild(tr);});
+}
+function collectSpend(){
+  CONFIG.spendBase=CONFIG.spendBase||{};CONFIG.buyerScenario=CONFIG.buyerScenario||{};
+  const n=(id,d)=>{const e=document.getElementById(id);const v=e?parseFloat(e.value):NaN;return isFinite(v)?v:d;};
+  CONFIG.spendBase.usdRate=n('g-usd',49);
+  CONFIG.buyerScenario.outlierMultiple=n('g-outlier',3);
+  CONFIG.buyerScenario.greenElecShare=n('g-green',0.25);
+  CONFIG.buyerScenario.recycledCutPct=n('g-recyc',0.35);
+}
+window.renameSpend=function(oldK,newK){newK=(newK||'').trim();if(!newK||newK===oldK||CONFIG.spendFactors[newK]){renderSpend();return;}const nf={};Object.entries(CONFIG.spendFactors).forEach(([k,v])=>{nf[k===oldK?newK:k]=v;});CONFIG.spendFactors=nf;renderSpend();};
+window.addSpendFactor=function(){let i=1,k='yeni_kategori';while(CONFIG.spendFactors[k])k='yeni_kategori_'+(i++);CONFIG.spendFactors[k]={name:{tr:'Yeni kategori',en:'New category'},value:0.45,unit:'kgCO2e/USD'};renderSpend();};
+window.delSpend=function(k){if(!confirm('“'+k+'” silinsin mi?'))return;delete CONFIG.spendFactors[k];renderSpend();};
+function renderAll(){renderFactors();renderSpend();renderSectors();renderGeneral();}
 
 /* ---- FIRMA RAPORLARI ---- */
 window.loadReports=async function(){const st=document.getElementById('reports-status');const tb=document.getElementById('reports-body');tb.innerHTML='';st.textContent='Yükleniyor…';try{const snap=await getDocs(query(collectionGroup(db,'items'),orderBy('createdAt','desc')));if(snap.empty){st.textContent='Henüz kayıtlı firma raporu yok.';return;}st.textContent=snap.size+' rapor';snap.forEach(d=>{const r=d.data();const dt=r.createdAt&&r.createdAt.toDate?r.createdAt.toDate().toLocaleString('tr-TR'):'';const tr=document.createElement('tr');tr.className='rep-row';tr.innerHTML='<td>'+dt+'</td><td>'+esc(r.company||'')+'</td><td>'+esc(r.userEmail||'')+'</td><td>'+esc(r.sector||'')+'</td><td class="num">'+Math.round(r.total||0).toLocaleString('tr-TR')+'</td><td>'+(r.type==='buyer'?'Alıcı':'Tedarikçi')+'</td>';tb.appendChild(tr);});}catch(e){st.textContent='Yüklenemedi: '+(e.message||e)+' (Firestore indeksi gerekebilir — hata mesajındaki bağlantıya tıklayın.)';}};

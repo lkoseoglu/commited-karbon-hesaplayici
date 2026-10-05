@@ -123,3 +123,62 @@ window.addEventListener('message', function(e){
 ### Firestore kuralları
 `firestore.rules` içine `rotary_mavisehir_bagis` koleksiyonu eklendi (üye kendi talebini yazar,
 yalnız admin okur). Kuralları Firebase konsolundan **yayınlamayı** unutmayın.
+
+---
+
+## Alıcı modülü (Kapsam 3.1 / 3.4) — v3.1 notları
+
+`karbon-hesaplayici.html` içindeki **"Alıcıyım — tedarikçilerimin emisyonlarını topluyorum"** akışı,
+elle girilen kg CO₂e değerlerini toplamak yerine artık hibrit bir Kapsam 3.1 motoru çalıştırır.
+Config sürümü **3.1**'e çıkarıldı (eski 3.0 bulut config'i artık yok sayılır; admin panelinden
+bir kez "Buluta kaydet" demek yeterlidir).
+
+### Satır başına üç yöntem
+
+| Yöntem (`method`) | Hesap | Veri kalitesi |
+|---|---|---|
+| `supplier` | `tedarikçi toplam emisyonu (t) × 1000 × (sizin alımınız ÷ tedarikçinin toplamı)` — tahsis ciro/harcama **veya** fiziksel miktar üzerinden | 1 (üçüncü taraf doğrulamalı) / 2 (beyan) |
+| `activity` | `miktar (kg) × malzeme emisyon faktörü` (`CONFIG.purchaseMaterials`) | 3 |
+| `spend` | `harcama (₺) ÷ USD kuru × kategori faktörü (kgCO₂e/USD)` (`CONFIG.spendFactors`) | 5 |
+
+Her satıra ayrıca opsiyonel **tedarik nakliyesi (Kapsam 3.4)** eklenebilir:
+`ton × km × mod faktörü` (`CONFIG.freightModes`: karayolu / demiryolu / deniz / hava).
+
+### Toplamda hesaplananlar
+
+- **Kapsama analizi:** "yıllık toplam satın alma harcaması" girilirse, kapsanmayan harcama
+  portföyün ağırlıklı yoğunluğuyla (yoksa genel kategori faktörüyle) ekstrapole edilir ve
+  5/5 kalite ile toplama eklenir — rapor eksik kalmaz.
+- **Veri kalitesi skoru:** emisyonla ağırlıklı 1-5 ortalama (`CONFIG.dqScale`), birincil veri payı (%),
+  ve ağırlıklı **belirsizlik aralığı** (±%).
+- **Pareto:** emisyonun %80'ini oluşturan tedarikçi sayısı ve ilk 10 için yatay bar.
+- **Yoğunluk ve aykırı değer:** `kg CO₂e / 1.000 ₺`; medyanın `buyerScenario.outlierMultiple` katını
+  aşan satırlar işaretlenir.
+- **Öncelik listesi:** `emisyon payı × veri kalitesi puanı` sıralamasıyla "önce kimden birincil
+  veri istenmeli" ilk 5.
+- **Azaltım senaryosu:** üç kaydırıcı — (a) ilk N tedarikçi yeşil elektrik (`greenElecShare`),
+  (b) karayolu → deniz mod değişimi (ton·km faktör oranından), (c) geri dönüşümlü muadil
+  malzeme (`recycledPairs` faktör çiftinden). Tüm varsayımlar ekranda yazar.
+
+### Excel
+
+- **Şablon indir:** 4 sayfalı `.xlsx` (tedarikçi satırları + kategori kodları + malzeme kodları + yöntem kodları).
+- **Excel'den yükle / Yapıştır:** aynı sütun sırası; başlık satırı atlanır, bilinmeyen kod/kategori
+  güvenli varsayılana düşer.
+- Rapor Excel'i alıcı için tedarikçi bazında döküm + kapsama + öncelik listesi içerir; PDF'e
+  KPI kutuları, kapsama çubuğu, ilk 12 tedarikçi ve öncelik listesi eklendi.
+
+### Yeni config alanları
+
+`spendBase` (USD kuru + kaynak/uyarı metni), `spendFactors` (32 satın alma kategorisi, kgCO₂e/USD),
+`purchaseMaterials` (3.1 malzeme listesi), `freightModes`, `dqScale` (1-5 + belirsizlik %),
+`buyerScenario` (senaryo varsayımları, aykırı değer eşiği). Ayrıca `factors` içine çelik, paslanmaz,
+alüminyum, bakır, çimento, cam, kağıt, ahşap, deri, kauçuk, geri dönüşümlü muadilleri ve
+demiryolu/hava kargo faktörleri eklendi.
+
+Hepsi admin panelindeki yeni **"Harcama Faktörleri"** sekmesinden (ve mevcut "Emisyon Faktörleri"
+sekmesinden) düzenlenebilir.
+
+> Harcama bazlı faktörlerin varsayılanları EPA *Supply Chain GHG Emission Factors v1.3*
+> (2022 USD, alıcı fiyatı) referansıyla türetilmiştir. Tarama (screening) amaçlıdır; fiyat
+> ve kur farkları nedeniyle belirsizliği yüksektir — resmi raporlama öncesi doğrulanmalıdır.
