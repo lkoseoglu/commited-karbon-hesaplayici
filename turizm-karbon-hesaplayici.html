@@ -1,0 +1,1622 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{color-scheme:light}body{margin:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>Turizm Karbon Hesaplayıcısı</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300..800&display=swap">
+<style>
+/* Layout: tek sütun akış; otel tarafı 5 adımlı dikey akış (Ölç → Kıyasla → Azalt → Net Sıfır → Raporla),
+   üstte yapışkan adım şeridi + canlı özet. Geniş ekranda form alanları çok sütunlu ızgara. */
+:root{
+  --bg:#F2F7F3; --surface:#FFFFFF; --surface2:#E9F2EB; --ink:#14261E; --muted:#5B6E63;
+  --brand:#1E6B4A; --brand-deep:#0B2E22; --brand-soft:#CFE6DA; --accent:#E8C547; --accent-ink:#6B5A1E;
+  --line:#D8E4DC; --good:#2FA05C; --warn:#C98A1B; --bad:#C44536; --chip:#EAF5EE;
+  /* grafik rolleri */
+  --series:#0E7A45; --series-soft:#BFDFCD; --ref:#8A9D92; --grid:#E2EDE6; --plot:#FFFFFF;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0D1A14; --surface:#13251C; --surface2:#1A3226; --ink:#E8F1EA; --muted:#9DB3A6;
+    --brand:#5BBD8B; --brand-deep:#A9E3C3; --brand-soft:#2C5943; --accent:#E8C547; --accent-ink:#F0DE9C;
+    --line:#2A4435; --good:#4FC47E; --warn:#E0A83C; --bad:#E06B5B; --chip:#1E3A2B;
+    --series:#4FB383; --series-soft:#27503C; --ref:#7B9188; --grid:#223B2D; --plot:#13251C;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0D1A14; --surface:#13251C; --surface2:#1A3226; --ink:#E8F1EA; --muted:#9DB3A6;
+  --brand:#5BBD8B; --brand-deep:#A9E3C3; --brand-soft:#2C5943; --accent:#E8C547; --accent-ink:#F0DE9C;
+  --line:#2A4435; --good:#4FC47E; --warn:#E0A83C; --bad:#E06B5B; --chip:#1E3A2B;
+  --series:#4FB383; --series-soft:#27503C; --ref:#7B9188; --grid:#223B2D; --plot:#13251C;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg); color:var(--ink); font-family:'DM Sans',system-ui,-apple-system,'Segoe UI',Arial,sans-serif; margin:0; padding-block:0 56px; padding-inline:16px; line-height:1.5; font-size:16px}
+.wrap{max-width:1140px; margin:0 auto}
+
+/* ---------- Hero ---------- */
+.hero{background:linear-gradient(135deg,#0B2E22 0%,#14503A 60%,#1E6B4A 100%); color:#F2F7F3; border-radius:0 0 24px 24px; padding:40px 28px 34px; margin:0 -16px 24px}
+.hero-in{max-width:1140px; margin:0 auto; display:flex; flex-direction:column; gap:14px}
+.eyebrow{font-size:13px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:#8FCDAA; margin:0}
+.hero h1{font-size:clamp(28px,4.5vw,44px); line-height:1.12; margin:0; font-weight:700; text-wrap:balance}
+.hero p.sub{margin:0; max-width:62ch; color:#CFE6DA; font-size:clamp(15px,1.6vw,18px); font-weight:300}
+.badges{display:flex; flex-wrap:wrap; gap:8px; margin-top:4px}
+.badge{font-size:13px; font-weight:600; border:1px solid rgba(169,227,195,.45); background:rgba(255,255,255,.08); color:#E8F1EA; border-radius:999px; padding:6px 14px}
+.badge.gold{background:var(--accent); color:#14261E; border-color:var(--accent)}
+
+/* ---------- Tabs ---------- */
+.tabs{display:flex; gap:8px; margin:0 0 16px; flex-wrap:wrap}
+.tab{flex:1 1 220px; border:1.5px solid var(--line); background:var(--surface); color:var(--ink); border-radius:14px; padding:14px 18px; font:inherit; font-weight:700; font-size:16px; cursor:pointer; text-align:left; display:flex; flex-direction:column; gap:2px}
+.tab small{font-weight:400; color:var(--muted); font-size:13px}
+.tab[aria-selected="true"]{border-color:var(--brand); background:var(--surface2); box-shadow:inset 0 0 0 1px var(--brand)}
+
+/* ---------- Yapışkan özet + adım şeridi ---------- */
+.stick{position:sticky; top:env(safe-area-inset-top,0px); z-index:20; background:var(--bg); padding-block:8px; margin-bottom:8px}
+.sumbar{display:flex; flex-wrap:wrap; gap:8px 18px; align-items:center; background:var(--brand-deep); color:#F2F7F3; border-radius:14px; padding:10px 16px}
+:root[data-theme="dark"] .sumbar, :root:not([data-theme="light"]) .sumbar{background:#0B2E22; border:1px solid var(--line)}
+.sumbar .sb{display:flex; flex-direction:column; line-height:1.2; min-width:0}
+.sumbar .sb b{font-size:19px; font-weight:800; font-variant-numeric:tabular-nums}
+.sumbar .sb span{font-size:11.5px; letter-spacing:.08em; text-transform:uppercase; color:#8FCDAA; font-weight:600}
+.sumbar .sb.gr{margin-left:auto}
+.steps{display:flex; gap:6px; overflow-x:auto; margin-top:8px; padding-bottom:2px; scrollbar-width:thin}
+.steps a{flex:0 0 auto; text-decoration:none; font-size:13px; font-weight:700; color:var(--muted); border:1px solid var(--line); background:var(--surface); border-radius:999px; padding:6px 13px; display:flex; gap:7px; align-items:center}
+.steps a .n{display:inline-grid; place-items:center; width:18px; height:18px; border-radius:50%; background:var(--surface2); color:var(--brand); font-size:11px; font-weight:800}
+.steps a:hover{border-color:var(--brand); color:var(--ink)}
+.steps a:focus-visible{outline:2px solid var(--brand); outline-offset:2px}
+
+/* ---------- Bölümler ---------- */
+.sect{scroll-margin-top:118px; margin:0 0 30px}
+.sect-head{display:flex; gap:12px; align-items:flex-start; margin:0 0 14px}
+.sect-head .num{flex:0 0 auto; width:30px; height:30px; border-radius:9px; background:var(--brand); color:#fff; display:grid; place-items:center; font-weight:800; font-size:15px}
+:root[data-theme="dark"] .sect-head .num, :root:not([data-theme="light"]) .sect-head .num{color:#0B2E22}
+.sect-head h2{margin:0; font-size:21px; font-weight:700; line-height:1.2}
+.sect-head p{margin:3px 0 0; font-size:14px; color:var(--muted); max-width:70ch}
+
+fieldset{border:1px solid var(--line); background:var(--surface); border-radius:16px; padding:16px 18px 14px; margin:0 0 14px; min-width:0}
+legend{font-weight:700; font-size:15px; color:var(--brand); padding:0 8px; letter-spacing:.02em}
+.grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px 14px}
+.grid.wide{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+.f{display:flex; flex-direction:column; gap:4px; min-width:0}
+.f label{font-size:13.5px; font-weight:600; color:var(--ink)}
+.f .hint{font-size:12px; color:var(--muted)}
+.inwrap{display:flex; align-items:center; border:1px solid var(--line); border-radius:10px; background:var(--bg); overflow:hidden}
+.inwrap:focus-within{outline:2px solid var(--brand); outline-offset:1px}
+.inwrap input,.inwrap select{border:0; background:transparent; color:var(--ink); font:inherit; font-size:15px; padding:9px 10px; width:100%; min-width:0}
+.inwrap input:focus,.inwrap select:focus{outline:none}
+.unit{font-size:12.5px; color:var(--muted); padding:0 10px 0 4px; white-space:nowrap}
+
+/* ---------- Kartlar / KPI ---------- */
+.cards{display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:14px; align-items:start}
+.card{background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:16px 18px}
+.card h3{margin:0 0 10px; font-size:14.5px; font-weight:700}
+.card.total{background:var(--brand-deep); border-color:transparent; color:#F2F7F3}
+:root[data-theme="dark"] .card.total, :root:not([data-theme="light"]) .card.total{background:#0B2E22; border-color:var(--line)}
+.card.total h3{color:#8FCDAA; font-size:12.5px; letter-spacing:.1em; text-transform:uppercase}
+.kpi{font-size:34px; font-weight:800; line-height:1; margin:0}
+.kpi small{font-size:14px; font-weight:600; color:var(--muted)}
+.card.total .kpi small{color:#A9E3C3}
+.kpi.sm{font-size:26px}
+.sub{font-size:12.5px; color:var(--muted); margin:8px 0 0}
+.card.total .sub{color:#A9E3C3}
+.hl{border-left:3px solid var(--brand)}
+
+/* ---------- Bar listeleri ---------- */
+.bar-row{display:grid; grid-template-columns:minmax(96px,34%) minmax(0,1fr) 84px; gap:10px; align-items:center; font-size:13px; margin:7px 0}
+.bar-row .lbl{color:var(--muted); font-weight:600; overflow-wrap:anywhere}
+.bar-track{background:var(--surface2); border-radius:4px; height:12px; overflow:hidden}
+.bar-fill{height:100%; border-radius:4px; background:var(--series); min-width:2px; transition:width .25s}
+.bar-row .val{text-align:right; font-variant-numeric:tabular-nums; font-weight:700}
+@media (prefers-reduced-motion: reduce){ .bar-fill{transition:none} }
+
+/* ---------- Kıyas şeridi ---------- */
+.scale{margin:12px 0 0}
+.scale-track{position:relative; height:26px; border-radius:7px; overflow:hidden; display:flex; border:1px solid var(--line)}
+.scale-track i{flex:1; display:block}
+.scale-mark{position:absolute; top:-6px; bottom:-6px; width:3px; background:var(--ink); border-radius:2px; box-shadow:0 0 0 2px var(--surface)}
+.scale-wrap{position:relative; padding:6px 0}
+.scale-ticks{display:flex; justify-content:space-between; font-size:11.5px; color:var(--muted); margin-top:5px; font-variant-numeric:tabular-nums}
+.grade{display:inline-flex; gap:6px; align-items:center; font-weight:800; border-radius:8px; padding:3px 11px; font-size:14px}
+.grade .dot{width:9px; height:9px; border-radius:50%; background:currentColor}
+
+/* ---------- Tablolar ---------- */
+.tblwrap{overflow-x:auto; margin:4px 0 0}
+table.t{border-collapse:collapse; width:100%; font-size:13px; min-width:540px}
+table.t th,table.t td{border-bottom:1px solid var(--line); padding:8px 10px; text-align:right; font-variant-numeric:tabular-nums}
+table.t th:first-child,table.t td:first-child{text-align:left; font-variant-numeric:normal}
+table.t thead th{background:var(--surface2); font-size:12px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; border-bottom:1px solid var(--line)}
+table.t tbody tr:hover{background:var(--chip)}
+table.t td.on{font-weight:700}
+.minibar{display:block; height:7px; border-radius:3px; background:var(--series); min-width:2px}
+.minibar.alt{background:var(--ref)}
+
+/* ---------- Önlem seçimi ---------- */
+.checks{display:flex; flex-direction:column; gap:8px; margin-top:6px}
+.chk{display:flex; gap:10px; align-items:flex-start; background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:9px 12px; cursor:pointer}
+.chk:hover{border-color:var(--brand)}
+.chk input{margin-top:3px; accent-color:var(--brand); flex:0 0 auto}
+.chk span{font-size:13.5px}
+.chk .w{color:var(--muted); font-weight:600; font-size:12px; white-space:nowrap; margin-left:auto; padding-left:8px}
+.chk:has(input:checked){background:var(--chip); border-color:var(--brand)}
+
+/* ---------- Grafik ---------- */
+.plotcard{background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:16px 18px 10px}
+.plothead{display:flex; flex-wrap:wrap; gap:8px 16px; align-items:baseline; margin-bottom:6px}
+.plothead h3{margin:0; font-size:14.5px; font-weight:700}
+.legend{display:flex; gap:14px; flex-wrap:wrap; margin-left:auto; font-size:12.5px; color:var(--muted)}
+.legend i{display:inline-block; width:18px; height:0; border-top:2px solid var(--series); vertical-align:middle; margin-right:6px}
+.legend i.dash{border-top:2px dashed var(--ref)}
+.legend i.area{height:10px; border:0; background:var(--series-soft); border-radius:2px}
+.plotbox{position:relative}
+.plotbox svg{display:block; width:100%; height:auto; max-width:100%}
+.tip{position:absolute; pointer-events:none; opacity:0; transition:opacity .12s; background:var(--brand-deep); color:#F2F7F3; border-radius:9px; padding:7px 10px; font-size:12.5px; line-height:1.45; white-space:nowrap; z-index:5; box-shadow:0 4px 14px rgba(0,0,0,.18)}
+:root[data-theme="dark"] .tip, :root:not([data-theme="light"]) .tip{background:#0B2E22; border:1px solid var(--line)}
+.tip.on{opacity:1}
+.tip b{font-variant-numeric:tabular-nums}
+
+/* ---------- Zaman çizelgesi ---------- */
+.tl{list-style:none; margin:6px 0 0; padding:0 0 0 22px; border-left:2px solid var(--line); display:flex; flex-direction:column; gap:14px}
+.tl li{position:relative; font-size:13.5px}
+.tl li::before{content:""; position:absolute; left:-29px; top:4px; width:12px; height:12px; border-radius:50%; background:var(--surface); border:2px solid var(--brand)}
+.tl li.done::before{background:var(--brand)}
+.tl b{display:block; font-size:14px}
+.tl span{color:var(--muted)}
+
+/* ---------- CTA / butonlar ---------- */
+.cta{background:var(--surface2); border:1px solid var(--brand-soft); border-radius:16px; padding:18px}
+.cta h3{margin:0 0 6px; font-size:16px}
+.cta p{margin:0 0 10px; font-size:14px; color:var(--muted)}
+.btn{display:inline-block; font:inherit; font-weight:700; font-size:14.5px; border-radius:999px; padding:10px 20px; cursor:pointer; border:1.5px solid transparent; text-decoration:none; text-align:center}
+.btn.primary{background:var(--brand); color:#fff}
+:root[data-theme="dark"] .btn.primary, :root:not([data-theme="light"]) .btn.primary{color:#0B2E22}
+.btn.ghost{background:transparent; border-color:var(--brand); color:var(--brand)}
+.btn:focus-visible{outline:2px solid var(--ink); outline-offset:2px}
+.btn-row{display:flex; flex-wrap:wrap; gap:8px}
+.addr{font-size:13px; color:var(--muted); margin-top:8px}
+.addr b{user-select:all}
+
+/* ---------- Beyan kartı ---------- */
+.decl{background:var(--surface); border:1px solid var(--brand); border-radius:16px; padding:18px 20px}
+.decl .dh{display:flex; flex-wrap:wrap; gap:6px 14px; align-items:baseline; border-bottom:1px solid var(--line); padding-bottom:10px; margin-bottom:12px}
+.decl .dh b{font-size:17px}
+.decl .dh span{font-size:12.5px; color:var(--muted)}
+.dl{display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:10px 18px; margin:0}
+.dl div{display:flex; flex-direction:column; gap:1px; border-top:1px solid var(--line); padding-top:7px; min-width:0}
+.dl dt{font-size:12px; color:var(--muted); font-weight:600; letter-spacing:.03em}
+.dl dd{margin:0; font-size:15px; font-weight:700; font-variant-numeric:tabular-nums; overflow-wrap:anywhere}
+.dl dd small{font-weight:500; font-size:12px; color:var(--muted)}
+
+/* ---------- Yardımcılar ---------- */
+.notice{font-size:13px; background:var(--chip); border:1px solid var(--brand-soft); border-radius:10px; padding:9px 12px; color:var(--ink); margin:0 0 14px}
+.notice.warn{background:rgba(201,138,27,.12); border-color:var(--warn)}
+.mini{font-size:12.5px; color:var(--muted)}
+.recs{margin:10px 0 0; padding-left:18px; font-size:13.5px}
+.recs li{margin:4px 0}
+.score-track{background:var(--surface2); border-radius:7px; height:16px; overflow:hidden; margin:8px 0 4px}
+.score-fill{height:100%; border-radius:7px; background:var(--series); min-width:4px}
+.pill-row{display:flex; flex-wrap:wrap; gap:6px; margin-top:8px}
+.pill{font-size:12px; font-weight:700; border-radius:999px; padding:4px 11px; background:var(--chip); color:var(--brand); border:1px solid var(--brand-soft)}
+details.fold{background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:2px 14px; margin-top:10px}
+details.fold summary{font-weight:700; padding:10px 0; cursor:pointer; color:var(--brand); font-size:13.5px}
+details.meth{background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:4px 18px; margin-top:22px}
+details.meth summary{font-weight:700; padding:12px 0; cursor:pointer; color:var(--brand)}
+.foot{font-size:12.5px; color:var(--muted); margin-top:16px; max-width:85ch}
+.toast{position:fixed; left:50%; bottom:18px; transform:translateX(-50%); background:var(--brand-deep); color:#F2F7F3; border-radius:999px; padding:10px 20px; font-size:14px; font-weight:600; opacity:0; transition:opacity .25s; pointer-events:none; z-index:60}
+:root[data-theme="dark"] .toast, :root:not([data-theme="light"]) .toast{background:#0B2E22; border:1px solid var(--line)}
+.toast.show{opacity:1}
+.panel[hidden]{display:none}
+.two{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:14px; align-items:start}
+@media (max-width:820px){ .two{grid-template-columns:minmax(0,1fr)} }
+@media (prefers-reduced-motion: reduce){ *{transition:none !important} }
+</style>
+
+<header class="hero">
+  <div class="hero-in">
+    <p class="eyebrow">cOmmited Events · Ölçün, Kıyaslayın, Azaltın, Belgeleyin</p>
+    <h1>Turizm Karbon Hesaplayıcısı</h1>
+    <p class="sub">Oteliniz için HCMI v2.0 metodolojisiyle oda-gece ve toplantı başına resmî karbon metriklerini üretin; segment kıyasınızı görün, azaltım senaryonuzu kurun, net sıfır patikanızı çizin ve kurumsal müşterilerin sorduğu veriyi tek sayfada yanıtlayın.</p>
+    <div class="badges">
+      <span class="badge gold">%100 Ücretsiz</span>
+      <span class="badge">Kayıt yok</span>
+      <span class="badge">HCMI v2.0 · GHG Protocol</span>
+      <span class="badge">Net Zero Methodology for Hotels</span>
+      <span class="badge">Türkiye Yeşil Taksonomisi · RG 24.09.2026/33380</span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="tabs" role="tablist" aria-label="İşletme türü">
+    <button class="tab" id="tab-otel" role="tab" aria-selected="true" aria-controls="panel-otel">Otel &amp; Konaklama<small>Otel, tatil köyü, pansiyon, kamp alanı — 5 adımlı tam akış</small></button>
+    <button class="tab" id="tab-acente" role="tab" aria-selected="false" aria-controls="panel-acente">Acente &amp; Tur Operatörü<small>Paket tur, transfer, seyahat organizasyonu</small></button>
+  </div>
+
+  <!-- ============================ OTEL ============================ -->
+  <section class="panel" id="panel-otel" role="tabpanel" aria-labelledby="tab-otel">
+
+    <div class="stick" id="stick">
+      <div class="sumbar">
+        <div class="sb"><b id="s_total">—</b><span>HCMI ayak izi tCO₂e</span></div>
+        <div class="sb"><b id="s_cpor">—</b><span>kgCO₂e / oda-gece</span></div>
+        <div class="sb"><b id="s_meet">—</b><span>kgCO₂e / m² / saat</span></div>
+        <div class="sb gr"><b id="s_grade">—</b><span>Segment kıyası</span></div>
+      </div>
+      <nav class="steps" aria-label="Adımlar">
+        <a href="#adim1"><span class="n">1</span>Ölç</a>
+        <a href="#adim2"><span class="n">2</span>Kıyasla</a>
+        <a href="#adim3"><span class="n">3</span>Azalt</a>
+        <a href="#adim4"><span class="n">4</span>Net Sıfır</a>
+        <a href="#adim5"><span class="n">5</span>Raporla</a>
+      </nav>
+    </div>
+
+    <p class="notice">Alanlar 120 odalı örnek bir Ege tatil köyünün değerleriyle yüklü geldi — <b>bunlar örnek verilerdir, sizin verileriniz değildir.</b> Kendi yıllık rakamlarınızı girdikçe beş adımın tamamı anında güncellenir.</p>
+
+    <!-- ---------- ADIM 1: ÖLÇ ---------- -->
+    <section class="sect" id="adim1">
+      <div class="sect-head">
+        <div class="num">1</div>
+        <div>
+          <h2>Ölç — HCMI v2.0 veri girişi</h2>
+          <p>HCMI, otelin ayak izini iki hizmete böler: konuk odaları ve toplantı alanı. Bu yüzden alan bilgisi (m²) enerji verisi kadar kritiktir — tahsis oranı buradan çıkar. 12 aylık veri kullanın; eksik ay varsa pro rata veya önceki yılın aynı dönemiyle tamamlayın.</p>
+        </div>
+      </div>
+
+      <fieldset>
+        <legend>Tesis kimliği</legend>
+        <div class="grid wide">
+          <div class="f"><label for="h_name">Tesis adı</label>
+            <div class="inwrap"><input id="h_name" type="text" value="Örnek Tatil Köyü" autocomplete="organization"></div></div>
+          <div class="f"><label for="h_city">Şehir / destinasyon</label>
+            <div class="inwrap"><input id="h_city" type="text" value="Muğla"></div></div>
+          <div class="f"><label for="h_segment">Segment (kıyas bandını belirler)</label>
+            <div class="inwrap"><select id="h_segment">
+              <option value="resort5" selected>5★ tatil köyü / her şey dahil</option>
+              <option value="city5">5★ şehir oteli</option>
+              <option value="h4">4★ otel</option>
+              <option value="boutique">3★ / butik otel</option>
+              <option value="apart">Apart / pansiyon / kamp alanı</option>
+            </select></div></div>
+          <div class="f"><label for="h_year">Raporlama yılı (baz yıl)</label>
+            <div class="inwrap"><input id="h_year" type="number" min="2010" max="2050" step="1" value="2025"></div>
+            <span class="hint">Net sıfır patikası bu yıldan başlar</span></div>
+          <div class="f"><label for="h_rooms">Oda sayısı</label>
+            <div class="inwrap"><input id="h_rooms" type="number" min="1" value="120"><span class="unit">oda</span></div></div>
+          <div class="f"><label for="h_verify">Doğrulama durumu</label>
+            <div class="inwrap"><select id="h_verify">
+              <option value="Doğrulanmadı — iç hesaplama" selected>Doğrulanmadı — iç hesaplama</option>
+              <option value="İç inceleme tamamlandı">İç inceleme tamamlandı</option>
+              <option value="Bağımsız üçüncü taraf doğrulandı">Bağımsız üçüncü taraf doğrulandı</option>
+            </select></div>
+            <span class="hint">Kurumsal müşteri beyanında görünür</span></div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Alanlar — HCMI tahsis tabanı</legend>
+        <div class="grid">
+          <div class="f"><label for="h_area_total">Toplam iklimlendirilen alan</label>
+            <div class="inwrap"><input id="h_area_total" type="number" min="0" value="11500"><span class="unit">m²</span></div>
+            <span class="hint">Oda, lobi, restoran, mutfak, arka ofis — tümü</span></div>
+          <div class="f"><label for="h_area_rooms">Konuk odaları alanı</label>
+            <div class="inwrap"><input id="h_area_rooms" type="number" min="0" value="5200"><span class="unit">m²</span></div>
+            <span class="hint">Odalar + oda koridorları</span></div>
+          <div class="f"><label for="h_area_meeting">Toplantı / etkinlik alanı</label>
+            <div class="inwrap"><input id="h_area_meeting" type="number" min="0" value="900"><span class="unit">m²</span></div>
+            <span class="hint">Balo salonu, toplantı odaları, foyer</span></div>
+          <div class="f"><label for="h_meeting_hours">Toplantı alanı yıllık kullanım</label>
+            <div class="inwrap"><input id="h_meeting_hours" type="number" min="0" value="1200"><span class="unit">saat/yıl</span></div>
+            <span class="hint">Satılan salon-saati toplamı</span></div>
+        </div>
+        <p class="mini" id="area_note" style="margin:10px 0 2px">Ortak alanlar (lobi, restoran, mutfak, arka ofis) HCMI'ye göre oda ve toplantı alanı oranında ikiye paylaştırılır.</p>
+      </fieldset>
+
+      <fieldset>
+        <legend>Doluluk</legend>
+        <div class="grid">
+          <div class="f"><label for="h_roomnights">Satılan oda-gece (yıllık)</label>
+            <div class="inwrap"><input id="h_roomnights" type="number" min="0" value="26280"><span class="unit">oda-gece</span></div>
+            <span class="hint">120 oda × %60 × 365 = 26.280 · No-show sayılmaz, ücretsiz ama kullanılan odalar sayılır</span></div>
+          <div class="f"><label for="h_guestnights">Misafir gecelemesi</label>
+            <div class="inwrap"><input id="h_guestnights" type="number" min="0" value="47300"><span class="unit">geceleme</span></div></div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Elektrik (Kapsam 2)</legend>
+        <div class="grid">
+          <div class="f"><label for="h_elec_grid">Şebekeden çekilen elektrik</label>
+            <div class="inwrap"><input id="h_elec_grid" type="number" min="0" value="1480000"><span class="unit">kWh/yıl</span></div></div>
+          <div class="f"><label for="h_elec_onsite">Yerinde üretim öz tüketimi (GES)</label>
+            <div class="inwrap"><input id="h_elec_onsite" type="number" min="0" value="95000"><span class="unit">kWh/yıl</span></div>
+            <span class="hint">Şebekeden çekilmeyen, çatıda üretilip tüketilen</span></div>
+          <div class="f"><label for="h_elec_rec">YEK-G / I-REC ile belgelenen</label>
+            <div class="inwrap"><input id="h_elec_rec" type="number" min="0" value="0"><span class="unit">kWh/yıl</span></div>
+            <span class="hint">Piyasa bazlı Kapsam 2'de sıfırlanır</span></div>
+          <div class="f"><label for="h_district">Bölgesel ısıtma / soğutma</label>
+            <div class="inwrap"><input id="h_district" type="number" min="0" value="0"><span class="unit">kWh/yıl</span></div></div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Yakıtlar (Kapsam 1)</legend>
+        <div class="grid">
+          <div class="f"><label for="h_gas">Doğal gaz</label>
+            <div class="inwrap"><input id="h_gas" type="number" min="0" value="92000"><span class="unit">m³/yıl</span></div></div>
+          <div class="f"><label for="h_lpg">LPG / tüp gaz</label>
+            <div class="inwrap"><input id="h_lpg" type="number" min="0" value="5500"><span class="unit">kg/yıl</span></div></div>
+          <div class="f"><label for="h_fueloil">Fuel-oil / kalorifer yakıtı</label>
+            <div class="inwrap"><input id="h_fueloil" type="number" min="0" value="0"><span class="unit">litre/yıl</span></div></div>
+          <div class="f"><label for="h_gen">Jeneratör dizeli</label>
+            <div class="inwrap"><input id="h_gen" type="number" min="0" value="3200"><span class="unit">litre/yıl</span></div></div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Araçlar &amp; soğutucu gazlar (Kapsam 1)</legend>
+        <div class="grid">
+          <div class="f"><label for="h_veh_diesel">Servis araçları — dizel</label>
+            <div class="inwrap"><input id="h_veh_diesel" type="number" min="0" value="7800"><span class="unit">litre/yıl</span></div></div>
+          <div class="f"><label for="h_veh_petrol">Servis araçları — benzin</label>
+            <div class="inwrap"><input id="h_veh_petrol" type="number" min="0" value="2400"><span class="unit">litre/yıl</span></div></div>
+          <div class="f"><label for="h_ref_type">Soğutucu gaz türü</label>
+            <div class="inwrap"><select id="h_ref_type">
+              <option value="2088" selected>R-410A (GWP 2088)</option>
+              <option value="1430">R-134a (GWP 1430)</option>
+              <option value="3922">R-404A (GWP 3922)</option>
+              <option value="1774">R-407C (GWP 1774)</option>
+              <option value="675">R-32 (GWP 675)</option>
+              <option value="1">R-290 / R-744 (doğal, GWP ≈ 1)</option>
+            </select></div></div>
+          <div class="f"><label for="h_ref_kg">Yıllık gaz dolumu (kaçak ikmali)</label>
+            <div class="inwrap"><input id="h_ref_kg" type="number" min="0" step="0.1" value="11"><span class="unit">kg/yıl</span></div></div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Çamaşırhane (HCMI Kapsam 3)</legend>
+        <div class="grid">
+          <div class="f"><label for="h_laundry">Dışarıda yıkanan tekstil</label>
+            <div class="inwrap"><input id="h_laundry" type="number" min="0" value="128000"><span class="unit">kg/yıl</span></div>
+            <span class="hint">Tesis içi çamaşırhanenin enerjisi yukarıdaki elektrik/gaz içinde zaten var — buraya yalnızca dış hizmeti yazın</span></div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Su &amp; atık — HCMI kapsamı dışı, tam envanter için</legend>
+        <p class="mini" style="margin:0 0 10px">HCMI metrikleri yalnızca Kapsam 1, 2 ve dış çamaşırhaneyi içerir. Su ve atık kurumsal envanterinizde ve Yeşil Taksonomi raporlamasında gerekir; ayrı gösterilir.</p>
+        <div class="grid">
+          <div class="f"><label for="h_water">Su tüketimi</label>
+            <div class="inwrap"><input id="h_water" type="number" min="0" value="19000"><span class="unit">m³/yıl</span></div></div>
+          <div class="f"><label for="h_waste">Düzenli depolamaya giden atık</label>
+            <div class="inwrap"><input id="h_waste" type="number" min="0" step="0.1" value="165"><span class="unit">ton/yıl</span></div></div>
+          <div class="f"><label for="h_recycle">Geri dönüşüm / komposta ayrılan</label>
+            <div class="inwrap"><input id="h_recycle" type="number" min="0" step="0.1" value="55"><span class="unit">ton/yıl</span></div></div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Birim fiyatlar — azaltım ve dengeleme hesapları için</legend>
+        <p class="mini" style="margin:0 0 10px">Varsayılanlar gösterge niteliğindedir; kendi tarifelerinizi girin.</p>
+        <div class="grid">
+          <div class="f"><label for="p_elec">Elektrik</label>
+            <div class="inwrap"><input id="p_elec" type="number" min="0" step="0.01" value="4.20"><span class="unit">TL/kWh</span></div></div>
+          <div class="f"><label for="p_gas">Doğal gaz</label>
+            <div class="inwrap"><input id="p_gas" type="number" min="0" step="0.01" value="16.00"><span class="unit">TL/m³</span></div></div>
+          <div class="f"><label for="p_water">Su + atıksu</label>
+            <div class="inwrap"><input id="p_water" type="number" min="0" step="0.1" value="48"><span class="unit">TL/m³</span></div></div>
+          <div class="f"><label for="p_fuel">Motorin</label>
+            <div class="inwrap"><input id="p_fuel" type="number" min="0" step="0.1" value="54"><span class="unit">TL/litre</span></div></div>
+          <div class="f"><label for="p_laundry">Dış çamaşırhane</label>
+            <div class="inwrap"><input id="p_laundry" type="number" min="0" step="0.5" value="22"><span class="unit">TL/kg</span></div></div>
+          <div class="f"><label for="p_ver">Karbon sertifikası (VER)</label>
+            <div class="inwrap"><input id="p_ver" type="number" min="0" step="10" value="400"><span class="unit">TL/tCO₂e</span></div></div>
+        </div>
+      </fieldset>
+
+      <div class="card hl" style="margin-bottom:6px">
+        <h3>Veri tamlık skoru</h3>
+        <p class="kpi sm" style="margin:0"><span id="r_complete">—</span><small>/100</small></p>
+        <div class="score-track"><div class="score-fill" id="r_completebar" style="width:4%"></div></div>
+        <p class="sub" id="r_completenote">—</p>
+      </div>
+    </section>
+
+    <!-- ---------- ADIM 2: KIYASLA ---------- -->
+    <section class="sect" id="adim2">
+      <div class="sect-head">
+        <div class="num">2</div>
+        <div>
+          <h2>Kıyasla — HCMI çıktıları ve segment kıyası</h2>
+          <p>Aşağıdaki dört metrik, kurumsal müşterilerin ve toplantı planlayıcılarının sorduğu resmî HCMI çıktılarıdır. Kıyas bandı kendi segmentinize göre ayarlanır; Greenview Hotel Footprinting Tool veya CHSB Index'ten şehrinize ait değeri aldıysanız referansı elle değiştirebilirsiniz.</p>
+        </div>
+      </div>
+
+      <div class="cards" style="margin-bottom:14px">
+        <div class="card total">
+          <h3>HCMI ayak izi</h3>
+          <p class="kpi"><span id="r_hcmi">—</span> <small>tCO₂e/yıl</small></p>
+          <p class="sub">Kapsam 1 + Kapsam 2 (piyasa bazlı) + dış çamaşırhane</p>
+        </div>
+        <div class="card hl">
+          <h3>Oda-gece başına (CPOR)</h3>
+          <p class="kpi"><span id="r_cpor">—</span> <small>kgCO₂e</small></p>
+          <p class="sub" id="r_cpor_sub">—</p>
+        </div>
+        <div class="card hl">
+          <h3>Toplantı alanı</h3>
+          <p class="kpi sm"><span id="r_meet_h">—</span> <small>kgCO₂e/m²/saat</small></p>
+          <p class="sub"><span id="r_meet_y">—</span> kgCO₂e/m²/yıl · toplantı payı <span id="r_meet_share">—</span></p>
+        </div>
+        <div class="card">
+          <h3>Yenilenebilir pay</h3>
+          <p class="kpi sm"><span id="r_ren_elec">—</span> <small>elektrikte</small></p>
+          <p class="sub">Toplam enerjide <span id="r_ren_energy">—</span> · yerinde üretim + YEK-G/I-REC</p>
+        </div>
+      </div>
+
+      <div class="two">
+        <div class="plotcard">
+          <div class="plothead"><h3>Emisyon kaynakları</h3><span class="mini">tCO₂e/yıl · büyükten küçüğe</span></div>
+          <div id="src_bars"></div>
+          <details class="fold"><summary>Tablo görünümü</summary>
+            <div class="tblwrap"><table class="t" id="src_table"><thead><tr><th>Kaynak</th><th>tCO₂e/yıl</th><th>Pay</th><th>Kapsam</th></tr></thead><tbody></tbody></table></div>
+          </details>
+        </div>
+
+        <div class="plotcard">
+          <div class="plothead"><h3>Kapsam dağılımı</h3><span class="mini">GHG Protocol</span></div>
+          <div id="scope_bars"></div>
+          <details class="fold"><summary>Tablo görünümü — konum ve piyasa bazlı</summary>
+            <div class="tblwrap"><table class="t" id="scope_table"><thead><tr><th>Kalem</th><th>tCO₂e/yıl</th></tr></thead><tbody></tbody></table></div>
+          </details>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:14px">
+        <h3>Segment kıyası — oda-gece yoğunluğu</h3>
+        <div class="grid" style="margin-bottom:4px">
+          <div class="f"><label for="h_ref_cpor">Kıyas referansı (segment ortancası)</label>
+            <div class="inwrap"><input id="h_ref_cpor" type="number" min="1" step="0.5" value="45"><span class="unit">kgCO₂e/oda-gece</span></div>
+            <span class="hint">Segment seçimiyle otomatik dolar · gösterge değer, kendi kaynağınızla değiştirin</span></div>
+          <div class="f"><label>Konumunuz</label>
+            <div class="pill-row" style="margin-top:6px"><span class="grade" id="r_grade"><span class="dot"></span><span id="r_grade_txt">—</span></span></div>
+            <span class="hint" id="r_grade_sub">—</span></div>
+        </div>
+        <div class="scale">
+          <div class="scale-wrap">
+            <div class="scale-track" aria-hidden="true">
+              <i style="flex:.20; background:var(--good)"></i>
+              <i style="flex:.25; background:var(--brand-soft)"></i>
+              <i style="flex:.30; background:var(--warn)"></i>
+              <i style="flex:.65; background:var(--bad)"></i>
+            </div>
+            <span class="scale-mark" id="r_mark" style="left:0%"></span>
+          </div>
+          <div class="scale-ticks">
+            <span id="tick1">—</span><span id="tick2">—</span><span id="tick3">—</span><span id="tick4">—</span><span id="tick5">—</span>
+          </div>
+          <p class="mini" style="margin-top:8px">A: öncü · B: ortalamanın üzerinde · C: segment ortalaması bandı · D–E: azaltım önceliği yüksek</p>
+        </div>
+      </div>
+
+      <div class="cards" style="margin-top:14px">
+        <div class="card">
+          <h3>Alan yoğunluğu</h3>
+          <p class="kpi sm"><span id="r_int_m2">—</span> <small>kgCO₂e/m²/yıl</small></p>
+          <p class="sub">CHSB Index 2023 bandı: Norveç 13,5 — Hong Kong 214,5 kgCO₂e/m². Net Zero Methodology for Hotels'in birincil KPI'ı budur.</p>
+        </div>
+        <div class="card">
+          <h3>Enerji yoğunluğu</h3>
+          <p class="kpi sm"><span id="r_int_kwh">—</span> <small>kWh/m²/yıl</small></p>
+          <p class="sub">CHSB'de en verimli ülke ortalaması Avusturya 134,5 kWh/m². Segment göstergesi: <span id="r_kwh_ref">—</span> kWh/m².</p>
+        </div>
+        <div class="card">
+          <h3>Su yoğunluğu</h3>
+          <p class="kpi sm"><span id="r_int_water">—</span> <small>litre/oda-gece</small></p>
+          <p class="sub">Havuz ve peyzaj sulaması dahil. Resort tesislerde 500–900 L/oda-gece tipiktir.</p>
+        </div>
+        <div class="card">
+          <h3>Tam envanter (tarama)</h3>
+          <p class="kpi sm"><span id="r_full">—</span> <small>tCO₂e/yıl</small></p>
+          <p class="sub">HCMI + su + atık. Yeşil Taksonomi ve kurumsal ESG raporlaması bu rakamı ister; HCMI metriklerine girmez.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- ADIM 3: AZALT ---------- -->
+    <section class="sect" id="adim3">
+      <div class="sect-head">
+        <div class="num">3</div>
+        <div>
+          <h2>Azalt — senaryo simülatörü</h2>
+          <p>Önlemleri işaretledikçe tasarruf, yatırım ve geri ödeme anında hesaplanır. Sıralama tablosu önlemleri ton başına maliyete göre dizer: en üstteki satırlar en ucuz karbondur, yatırım planı oradan başlar.</p>
+        </div>
+      </div>
+
+      <div class="cards" style="margin-bottom:14px">
+        <div class="card total">
+          <h3>Seçilen önlemlerle azaltım</h3>
+          <p class="kpi"><span id="m_saving">0</span> <small>tCO₂e/yıl</small></p>
+          <p class="sub">Baz yılın <span id="m_pct">%0</span>'ı · kalan <span id="m_left">—</span> tCO₂e</p>
+        </div>
+        <div class="card hl">
+          <h3>Yeni oda-gece yoğunluğu</h3>
+          <p class="kpi"><span id="m_cpor">—</span> <small>kgCO₂e</small></p>
+          <p class="sub">Yeni kıyas notu: <span id="m_grade">—</span></p>
+        </div>
+        <div class="card">
+          <h3>Yıllık işletme tasarrufu</h3>
+          <p class="kpi sm"><span id="m_money">0</span> <small>TL/yıl</small></p>
+          <p class="sub">Enerji, su, çamaşırhane ve yakıt kalemlerinden</p>
+        </div>
+        <div class="card">
+          <h3>Yatırım &amp; geri ödeme</h3>
+          <p class="kpi sm"><span id="m_capex">0</span> <small>TL</small></p>
+          <p class="sub">Basit geri ödeme: <span id="m_payback">—</span></p>
+        </div>
+      </div>
+
+      <fieldset>
+        <legend>Enerji verimliliği</legend>
+        <div class="checks">
+          <label class="chk"><input type="checkbox" id="m_led" checked><span><b>LED dönüşümü ve aydınlatma kontrolü</b> — aydınlatma elektriğinin %55'i; otel elektriğinin yaklaşık %12'si aydınlatmadır</span><span class="w" data-w="led">—</span></label>
+          <label class="chk"><input type="checkbox" id="m_keycard"><span><b>Oda enerji otomasyonu</b> — anahtar kart / varlık sensörüyle boş odada klima ve aydınlatma kesilir</span><span class="w" data-w="keycard">—</span></label>
+          <label class="chk"><input type="checkbox" id="m_bms"><span><b>BMS kurulumu ve HVAC devreye alma</b> — set değerleri, çalışma saatleri ve havalandırma debilerinin optimizasyonu</span><span class="w" data-w="bms">—</span></label>
+          <label class="chk"><input type="checkbox" id="m_hr"><span><b>Isı geri kazanım</b> — atık su ve havalandırma egzozundan ön ısıtma</span><span class="w" data-w="hr">—</span></label>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Yenilenebilir enerji ve elektrifikasyon</legend>
+        <div class="checks">
+          <label class="chk"><input type="checkbox" id="m_pv" checked><span><b>Çatı GES</b> — öz tüketim; üretim şebeke elektriğinden düşer</span><span class="w" data-w="pv">—</span></label>
+        </div>
+        <div class="grid" style="margin:10px 0 2px">
+          <div class="f"><label for="h_pv_kwp">GES kurulu gücü</label>
+            <div class="inwrap"><input id="h_pv_kwp" type="number" min="0" value="250"><span class="unit">kWp</span></div>
+            <span class="hint">Türkiye ortalaması 1.550 kWh/kWp/yıl ile üretim hesaplanır</span></div>
+          <div class="f"><label for="h_pv_cost">GES birim yatırım</label>
+            <div class="inwrap"><input id="h_pv_cost" type="number" min="0" step="500" value="16000"><span class="unit">TL/kWp</span></div></div>
+        </div>
+        <div class="checks">
+          <label class="chk"><input type="checkbox" id="m_hp"><span><b>Sıcak su için ısı pompası</b> — gazın sıcak su payının %45'i elektriğe döner (COP 3,2). Türkiye şebeke faktörüyle net kazanç sınırlıdır; GES veya YEK-G ile birlikte uygulandığında belirgin büyür.</span><span class="w" data-w="hp">—</span></label>
+          <label class="chk"><input type="checkbox" id="m_st"><span><b>Güneş kollektörü</b> — termal sistemle sıcak su ön ısıtma</span><span class="w" data-w="st">—</span></label>
+          <label class="chk"><input type="checkbox" id="m_green"><span><b>YEK-G / I-REC ile yeşil elektrik tedariki</b> — fiziksel tüketim değişmez, yalnızca piyasa bazlı Kapsam 2 sıfırlanır. En büyük tek kalem gibi görünür; bu nedenle verimlilik önlemlerinin yerine değil, onlardan sonra uygulanır. Sertifika primi işletme maliyetidir.</span><span class="w" data-w="green">—</span></label>
+          <label class="chk"><input type="checkbox" id="m_ev"><span><b>Elektrikli servis araçları</b> — araç yakıtının %70'i elektriğe döner; yatırım, yılda 3.000 litre yakıtın yerini alan araç başına hesaplanır</span><span class="w" data-w="ev">—</span></label>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Su, atık ve soğutucu gazlar</legend>
+        <div class="checks">
+          <label class="chk"><input type="checkbox" id="m_water" checked><span><b>Verimli armatür ve debi sınırlayıcı</b> — musluk ≤6 L/dk, duş ≤8 L/dk; sıcak su ısıtma yükünü de düşürür</span><span class="w" data-w="water">—</span></label>
+          <label class="chk"><input type="checkbox" id="m_linen"><span><b>Havlu ve çarşaf değişim programı</b> — misafir onaylı değişim ve verimli yıkama çevrimiyle dış çamaşırhane hacminde %12 azalma</span><span class="w" data-w="linen">—</span></label>
+          <label class="chk"><input type="checkbox" id="m_waste"><span><b>Kaynakta ayrıştırma ve kompost</b> — depolamaya giden atığın %55'i geri dönüşüme ve komposta kayar</span><span class="w" data-w="waste">—</span></label>
+          <label class="chk"><input type="checkbox" id="m_refrig"><span><b>Soğutucu gaz kaçak yönetimi ve düşük GWP geçişi</b> — kaçak %55 azalır</span><span class="w" data-w="refrig">—</span></label>
+        </div>
+      </fieldset>
+
+      <div class="plotcard">
+        <div class="plothead"><h3>Yatırım önceliği</h3><span class="mini">ton başına maliyete göre sıralı · negatif değer kendini amorti eden önlem</span></div>
+        <div class="tblwrap">
+          <table class="t" id="macc">
+            <thead><tr><th>Önlem</th><th>tCO₂e/yıl</th><th>TL tasarruf/yıl</th><th>Yatırım TL</th><th>Geri ödeme</th><th>TL/tCO₂e</th><th style="min-width:90px">Karbon maliyeti</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <p class="mini" style="margin:10px 0 6px">Her satır, <b>tek başına</b> uygulandığında baz yıla göre etkiyi gösterir; satırların toplamı, önlemlerin birbiriyle etkileşmesi nedeniyle üstteki senaryo toplamından farklıdır. Senaryo toplamı önlemleri sırayla uygular, bu yüzden doğru olan odur. Karbon maliyeti 10 yıllık ömür varsayımıyla yıllıklandırılmıştır; negatif değer, önlemin kendini amorti ettiğini gösterir. Katsayılar sektör ortalamalarıdır ve yatırım tutarları oda sayısı ile alanla ölçeklenen gösterge değerlerdir — bağlayıcı rakam için enerji etüdü gerekir.</p>
+      </div>
+    </section>
+
+    <!-- ---------- ADIM 4: NET SIFIR ---------- -->
+    <section class="sect" id="adim4">
+      <div class="sect-head">
+        <div class="num">4</div>
+        <div>
+          <h2>Net Sıfır — patika, dengeleme ve belgelendirme</h2>
+          <p>Hedef patikası Net Zero Methodology for Hotels'in kilometre taşı yıllarına dayanır: 2030'a kadar emisyonları yarıya indirmek, 2040'ta bina için net sıfır iddiasında bulunabilmek, 2050'de kalan emisyonu kalıcı giderme ile kapatmak. Planınız, Adım 3'te seçtiğiniz önlemlerin sonucudur.</p>
+        </div>
+      </div>
+
+      <div class="grid" style="margin-bottom:14px">
+        <div class="f"><label for="nz_start">Önlemlerin uygulanmaya başlaması</label>
+          <div class="inwrap"><input id="nz_start" type="number" min="2020" max="2050" step="1" value="2026"></div></div>
+        <div class="f"><label for="nz_done">Önlemlerin tamamlanması</label>
+          <div class="inwrap"><input id="nz_done" type="number" min="2020" max="2050" step="1" value="2030"></div>
+          <span class="hint">Plan eğrisi bu yılda yeni seviyeye oturur</span></div>
+      </div>
+
+      <div class="plotcard" style="margin-bottom:14px">
+        <div class="plothead">
+          <h3>Net sıfır patikası</h3>
+          <span class="mini">tCO₂e/yıl</span>
+          <div class="legend">
+            <span><i class="dash"></i>Hedef patikası</span>
+            <span><i></i>Planınız</span>
+            <span><i class="area"></i>Açık</span>
+          </div>
+        </div>
+        <div class="plotbox" id="pathbox">
+          <svg id="pathsvg" viewBox="0 0 640 270" role="img" aria-label="Net sıfır hedef patikası ve plan eğrisi"></svg>
+          <div class="tip" id="pathtip"></div>
+        </div>
+        <details class="fold"><summary>Tablo görünümü — kilometre taşı yılları</summary>
+          <div class="tblwrap"><table class="t" id="path_table"><thead><tr><th>Yıl</th><th>Hedef tCO₂e</th><th>Hedef azaltım</th><th>Plan tCO₂e</th><th>Açık tCO₂e</th></tr></thead><tbody></tbody></table></div>
+        </details>
+      </div>
+
+      <div class="cards" style="margin-bottom:14px">
+        <div class="card hl">
+          <h3>2030 hedefi</h3>
+          <p class="kpi sm"><span id="nz_t2030">—</span> <small>tCO₂e</small></p>
+          <p class="sub">Baz yıla göre <span id="nz_r2030">—</span> azaltım</p>
+        </div>
+        <div class="card">
+          <h3>2030'da açık</h3>
+          <p class="kpi sm"><span id="nz_gap">—</span> <small>tCO₂e</small></p>
+          <p class="sub" id="nz_gap_sub">—</p>
+        </div>
+        <div class="card">
+          <h3>Tam dengeleme ihtiyacı</h3>
+          <p class="kpi sm"><span id="nz_offset">—</span> <small>tCO₂e/yıl</small></p>
+          <p class="sub">Önlemler sonrası kalan emisyonun tamamı · <span id="nz_offset_cost">—</span> TL/yıl</p>
+        </div>
+        <div class="card total">
+          <h3>Oda-gece başına dengeleme</h3>
+          <p class="kpi sm"><span id="nz_per_night">—</span> <small>TL/oda-gece</small></p>
+          <p class="sub">Karbon nötr konaklama bu tutarla sunulabilir — misafire yansıtılabilir veya sponsorla karşılanabilir</p>
+        </div>
+      </div>
+
+      <div class="two">
+        <div class="card">
+          <h3>Dengeleme — Gold Standard VER</h3>
+          <p class="mini" style="margin:0 0 10px">Commited, Gold Standard Impact Registry üzerinden iptal (retirement) işlemini sizin adınıza yapar; her iptal seri numarasıyla belgelenir ve misafir ya da kurumsal müşteriye sertifika olarak sunulabilir.</p>
+          <div class="tblwrap"><table class="t" id="ver_table" style="min-width:0">
+            <tbody>
+              <tr><td>Kalan emisyon (önlemler sonrası)</td><td class="on"><span id="ver_t">—</span> tCO₂e</td></tr>
+              <tr><td>İptal edilecek VER adedi</td><td class="on"><span id="ver_n">—</span> adet</td></tr>
+              <tr><td>Sertifika maliyeti</td><td class="on"><span id="ver_cost">—</span> TL/yıl</td></tr>
+              <tr><td>Misafir gecelemesi başına</td><td class="on"><span id="ver_guest">—</span> TL</td></tr>
+            </tbody>
+          </table></div>
+          <p class="notice warn" style="margin:12px 0 0">HCMI kuralı: satın alınan karbon kredileri brüt emisyondan <b>düşülmez</b>. Dengeleme ayrı bir satır olarak beyan edilir. Yukarıdaki HCMI metrikleri bu nedenle dengeleme öncesi brüt değerlerdir.</p>
+        </div>
+
+        <div class="card">
+          <h3>Kilometre taşı yılları — NZMFH 2. Baskı</h3>
+          <ul class="tl">
+            <li class="done"><b>2025 · Planla, taahhüt et, ölç</b><span>Net sıfır taahhüdü açıklanır; sınır içindeki her kategori için ölçüm ve azaltım planı yayımlanır.</span></li>
+            <li><b>2030 · Yenilenebilir ve dengeleme devrede</b><span>İklim eylemi için en kritik yıl. Yenilenebilir elektriğe geçiş tamamlanır; kalan emisyonlar için dengeleme yaklaşımı kurulur. Emisyon yoğunluğunda baz yıla göre %50 azaltım hedefi.</span></li>
+            <li><b>2035 · Odak kalıcı emisyonlara ve değer zincirine kayar</b><span>Yenilenebilir elektrik tüm coğrafyalarda tamamlanır; tedarikçi sözleşmelerine net sıfır şartları işlenir.</span></li>
+            <li><b>2040 · Bina için net sıfır iddiası</b><span>Kapsam 1 ve 2 asgariye iner; kalan emisyonlar ölçülüp dengelenir, dengeleme odağı giderme (removal) projelerine kayar.</span></li>
+            <li><b>2050 · Net sıfır</b><span>Değer zinciri derinlemesine karbonsuzlaşır; kaçınılamayan kalan emisyon ölçülür ve giderme ile kapatılır.</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <fieldset style="margin-top:14px">
+        <legend>Türkiye Yeşil Taksonomisi hazırlık kontrolü</legend>
+        <p class="mini" style="margin:0 0 8px">Taslak teknik tarama kriterlerine göre işaretleyin; skor ve eksik adımlar aşağıda güncellenir.</p>
+        <div class="checks">
+          <label class="chk"><input type="checkbox" id="t_sert" data-w="40"><span><b>Tanınan sürdürülebilirlik sertifikam var</b> — GSTC, Yeşil Anahtar, Yeşil Küre, Mavi Bayrak, Çevre Dostu Otel, Greening Hotels, TGA Sürdürülebilir Turizm vb.</span><span class="w">40 puan</span></label>
+          <label class="chk"><input type="checkbox" id="t_bina" data-w="15"><span><b>Yeşil bina belgesi veya Enerji Kimlik Belgesi B ve üzeri</b> — LEED Altın+, BREEAM Çok İyi+, DGNB Altın+, EDGE, EKB B+</span><span class="w">15 puan</span></label>
+          <label class="chk"><input type="checkbox" id="t_sifir" data-w="15"><span><b>Sıfır Atık Belgesi</b> (taksonomi kriteri Platin seviyeyi işaret ediyor)</span><span class="w">15 puan</span></label>
+          <label class="chk"><input type="checkbox" id="t_su" data-w="10"><span><b>Su armatürleri verimli</b> — musluk ≤6 L/dk, duş ≤8 L/dk, rezervuar ≤6 L (DNSH kriteri)</span><span class="w">10 puan</span></label>
+          <label class="chk"><input type="checkbox" id="t_izleme" data-w="10"><span><b>Enerji ve su tüketimini düzenli izliyor, yıllık raporluyorum</b></span><span class="w">10 puan</span></label>
+          <label class="chk"><input type="checkbox" id="t_koruma" data-w="10"><span><b>Cironun en az %1'i doğa koruma/restorasyona gidiyor</b> (konaklama–biyoçeşitlilik kriteri)</span><span class="w">10 puan</span></label>
+        </div>
+        <div class="two" style="margin-top:14px">
+          <div>
+            <p class="kpi sm" style="margin:0">Taksonomi hazırlık skoru <span id="r_skor">0</span><small>/100</small></p>
+            <div class="score-track"><div class="score-fill" id="r_skorbar" style="width:4%"></div></div>
+          </div>
+          <div>
+            <p class="mini" style="margin:0 0 2px; font-weight:700; color:var(--ink)">Sıradaki adımlar</p>
+            <ul class="recs" id="r_recs"></ul>
+          </div>
+        </div>
+      </fieldset>
+    </section>
+
+    <!-- ---------- ADIM 5: RAPORLA ---------- -->
+    <section class="sect" id="adim5">
+      <div class="sect-head">
+        <div class="num">5</div>
+        <div>
+          <h2>Raporla — kurumsal talep ve RFP yanıtı</h2>
+          <p>Kurumsal müşteriler, tur operatörleri ve toplantı planlayıcıları Kapsam 3 envanterleri için otelden tam olarak aşağıdaki satırları ister. Beyan kartını kopyalayıp teklifinize veya RFP yanıtınıza ekleyebilirsiniz.</p>
+        </div>
+      </div>
+
+      <div class="decl" id="decl">
+        <div class="dh">
+          <b id="d_name">—</b>
+          <span id="d_meta">—</span>
+        </div>
+        <dl class="dl">
+          <div><dt>Oda-gece başına karbon (CPOR)</dt><dd><span id="d_cpor">—</span> <small>kgCO₂e</small></dd></div>
+          <div><dt>Toplantı alanı</dt><dd><span id="d_meet">—</span> <small>kgCO₂e/m²/saat</small></dd></div>
+          <div><dt>Kapsam 1</dt><dd><span id="d_s1">—</span> <small>tCO₂e</small></dd></div>
+          <div><dt>Kapsam 2 — konum bazlı</dt><dd><span id="d_s2l">—</span> <small>tCO₂e</small></dd></div>
+          <div><dt>Kapsam 2 — piyasa bazlı</dt><dd><span id="d_s2m">—</span> <small>tCO₂e</small></dd></div>
+          <div><dt>Kapsam 3 — dış çamaşırhane</dt><dd><span id="d_s3">—</span> <small>tCO₂e</small></dd></div>
+          <div><dt>Yenilenebilir elektrik payı</dt><dd><span id="d_ren">—</span></dd></div>
+          <div><dt>Alan yoğunluğu</dt><dd><span id="d_m2">—</span> <small>kgCO₂e/m²</small></dd></div>
+          <div><dt>Metodoloji</dt><dd style="font-size:13px">HCMI v2.0 · GHG Protocol Kurumsal Standart</dd></div>
+          <div><dt>Doğrulama</dt><dd style="font-size:13px" id="d_verify">—</dd></div>
+        </dl>
+        <p class="mini" style="margin:14px 0 0">Bu değerler yukarıda girilen 12 aylık tüketim verisinden hesaplanmıştır ve dengeleme öncesi brüt emisyonu gösterir. Reklam ve pazarlama iddiası için bağımsız doğrulama önerilir.</p>
+      </div>
+
+      <div class="two" style="margin-top:14px">
+        <fieldset style="margin:0">
+          <legend>Toplantı / etkinlik karbon hesabı</legend>
+          <p class="mini" style="margin:0 0 10px">Bir toplantı planlayıcısı teklif isterken bu rakamı sorar. Otelin HCMI toplantı metriği üzerinden hesaplanır.</p>
+          <div class="grid">
+            <div class="f"><label for="e_m2">Kullanılan salon alanı</label>
+              <div class="inwrap"><input id="e_m2" type="number" min="0" value="400"><span class="unit">m²</span></div></div>
+            <div class="f"><label for="e_hours">Toplam kullanım</label>
+              <div class="inwrap"><input id="e_hours" type="number" min="0" value="24"><span class="unit">saat</span></div>
+              <span class="hint">Örn. 3 gün × 8 saat</span></div>
+            <div class="f"><label for="e_guests">Katılımcı sayısı</label>
+              <div class="inwrap"><input id="e_guests" type="number" min="1" value="150"><span class="unit">kişi</span></div></div>
+            <div class="f"><label for="e_nights">Konaklama</label>
+              <div class="inwrap"><input id="e_nights" type="number" min="0" value="300"><span class="unit">oda-gece</span></div>
+              <span class="hint">Örn. 100 oda × 3 gece</span></div>
+          </div>
+          <div class="tblwrap" style="margin-top:12px"><table class="t" style="min-width:0"><tbody>
+            <tr><td>Salon kullanımı</td><td class="on"><span id="e_room">—</span> kgCO₂e</td></tr>
+            <tr><td>Katılımcı konaklaması</td><td class="on"><span id="e_stay">—</span> kgCO₂e</td></tr>
+            <tr><td>Etkinlik toplamı</td><td class="on"><span id="e_total">—</span> kgCO₂e</td></tr>
+            <tr><td>Katılımcı başına</td><td class="on"><span id="e_pp">—</span> kgCO₂e</td></tr>
+            <tr><td>Karbon nötr etkinlik maliyeti</td><td class="on"><span id="e_cost">—</span> TL</td></tr>
+          </tbody></table></div>
+        </fieldset>
+
+        <div class="cta">
+          <h3>Çıktıları alın</h3>
+          <p>Beyan metnini teklifinize, JSON'u kendi sisteminize veya Commited'a aktarın.</p>
+          <div class="btn-row">
+            <button class="btn primary" id="btn-decl" type="button">Beyan metnini kopyala</button>
+            <button class="btn ghost" id="btn-copy" type="button">Yönetici özetini kopyala</button>
+            <button class="btn ghost" id="btn-json" type="button">JSON'u kopyala</button>
+            <a class="btn ghost" id="btn-wa" href="#" target="_blank" rel="noopener">WhatsApp ile paylaş</a>
+          </div>
+          <p class="addr">Detaylı rapor, bağımsız doğrulama, sertifika rotası ve dengeleme için: <b>info@commited.app</b> — konu satırına "Otel HCMI raporu" yazın. <button class="btn ghost" id="btn-mail" type="button" style="padding:5px 13px; font-size:13px; margin-top:8px">E-posta adresini kopyala</button></p>
+          <p class="mini" style="margin-top:12px">Yerleşik tarayıcı kısıtları nedeniyle bu sayfa dosya indirme veya yazdırma başlatamaz; tüm çıktılar panoya kopyalanır.</p>
+          <label class="chk" style="margin-top:12px"><input type="checkbox" id="opt_save"><span>Girdiğim veriler bu tarayıcıda saklansın, bir dahaki gelişimde hazır olsun</span></label>
+        </div>
+      </div>
+    </section>
+  </section>
+
+  <!-- ============================ ACENTE ============================ -->
+  <section class="panel" id="panel-acente" role="tabpanel" aria-labelledby="tab-acente" hidden>
+    <div class="two">
+      <div>
+        <fieldset>
+          <legend>Operasyon hacmi</legend>
+          <div class="grid">
+            <div class="f"><label for="a_paket">Yıllık paket / tur sayısı</label>
+              <div class="inwrap"><input id="a_paket" type="number" min="0" value="120"><span class="unit">tur</span></div></div>
+            <div class="f"><label for="a_yolcu">Toplam yolcu</label>
+              <div class="inwrap"><input id="a_yolcu" type="number" min="0" value="3600"><span class="unit">kişi</span></div></div>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>Ulaşım (yıllık toplam)</legend>
+          <div class="grid">
+            <div class="f"><label for="a_icucus">İç hat uçuş</label>
+              <div class="inwrap"><input id="a_icucus" type="number" min="0" value="1800000"><span class="unit">yolcu-km</span></div>
+              <span class="hint">Yolcu × mesafe (km) × 2 (gidiş-dönüş)</span></div>
+            <div class="f"><label for="a_kisadis">Dış hat — kısa (&lt;3.700 km)</label>
+              <div class="inwrap"><input id="a_kisadis" type="number" min="0" value="2400000"><span class="unit">yolcu-km</span></div></div>
+            <div class="f"><label for="a_uzundis">Dış hat — uzun</label>
+              <div class="inwrap"><input id="a_uzundis" type="number" min="0" value="0"><span class="unit">yolcu-km</span></div></div>
+            <div class="f"><label for="a_otobus">Otobüs / karayolu tur</label>
+              <div class="inwrap"><input id="a_otobus" type="number" min="0" value="900000"><span class="unit">yolcu-km</span></div></div>
+            <div class="f"><label for="a_transfer">Transfer araçları</label>
+              <div class="inwrap"><input id="a_transfer" type="number" min="0" value="60000"><span class="unit">araç-km</span></div></div>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>Konaklama &amp; ofis</legend>
+          <div class="grid">
+            <div class="f"><label for="a_gece">Satın alınan oda-gece</label>
+              <div class="inwrap"><input id="a_gece" type="number" min="0" value="7200"><span class="unit">oda-gece</span></div>
+              <span class="hint">Otelden gerçek CPOR alamıyorsanız varsayılan katsayı kullanılır</span></div>
+            <div class="f"><label for="a_cpor">Kullanılacak CPOR katsayısı</label>
+              <div class="inwrap"><input id="a_cpor" type="number" min="0" step="0.1" value="76.7"><span class="unit">kgCO₂e/oda-gece</span></div>
+              <span class="hint">Tedarikçi oteliniz HCMI değerini verdiyse onu girin — çok daha doğru sonuç verir</span></div>
+            <div class="f"><label for="a_ofis">Ofis elektriği</label>
+              <div class="inwrap"><input id="a_ofis" type="number" min="0" value="18000"><span class="unit">kWh/yıl</span></div></div>
+          </div>
+        </fieldset>
+      </div>
+      <div class="cards" style="grid-template-columns:minmax(0,1fr)">
+        <div class="card total">
+          <h3>Yıllık karbon ayak izi</h3>
+          <p class="kpi"><span id="ar_total">—</span> <small>tCO₂e</small></p>
+          <p class="sub" id="ar_trees">—</p>
+        </div>
+        <div class="card hl">
+          <h3>Misafir başına ayak izi</h3>
+          <p class="kpi sm"><span id="ar_pp">—</span> <small>kgCO₂e/misafir</small></p>
+          <p class="sub" id="ar_tour">—</p>
+        </div>
+        <div class="plotcard">
+          <div class="plothead"><h3>Kaynak dağılımı</h3></div>
+          <div id="ar_bars"></div>
+        </div>
+        <div class="cta">
+          <h3>Dengeleme ve Yeşil Acenta rotası</h3>
+          <p>TÜRSAB Yeşil Acenta programı, paket tur dengelemesi ve müşteriye sunulabilir sertifika için görüşelim.</p>
+          <div class="btn-row">
+            <button class="btn primary" id="btn-acopy" type="button">Özeti kopyala</button>
+            <a class="btn ghost" id="btn-awa" href="#" target="_blank" rel="noopener">WhatsApp ile paylaş</a>
+          </div>
+          <p class="addr"><b>info@commited.app</b></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <details class="meth">
+    <summary>Metodoloji, emisyon faktörleri ve kaynaklar</summary>
+    <p class="mini"><b>Otel tarafı</b> HCMI v2.0 (Hotel Carbon Measurement Initiative, Sustainable Hospitality Alliance) ve GHG Protocol Kurumsal Standardı ile hizalıdır. HCMI ayak izi Kapsam 1, Kapsam 2 ve varsa dış çamaşırhane (Kapsam 3) emisyonlarını kapsar; su, atık, yiyecek-içecek ve misafir ulaşımı HCMI metriklerine girmez ve ayrı gösterilir. Emisyonlar konuk odaları ile toplantı alanı arasında, bu iki alanın birbirine oranında paylaştırılır; ortak alanlar aynı oranda dağıtılır. Yöntem tüm alanlarda eşit yoğunluk varsayar — HCMI bunu, otel yöneticisinin alt sayaç ve dış destek olmadan kendi başına uygulayabilmesi için seçmiştir. Kapsam 2'de hem konum bazlı hem piyasa bazlı sonuç verilir; HCMI v2.0 metriklerde piyasa bazlı yaklaşımı kullanır.</p>
+    <div class="meth-tablewrap tblwrap">
+    <table class="t">
+      <thead><tr><th>Kalem</th><th style="text-align:left">Faktör</th><th style="text-align:left">Kaynak</th></tr></thead>
+      <tbody>
+      <tr><td>Şebeke elektriği (tüketim noktası, dağıtım dahil)</td><td style="text-align:left">0,469 kgCO₂e/kWh</td><td style="text-align:left">ETKB EVÇED, Türkiye Elektrik Tüketim Noktası Emisyon Faktörleri, 2023</td></tr>
+      <tr><td>Doğal gaz</td><td style="text-align:left">2,045 kgCO₂e/m³ · 10,6 kWh/m³</td><td style="text-align:left">DEFRA 2025</td></tr>
+      <tr><td>LPG</td><td style="text-align:left">2,98 kgCO₂e/kg · 12,8 kWh/kg</td><td style="text-align:left">DEFRA 2025</td></tr>
+      <tr><td>Motorin / benzin</td><td style="text-align:left">2,56 · 2,08 kgCO₂e/litre</td><td style="text-align:left">DEFRA 2025</td></tr>
+      <tr><td>Fuel-oil</td><td style="text-align:left">3,17 kgCO₂e/litre</td><td style="text-align:left">DEFRA 2025</td></tr>
+      <tr><td>Bölgesel ısıtma / soğutma</td><td style="text-align:left">0,21 kgCO₂e/kWh</td><td style="text-align:left">DEFRA 2025</td></tr>
+      <tr><td>Soğutucu gazlar (GWP₁₀₀)</td><td style="text-align:left">R-410A 2088 · R-134a 1430 · R-404A 3922 · R-407C 1774 · R-32 675</td><td style="text-align:left">IPCC AR5</td></tr>
+      <tr><td>Dış çamaşırhane</td><td style="text-align:left">0,65 kgCO₂e/kg tekstil</td><td style="text-align:left">Sektör ortalaması — HCMI dış çamaşırhane tahmin yaklaşımı</td></tr>
+      <tr><td>Su temini + atıksu arıtma</td><td style="text-align:left">0,41 kgCO₂e/m³</td><td style="text-align:left">DEFRA 2025</td></tr>
+      <tr><td>Atık: düzenli depolama / geri dönüşüm</td><td style="text-align:left">446 / 21 kgCO₂e/ton</td><td style="text-align:left">DEFRA 2025</td></tr>
+      <tr><td>Uçuş: iç hat / kısa dış / uzun dış</td><td style="text-align:left">0,246 / 0,154 / 0,191 kgCO₂e/yolcu-km (RF dahil)</td><td style="text-align:left">DEFRA 2025</td></tr>
+      <tr><td>Otobüs / transfer aracı</td><td style="text-align:left">0,027 kgCO₂e/yolcu-km · 0,17 kgCO₂e/araç-km</td><td style="text-align:left">DEFRA 2025</td></tr>
+      <tr><td>GES üretimi</td><td style="text-align:left">1.550 kWh/kWp/yıl</td><td style="text-align:left">Türkiye ortalama güneşlenme varsayımı</td></tr>
+      <tr><td>Ağaç eşdeğeri</td><td style="text-align:left">1 ağaç ≈ 25 kgCO₂/yıl</td><td style="text-align:left">Yaygın kabul, bilgilendirme amaçlı</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="mini"><b>Kıyas değerleri.</b> Alan yoğunluğu bandı (Norveç 13,5 — Hong Kong 214,5 kgCO₂e/m²) ve Avusturya'nın 134,5 kWh/m² enerji yoğunluğu, Cornell Hotel Sustainability Benchmarking (CHSB) Index 2023 özetinde yayımlanan değerlerdir; aynı özet, en iyi %25'teki otellerin en kötü %25'ten 2,5 kat az karbon saldığını bildirir. <b>Segment ortancası olarak gelen oda-gece referansları gösterge niteliğindedir ve yayımlanmış bir CHSB değeri değildir</b> — kendi şehriniz ve segmentiniz için Greenview Hotel Footprinting Tool (hotelfootprints.org) veya CHSB Index'ten aldığınız değeri referans alanına girin. Azaltım önlemlerinin tasarruf yüzdeleri ve yatırım tutarları sektör ortalaması gösterge değerlerdir; bağlayıcı teklif için enerji etüdü gerekir.</p>
+    <p class="mini"><b>Net sıfır patikası.</b> Net Zero Methodology for Hotels 2. Baskı (Greenview / Sustainable Hospitality Alliance) kilometre taşı yıllarına (2025, 2030, 2035, 2040, 2050) ve baz yıl sınıfına göre yıllık azaltım oranlarına dayanır: 2012 öncesi baz yıl için %3/yıl, 2012–2019 için %4/yıl, 2020 sonrası için %5/yıl; 2030 için "emisyonları yarıya indirme" kuralı taban alınır. Sektör hedefi olarak Global Hotel Decarbonization Report, oda başına yıllık emisyonların 2010'a göre 2030'da %66, 2050'de %90 azalmasını öngörür. Patika hukuki veya SBTi onaylı bir hedef beyanı değildir.</p>
+    <p class="mini"><b>Taksonomi kontrol listesi</b> Türkiye Yeşil Taksonomisi Yönetmeliği (Resmî Gazete 24.09.2026, Sayı 33380) ve İklim Değişikliği Başkanlığı taslak teknik tarama kriterlerinin turizm ve konaklama bölümlerine dayanır. Nihai kriterler Başkanlıkça yayımlanır ve her yıl 15 Aralık'a kadar güncellenebilir; skor hukuki uygunluk beyanı değildir.</p>
+    <p class="foot">Verileriniz tarayıcınızda hesaplanır; hiçbir veri sunucuya gönderilmez. "Verilerim bu tarayıcıda saklansın" seçeneğini işaretlerseniz girdileriniz yalnızca kendi tarayıcınızın yerel deposunda tutulur ve Commited dahil hiç kimseye ulaşmaz; işareti kaldırdığınızda silinir. KVKK kapsamında kişisel veri işlenmez. © cOmmited — commited.app · Bir Fibabanka iştirakidir.</p>
+  </details>
+</main>
+<div class="toast" id="toast">Kopyalandı</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ======================= Sabitler ======================= */
+  var EF = {
+    elec:0.469, district:0.21,
+    gas:2.045, lpg:2.98, diesel:2.56, petrol:2.08, fueloil:3.17,
+    water:0.41, landfill:446, recycle:21, laundry:0.65,
+    icucus:0.246, kisadis:0.154, uzundis:0.191, otobus:0.027, transfer:0.17,
+    agac:25
+  };
+  var KWH = { gas:10.6, lpg:12.8, diesel:10.0, petrol:9.1, fueloil:10.7 };
+  var PV_YIELD = 1550;          // kWh/kWp/yıl
+  var REC_PREMIUM = 0.12;       // TL/kWh YEK-G primi
+  var REF_PRICE = 1200;         // TL/kg soğutucu gaz
+  var SEG = {
+    resort5:{cpor:45, kwh:320}, city5:{cpor:33, kwh:280}, h4:{cpor:25, kwh:230},
+    boutique:{cpor:18, kwh:180}, apart:{cpor:13, kwh:140}
+  };
+  var MEAS = [
+    {k:'led',     id:'m_led',     n:'LED dönüşümü ve aydınlatma kontrolü'},
+    {k:'keycard', id:'m_keycard', n:'Oda enerji otomasyonu'},
+    {k:'bms',     id:'m_bms',     n:'BMS ve HVAC optimizasyonu'},
+    {k:'hr',      id:'m_hr',      n:'Isı geri kazanım'},
+    {k:'pv',      id:'m_pv',      n:'Çatı GES'},
+    {k:'hp',      id:'m_hp',      n:'Sıcak su ısı pompası'},
+    {k:'st',      id:'m_st',      n:'Güneş kollektörü (termal)'},
+    {k:'green',   id:'m_green',   n:'YEK-G / I-REC yeşil elektrik'},
+    {k:'ev',      id:'m_ev',      n:'Elektrikli servis araçları'},
+    {k:'water',   id:'m_water',   n:'Verimli su armatürleri'},
+    {k:'linen',   id:'m_linen',   n:'Havlu / çarşaf programı'},
+    {k:'waste',   id:'m_waste',   n:'Kaynakta ayrıştırma ve kompost'},
+    {k:'refrig',  id:'m_refrig',  n:'Soğutucu gaz kaçak yönetimi'}
+  ];
+  var REQ = [
+    {id:'h_area_total',w:10,n:'toplam alan'}, {id:'h_area_rooms',w:10,n:'oda alanı'},
+    {id:'h_area_meeting',w:5,n:'toplantı alanı'}, {id:'h_meeting_hours',w:5,n:'toplantı kullanım saati'},
+    {id:'h_roomnights',w:15,n:'satılan oda-gece'}, {id:'h_guestnights',w:5,n:'misafir gecelemesi'},
+    {id:'h_elec_grid',w:20,n:'elektrik'}, {id:'h_gas',w:10,n:'ısınma yakıtı'},
+    {id:'h_ref_kg',w:5,n:'soğutucu gaz dolumu'}, {id:'h_laundry',w:5,n:'dış çamaşırhane'},
+    {id:'h_water',w:5,n:'su'}, {id:'h_waste',w:5,n:'atık'}
+  ];
+  var STORE = 'commited-hotel-v1';
+  var mode = 'otel';
+
+  /* ======================= Yardımcılar ======================= */
+  function el(id){ return document.getElementById(id); }
+  function N(id){ var e=el(id); var v=e?parseFloat(e.value):NaN; return isFinite(v)&&v>0?v:0; }
+  function Nn(id,d){ var e=el(id); var v=e?parseFloat(e.value):NaN; return isFinite(v)?v:d; }
+  function TX(id){ var e=el(id); return e?String(e.value||'').trim():''; }
+  function CK(id){ var e=el(id); return !!(e&&e.checked); }
+  function fmt(x,d){ if(!isFinite(x)) return '—'; return x.toLocaleString('tr-TR',{maximumFractionDigits:d===undefined?1:d,minimumFractionDigits:0}); }
+  function tl(x){ if(!isFinite(x)) return '—'; return Math.round(x).toLocaleString('tr-TR'); }
+  function pct(x){ if(!isFinite(x)) return '—'; return '%'+fmt(x*100,0); }
+  function set(id,v){ var e=el(id); if(e) e.textContent=v; }
+  function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function areaT(i){ return i.aTotal>0 ? i.aTotal : (i.aRooms+i.aMeet); }
+
+  /* ======================= Girdi okuma ======================= */
+  function read(){
+    return {
+      name:TX('h_name')||'Tesis', city:TX('h_city'), seg:TX('h_segment'),
+      year:Math.round(Nn('h_year',2025)), rooms:N('h_rooms'), verify:TX('h_verify'),
+      aTotal:N('h_area_total'), aRooms:N('h_area_rooms'), aMeet:N('h_area_meeting'), mHours:N('h_meeting_hours'),
+      rn:N('h_roomnights'), gn:N('h_guestnights'),
+      elec:N('h_elec_grid'), pvOn:N('h_elec_onsite'), rec:N('h_elec_rec'), dist:N('h_district'),
+      gas:N('h_gas'), lpg:N('h_lpg'), fo:N('h_fueloil'), gen:N('h_gen'),
+      vd:N('h_veh_diesel'), vp:N('h_veh_petrol'),
+      gwp:Nn('h_ref_type',0), refKg:N('h_ref_kg'), laundry:N('h_laundry'),
+      water:N('h_water'), waste:N('h_waste'), recyc:N('h_recycle'),
+      pElec:N('p_elec'), pGas:N('p_gas'), pWater:N('p_water'), pFuel:N('p_fuel'),
+      pLaundry:N('p_laundry'), pVer:N('p_ver'),
+      pvKwp:N('h_pv_kwp'), pvCost:N('h_pv_cost'), refCpor:N('h_ref_cpor')||1
+    };
+  }
+
+  /* ======================= Çekirdek hesap ======================= */
+  /* Faaliyet verisinden emisyon (kg) — bir senaryo için */
+  function emit(i, a){
+    var recKwh = Math.min(a.rec, a.elec);
+    var s1 = a.gas*EF.gas + a.lpg*EF.lpg + a.fo*EF.fueloil + a.gen*EF.diesel
+           + a.vd*EF.diesel + a.vp*EF.petrol + a.refKg*i.gwp;
+    var s2m = Math.max(a.elec-recKwh,0)*EF.elec + a.dist*EF.district;
+    var s2l = a.elec*EF.elec + a.dist*EF.district;
+    var s3 = a.laundry*EF.laundry;
+    var hcmi = s1 + s2m + s3;
+    var extra = a.water*EF.water + a.waste*EF.landfill + a.recyc*EF.recycle;
+    return { s1:s1, s2m:s2m, s2l:s2l, s3:s3, hcmi:hcmi, full:hcmi+extra, extra:extra, recKwh:recKwh };
+  }
+
+  function baseActivity(i){
+    return { elec:i.elec, rec:Math.min(i.rec,i.elec), dist:i.dist, gas:i.gas, lpg:i.lpg,
+             fo:i.fo, gen:i.gen, vd:i.vd, vp:i.vp, refKg:i.refKg, laundry:i.laundry,
+             water:i.water, waste:i.waste, recyc:i.recyc, pvOn:i.pvOn };
+  }
+
+  /* Önlemleri sırayla uygula. forceKey verilirse yalnız o önlem seçili sayılır. */
+  function scenario(i, forceKey){
+    var sel = {};
+    MEAS.forEach(function(m){ sel[m.k] = forceKey ? (m.k===forceKey) : CK(m.id); });
+    var A = areaT(i), capex = 0, opex = 0;
+    var e=i.elec, g=i.gas, w=i.water, ln=i.laundry, rk=i.refKg,
+        wl=i.waste, wr=i.recyc, vd=i.vd, vp=i.vp, addE=0;
+
+    if(sel.led){     e *= (1 - 0.12*0.55);          capex += i.rooms*2500; }
+    if(sel.keycard){ e *= 0.93;                      capex += i.rooms*6000; }
+    if(sel.bms){     e *= 0.91; g *= 0.94;           capex += A*300; }
+    if(sel.hr){      e *= 0.98; g *= 0.90;           capex += A*180; }
+    if(sel.water){   w *= 0.75; g *= 0.92;           capex += i.rooms*3200; }
+    if(sel.linen){   ln *= 0.88; w *= 0.94;          capex += i.rooms*1200; }
+    if(sel.st){      g *= 0.75;                      capex += i.rooms*5000; }
+    if(sel.hp){      var gs=g*0.45; g-=gs; addE += (gs*KWH.gas)/3.2; capex += i.rooms*9000; }
+    if(sel.waste){   var sh=wl*0.55; wl-=sh; wr+=sh; capex += 120000 + i.rooms*300; }
+    if(sel.refrig){  rk *= 0.45;                     capex += 180000; }
+    if(sel.ev){      var dvd=vd*0.7, dvp=vp*0.7; vd-=dvd; vp-=dvp;
+                     addE += (dvd*KWH.diesel + dvp*KWH.petrol)*0.30;
+                     /* 1 elektrikli araç ≈ yılda 3.000 litre akaryakıtın yerini alır */
+                     capex += 1400000*Math.max(1, Math.ceil((dvd+dvp)/3000)); }
+
+    var eT = e + addE;
+    if(sel.pv){ var gen=i.pvKwp*PV_YIELD; eT = Math.max(eT-Math.min(gen,eT),0); capex += i.pvKwp*i.pvCost; }
+    var recK = Math.min(i.rec, eT);
+    if(sel.green){ recK = eT; opex += eT*REC_PREMIUM; }
+
+    var a = { elec:eT, rec:recK, dist:i.dist, gas:g, lpg:i.lpg, fo:i.fo, gen:i.gen,
+              vd:vd, vp:vp, refKg:rk, laundry:ln, water:w, waste:wl, recyc:wr, pvOn:i.pvOn };
+    var em = emit(i, a);
+    var savedTL = (i.elec-eT)*i.pElec + (i.gas-g)*i.pGas + (i.water-w)*i.pWater
+                + ((i.vd-vd)+(i.vp-vp))*i.pFuel + (i.laundry-ln)*i.pLaundry
+                + (i.refKg-rk)*REF_PRICE - opex;
+    return { em:em, a:a, capex:capex, opex:opex, tl:savedTL, any:MEAS.some(function(m){return sel[m.k];}) };
+  }
+
+  function metrics(i, em){
+    var sum = i.aRooms + i.aMeet;
+    var sR = sum>0 ? i.aRooms/sum : 1, sM = sum>0 ? i.aMeet/sum : 0;
+    var fR = em.hcmi*sR, fM = em.hcmi*sM;
+    return {
+      shareR:sR, shareM:sM, fRooms:fR, fMeet:fM,
+      cpor: i.rn>0 ? fR/i.rn : NaN,
+      meetH: (i.aMeet>0 && i.mHours>0) ? fM/(i.aMeet*i.mHours) : NaN,
+      meetY: i.aMeet>0 ? fM/i.aMeet : NaN
+    };
+  }
+
+  function energyKwh(i, a){
+    return a.elec + i.pvOn + a.dist + a.gas*KWH.gas + a.lpg*KWH.lpg + a.gen*KWH.diesel + a.fo*KWH.fueloil;
+  }
+
+  function gradeOf(ratio){
+    if(!isFinite(ratio)) return {k:'—', t:'veri bekleniyor', c:'var(--muted)'};
+    if(ratio<=0.60) return {k:'A', t:'öncü seviye',              c:'var(--good)'};
+    if(ratio<=0.85) return {k:'B', t:'ortalamanın üzerinde',     c:'var(--brand)'};
+    if(ratio<=1.15) return {k:'C', t:'segment ortalaması bandı', c:'var(--warn)'};
+    if(ratio<=1.50) return {k:'D', t:'ortalamanın altında',      c:'var(--bad)'};
+    return                 {k:'E', t:'azaltım önceliği yüksek',  c:'var(--bad)'};
+  }
+
+  /* ======================= Çizim yardımcıları ======================= */
+  function bars(hostId, rows, dec){
+    var host = el(hostId); if(!host) return;
+    var mx = 0; rows.forEach(function(r){ if(r.v>mx) mx=r.v; });
+    if(mx<=0) mx = 1;
+    host.innerHTML = rows.map(function(r){
+      return '<div class="bar-row"><div class="lbl">'+esc(r.l)+'</div>'
+        + '<div class="bar-track"><div class="bar-fill" style="width:'+(Math.max(r.v,0)/mx*100).toFixed(1)+'%"></div></div>'
+        + '<div class="val">'+fmt(r.v, dec===undefined?1:dec)+'</div></div>';
+    }).join('');
+  }
+  function rows2table(tblId, rows){
+    var t = el(tblId); if(!t) return;
+    t.querySelector('tbody').innerHTML = rows.map(function(r){
+      return '<tr>'+r.map(function(c,k){ return '<td'+(k>0?' class="on"':'')+'>'+c+'</td>'; }).join('')+'</tr>';
+    }).join('');
+  }
+
+  /* ======================= Net sıfır patikası ======================= */
+  var PATH = null;
+  function milestones(i, baseT){
+    var by = i.year, rate = by<2012 ? 0.03 : (by<=2019 ? 0.04 : 0.05);
+    var r30 = Math.min(Math.max(0.50, rate*Math.max(2030-by,0)), 0.88);
+    var raw = [{y:by,r:0},{y:2030,r:r30},{y:2035,r:0.65},{y:2040,r:0.80},{y:2050,r:0.90}];
+    var out = [], last = 0;
+    raw.forEach(function(m){
+      if(m.y < by) return;
+      if(m.y === by){ out.push({y:by, r:0, v:baseT}); last = 0; return; }
+      var r = Math.max(m.r, last); last = r;
+      out.push({y:m.y, r:r, v:baseT*(1-r)});
+    });
+    if(out.length===0) out.push({y:by,r:0,v:baseT});
+    return out;
+  }
+  function interp(ms, y){
+    if(y<=ms[0].y) return ms[0].v;
+    for(var k=1;k<ms.length;k++){
+      if(y<=ms[k].y){
+        var a=ms[k-1], b=ms[k], f=(y-a.y)/(b.y-a.y||1);
+        return a.v + (b.v-a.v)*f;
+      }
+    }
+    return ms[ms.length-1].v;
+  }
+  function niceMax(v){
+    if(!(v>0)) return 1;
+    var e = Math.pow(10, Math.floor(Math.log10(v))), n = v/e;
+    var steps = [1,1.2,1.5,2,2.5,3,4,5,6,8,10], m = 10;
+    for(var k=0;k<steps.length;k++){ if(n<=steps[k]){ m=steps[k]; break; } }
+    return m*e;
+  }
+  function planAt(baseT, planT, nzS, nzD, y){
+    if(y<=nzS) return baseT;
+    if(nzD<=nzS || y>=nzD) return planT;
+    return baseT + (planT-baseT)*((y-nzS)/(nzD-nzS));
+  }
+
+  function renderPath(i, baseT, planT){
+    var by = i.year;
+    var nzS = Math.max(Math.round(Nn('nz_start',by+1)), by);
+    var nzD = Math.max(Math.round(Nn('nz_done',2030)), nzS);
+    var ms = milestones(i, baseT);
+    var x0 = by, x1 = 2050;
+    if(x1<=x0) x1 = x0+1;
+    var W=640,H=270,L=54,R=16,T=16,B=36;
+    var ymax = niceMax(Math.max(baseT, planT, 1)*1.08);
+    function X(y){ return L + (y-x0)/(x1-x0)*(W-L-R); }
+    function Y(v){ return T + (1 - Math.max(v,0)/ymax)*(H-T-B); }
+
+    var years=[], y;
+    for(y=x0; y<=x1; y++) years.push(y);
+
+    var tgt = years.map(function(y){ return interp(ms,y); });
+    var pln = years.map(function(y){ return planAt(baseT, planT, nzS, nzD, y); });
+
+    var s = [];
+    // ızgara
+    for(var gi=0; gi<=4; gi++){
+      var gv = ymax*gi/4, gy = Y(gv);
+      s.push('<line x1="'+L+'" y1="'+gy.toFixed(1)+'" x2="'+(W-R)+'" y2="'+gy.toFixed(1)+'" stroke="var(--grid)" stroke-width="1" fill="none"/>');
+      s.push('<text x="'+(L-8)+'" y="'+(gy+4).toFixed(1)+'" text-anchor="end" font-size="10.5" fill="var(--muted)">'+fmt(gv,0)+'</text>');
+    }
+    // açık bandı
+    var fwd = years.map(function(y,k){ return X(y).toFixed(1)+','+Y(Math.max(pln[k],tgt[k])).toFixed(1); });
+    var bwd = years.map(function(y,k){ return X(y).toFixed(1)+','+Y(tgt[k]).toFixed(1); }).reverse();
+    s.push('<polygon points="'+fwd.concat(bwd).join(' ')+'" fill="var(--series-soft)" fill-opacity="0.55" stroke="none"/>');
+    // hedef (kesikli) ve plan (düz)
+    s.push('<polyline points="'+years.map(function(y,k){return X(y).toFixed(1)+','+Y(tgt[k]).toFixed(1);}).join(' ')+'" fill="none" stroke="var(--ref)" stroke-width="2" stroke-dasharray="6 4" stroke-linecap="round"/>');
+    s.push('<polyline points="'+years.map(function(y,k){return X(y).toFixed(1)+','+Y(pln[k]).toFixed(1);}).join(' ')+'" fill="none" stroke="var(--series)" stroke-width="2" stroke-linecap="round"/>');
+    // kilometre taşları
+    ms.forEach(function(m){
+      s.push('<circle cx="'+X(m.y).toFixed(1)+'" cy="'+Y(m.v).toFixed(1)+'" r="3.5" fill="var(--plot)" stroke="var(--ref)" stroke-width="2"/>');
+      s.push('<text x="'+X(m.y).toFixed(1)+'" y="'+(H-14)+'" text-anchor="middle" font-size="10.5" fill="var(--muted)">'+m.y+'</text>');
+    });
+    // plan bitiş noktası + etiketi
+    var pxv = X(nzD), pyv = Y(planT);
+    s.push('<circle cx="'+pxv.toFixed(1)+'" cy="'+pyv.toFixed(1)+'" r="4" fill="var(--series)" stroke="var(--plot)" stroke-width="2"/>');
+    var anchor = pxv > W-150 ? 'end' : 'start';
+    var lx = anchor==='end' ? pxv-9 : pxv+9;
+    s.push('<text x="'+lx.toFixed(1)+'" y="'+(pyv-9).toFixed(1)+'" text-anchor="'+anchor+'" font-size="11" font-weight="700" fill="var(--series)">Plan '+fmt(planT,0)+' t</text>');
+    // imleç + etkileşim alanı
+    s.push('<line id="chx" x1="0" y1="'+T+'" x2="0" y2="'+(H-B)+'" stroke="var(--ref)" stroke-width="1" opacity="0"/>');
+    s.push('<rect id="chit" x="'+L+'" y="'+T+'" width="'+(W-L-R)+'" height="'+(H-T-B)+'" fill="transparent"/>');
+
+    var svg = el('pathsvg');
+    svg.innerHTML = s.join('');
+    PATH = { years:years, tgt:tgt, pln:pln, X:X, Y:Y, W:W, H:H, L:L, R:R, ms:ms, nzD:nzD };
+    bindPath();
+
+    // tablo
+    rows2table('path_table', ms.map(function(m){
+      var p = planAt(baseT, planT, nzS, nzD, m.y);
+      var gap = Math.max(p-m.v,0);
+      return [String(m.y), fmt(m.v,0), m.r>0?pct(m.r):'baz yıl', fmt(p,0), fmt(gap,0)];
+    }));
+
+    // kartlar
+    var m30 = null; ms.forEach(function(m){ if(m.y===2030) m30 = m; });
+    if(!m30) m30 = ms[ms.length-1];
+    var p30 = planAt(baseT, planT, nzS, nzD, m30.y);
+    var gap30 = Math.max(p30 - m30.v, 0);
+    set('nz_t2030', fmt(m30.v,0)); set('nz_r2030', pct(m30.r));
+    set('nz_gap', fmt(gap30,0));
+    set('nz_gap_sub', gap30<=0 ? 'Patikanın önündesiniz — seçilen önlemler 2030 hedefini karşılıyor.'
+      : 'Hedefi tutturmak için ek azaltım veya ' + tl(gap30*i.pVer) + ' TL/yıl dengeleme gerekir.');
+    return { ms:ms, planT:planT, gap30:gap30, t2030:m30.v };
+  }
+
+  function bindPath(){
+    var hit = el('chit'), tip = el('pathtip'), box = el('pathbox'), line = el('chx');
+    if(!hit||!tip||!box||!line) return;
+    function move(ev){
+      var P = PATH; if(!P) return;
+      var r = hit.getBoundingClientRect();
+      var cx = (ev.touches && ev.touches[0] ? ev.touches[0].clientX : ev.clientX);
+      var f = (cx - r.left) / (r.width||1);
+      var idx = Math.round(f*(P.years.length-1));
+      idx = Math.min(Math.max(idx,0), P.years.length-1);
+      var y = P.years[idx], t = P.tgt[idx], p = P.pln[idx];
+      var px = P.X(y);
+      line.setAttribute('x1', px); line.setAttribute('x2', px); line.setAttribute('opacity','0.7');
+      tip.innerHTML = '<b>'+y+'</b><br>Hedef <b>'+fmt(t,0)+'</b> t<br>Plan <b>'+fmt(p,0)+'</b> t'
+        + (p>t ? '<br>Açık <b>'+fmt(p-t,0)+'</b> t' : '<br>Hedefin altında');
+      tip.style.left = (px/P.W*100)+'%';
+      tip.style.top  = (P.Y(Math.max(p,t))/P.H*100)+'%';
+      tip.style.transform = 'translate(-50%,-112%)';
+      tip.classList.add('on');
+    }
+    function out(){ tip.classList.remove('on'); line.setAttribute('opacity','0'); }
+    hit.addEventListener('mousemove', move);
+    hit.addEventListener('touchmove', function(e){ move(e); }, {passive:true});
+    hit.addEventListener('mouseleave', out);
+    hit.addEventListener('touchend', out);
+  }
+
+  /* ======================= Otel render ======================= */
+  var LAST = null;
+
+  function renderHotel(){
+    var i = read();
+    var A = areaT(i);
+    var baseEm = emit(i, baseActivity(i));
+    var mt = metrics(i, baseEm);
+    var baseT = baseEm.hcmi/1000;
+
+    /* --- alan uyarısı --- */
+    var note = el('area_note');
+    if(i.aTotal>0 && (i.aRooms+i.aMeet) > i.aTotal*1.001){
+      note.innerHTML = '<b style="color:var(--bad)">Oda + toplantı alanı toplam alanı aşıyor.</b> Toplam alan, oda ve toplantı alanlarını da içermelidir — ortak alanlar aradaki farktır.';
+    } else {
+      note.textContent = 'Ortak alanlar (lobi, restoran, mutfak, arka ofis) HCMI\'ye göre oda ve toplantı alanı oranında ikiye paylaştırılır. Bu tesiste oda payı '
+        + pct(mt.shareR) + ', toplantı payı ' + pct(mt.shareM) + '.';
+    }
+
+    /* --- Adım 2 kartları --- */
+    set('r_hcmi', fmt(baseT, baseT<100?1:0));
+    set('r_cpor', isFinite(mt.cpor)?fmt(mt.cpor,1):'—');
+    set('r_cpor_sub', isFinite(mt.cpor)
+      ? 'Oda ayak izi ' + fmt(mt.fRooms/1000,0) + ' tCO₂e / ' + fmt(i.rn,0) + ' oda-gece'
+      : 'Satılan oda-gece girin');
+    set('r_meet_h', isFinite(mt.meetH)?fmt(mt.meetH,3):'—');
+    set('r_meet_y', isFinite(mt.meetY)?fmt(mt.meetY,0):'—');
+    set('r_meet_share', pct(mt.shareM));
+
+    var eKwh = energyKwh(i, baseActivity(i));
+    var renK = i.pvOn + Math.min(i.rec, i.elec);
+    set('r_ren_elec', (i.elec+i.pvOn)>0 ? pct(renK/(i.elec+i.pvOn)) : '—');
+    set('r_ren_energy', eKwh>0 ? pct(renK/eKwh) : '—');
+
+    /* --- kaynak barları --- */
+    var src = [
+      {l:'Elektrik (piyasa bazlı)', v:Math.max(i.elec-Math.min(i.rec,i.elec),0)*EF.elec/1000, s:'Kapsam 2'},
+      {l:'Doğal gaz', v:i.gas*EF.gas/1000, s:'Kapsam 1'},
+      {l:'LPG', v:i.lpg*EF.lpg/1000, s:'Kapsam 1'},
+      {l:'Fuel-oil', v:i.fo*EF.fueloil/1000, s:'Kapsam 1'},
+      {l:'Jeneratör', v:i.gen*EF.diesel/1000, s:'Kapsam 1'},
+      {l:'Servis araçları', v:(i.vd*EF.diesel+i.vp*EF.petrol)/1000, s:'Kapsam 1'},
+      {l:'Soğutucu gaz kaçağı', v:i.refKg*i.gwp/1000, s:'Kapsam 1'},
+      {l:'Dış çamaşırhane', v:i.laundry*EF.laundry/1000, s:'Kapsam 3'},
+      {l:'Bölgesel ısıtma', v:i.dist*EF.district/1000, s:'Kapsam 2'},
+      {l:'Su (HCMI dışı)', v:i.water*EF.water/1000, s:'Kapsam 3 · HCMI dışı'},
+      {l:'Atık (HCMI dışı)', v:(i.waste*EF.landfill+i.recyc*EF.recycle)/1000, s:'Kapsam 3 · HCMI dışı'}
+    ].filter(function(r){ return r.v>0; }).sort(function(a,b){ return b.v-a.v; });
+    bars('src_bars', src, 1);
+    var fullT = baseEm.full/1000;
+    rows2table('src_table', src.map(function(r){
+      return [esc(r.l), fmt(r.v,1), fullT>0?pct(r.v/fullT):'—', r.s];
+    }));
+
+    /* --- kapsam barları --- */
+    bars('scope_bars', [
+      {l:'Kapsam 1', v:baseEm.s1/1000},
+      {l:'Kapsam 2', v:baseEm.s2m/1000},
+      {l:'Kapsam 3 (HCMI)', v:baseEm.s3/1000},
+      {l:'Kapsam 3 (diğer)', v:baseEm.extra/1000}
+    ], 1);
+    rows2table('scope_table', [
+      ['Kapsam 1 — yakıtlar, araçlar, soğutucu gaz', fmt(baseEm.s1/1000,1)],
+      ['Kapsam 2 — konum bazlı', fmt(baseEm.s2l/1000,1)],
+      ['Kapsam 2 — piyasa bazlı (HCMI)', fmt(baseEm.s2m/1000,1)],
+      ['Kapsam 3 — dış çamaşırhane (HCMI)', fmt(baseEm.s3/1000,1)],
+      ['HCMI ayak izi toplamı', fmt(baseT,1)],
+      ['Kapsam 3 — su ve atık (HCMI dışı)', fmt(baseEm.extra/1000,1)],
+      ['Tam envanter (tarama)', fmt(fullT,1)]
+    ]);
+
+    /* --- kıyas --- */
+    var ref = i.refCpor;
+    var ratio = isFinite(mt.cpor) && ref>0 ? mt.cpor/ref : NaN;
+    var gr = gradeOf(ratio);
+    var gEl = el('r_grade');
+    gEl.style.color = gr.c; gEl.style.background = 'var(--chip)'; gEl.style.border = '1px solid currentColor';
+    set('r_grade_txt', gr.k + ' · ' + gr.t);
+    set('r_grade_sub', isFinite(ratio)
+      ? 'Referansın ' + pct(ratio) + ' seviyesinde (' + fmt(ref,1) + ' kgCO₂e/oda-gece)'
+      : 'Oda-gece ve alan verisi girin');
+    set('s_grade', gr.k);
+    var posPct = isFinite(ratio) ? Math.min(Math.max((ratio-0.4)/1.4,0),1)*100 : 0;
+    el('r_mark').style.left = posPct.toFixed(1)+'%';
+    [[1,0.4],[2,0.6],[3,0.85],[4,1.15],[5,1.8]].forEach(function(p){
+      set('tick'+p[0], fmt(ref*p[1],0));
+    });
+
+    set('r_int_m2', A>0 ? fmt(baseEm.hcmi/A,1) : '—');
+    set('r_int_kwh', A>0 ? fmt(eKwh/A,0) : '—');
+    set('r_kwh_ref', SEG[i.seg] ? fmt(SEG[i.seg].kwh,0) : '—');
+    set('r_int_water', i.rn>0 ? fmt(i.water*1000/i.rn,0) : '—');
+    set('r_full', fmt(fullT, fullT<100?1:0));
+
+    /* --- yapışkan özet --- */
+    set('s_total', fmt(baseT, baseT<100?1:0));
+    set('s_cpor', isFinite(mt.cpor)?fmt(mt.cpor,1):'—');
+    set('s_meet', isFinite(mt.meetH)?fmt(mt.meetH,3):'—');
+
+    /* --- Adım 3: senaryo --- */
+    var sc = scenario(i, null);
+    var newT = sc.em.hcmi/1000, newFull = sc.em.full/1000;
+    var savedH = Math.max(baseT-newT,0), savedF = Math.max(fullT-newFull,0);
+    var nmt = metrics(i, sc.em);
+    set('m_saving', fmt(savedH,1));
+    set('m_pct', baseT>0?pct(savedH/baseT):'—');
+    set('m_left', fmt(newT,0));
+    set('m_cpor', isFinite(nmt.cpor)?fmt(nmt.cpor,1):'—');
+    var ngr = gradeOf(isFinite(nmt.cpor)&&ref>0 ? nmt.cpor/ref : NaN);
+    set('m_grade', ngr.k + ' · ' + ngr.t);
+    set('m_money', tl(sc.tl));
+    set('m_capex', tl(sc.capex));
+    set('m_payback', sc.tl>0 ? fmt(sc.capex/sc.tl,1)+' yıl' : (sc.capex>0?'işletme tasarrufu yok':'—'));
+
+    /* --- önlem başına (bağımsız) --- */
+    var rowsM = MEAS.map(function(m){
+      var r = scenario(i, m.k);
+      var dH = Math.max(baseT - r.em.hcmi/1000, 0);
+      var d = Math.max(fullT - r.em.full/1000, 0);   // tam envanterdeki azaltım
+      var cost = d>0 ? (r.capex/(d*10) - r.tl/d) : NaN; // 10 yıl ömürle yıllıklandırılmış
+      return { k:m.k, n:m.n, d:d, dH:dH, tl:r.tl, capex:r.capex,
+               pay: r.tl>0 ? r.capex/r.tl : NaN, cost:cost, on:CK(m.id) };
+    });
+    rowsM.forEach(function(r){
+      var w = document.querySelector('[data-w="'+r.k+'"]');
+      if(w) w.textContent = r.d>0 ? '−'+fmt(r.d,1)+' t' : '—';
+    });
+    var sorted = rowsM.slice().filter(function(r){ return r.d>0; })
+      .sort(function(a,b){ return (isFinite(a.cost)?a.cost:9e9) - (isFinite(b.cost)?b.cost:9e9); });
+    var maxAbs = 1; sorted.forEach(function(r){ if(isFinite(r.cost)) maxAbs = Math.max(maxAbs, Math.abs(r.cost)); });
+    el('macc').querySelector('tbody').innerHTML = sorted.map(function(r){
+      var wpx = isFinite(r.cost) ? Math.max(Math.abs(r.cost)/maxAbs*100, 3) : 3;
+      return '<tr>'
+        + '<td>'+(r.on?'<b>'+esc(r.n)+'</b>':esc(r.n))+'</td>'
+        + '<td class="on">'+fmt(r.d,1)+'</td>'
+        + '<td>'+tl(r.tl)+'</td>'
+        + '<td>'+tl(r.capex)+'</td>'
+        + '<td>'+(isFinite(r.pay)?fmt(r.pay,1)+' yıl':'—')+'</td>'
+        + '<td class="on">'+(isFinite(r.cost)?tl(r.cost):'—')+'</td>'
+        + '<td><span class="minibar'+(isFinite(r.cost)&&r.cost<0?'':' alt')+'" style="width:'+wpx.toFixed(0)+'%"></span></td>'
+        + '</tr>';
+    }).join('') || '<tr><td colspan="7" style="text-align:left; color:var(--muted)">Önlem başına tasarruf hesaplanabilmesi için tüketim verisi girin.</td></tr>';
+
+    /* --- Adım 4 --- */
+    var pr = renderPath(i, baseT, newT);
+    var offs = newT;
+    set('nz_offset', fmt(offs,0));
+    set('nz_offset_cost', tl(offs*i.pVer));
+    set('nz_per_night', i.rn>0 ? fmt(offs*1000/i.rn*i.pVer/1000, 2) : '—');
+    set('ver_t', fmt(offs,1));
+    set('ver_n', fmt(Math.ceil(offs),0));
+    set('ver_cost', tl(offs*i.pVer));
+    set('ver_guest', i.gn>0 ? fmt(offs*i.pVer/i.gn,2) : '—');
+
+    /* --- Adım 5 beyan --- */
+    set('d_name', i.name + (i.city?' · '+i.city:''));
+    set('d_meta', i.year + ' raporlama yılı · ' + fmt(i.rooms,0) + ' oda · ' + fmt(i.rn,0) + ' satılan oda-gece');
+    set('d_cpor', isFinite(mt.cpor)?fmt(mt.cpor,1):'—');
+    set('d_meet', isFinite(mt.meetH)?fmt(mt.meetH,3):'—');
+    set('d_s1', fmt(baseEm.s1/1000,1));
+    set('d_s2l', fmt(baseEm.s2l/1000,1));
+    set('d_s2m', fmt(baseEm.s2m/1000,1));
+    set('d_s3', fmt(baseEm.s3/1000,1));
+    set('d_ren', (i.elec+i.pvOn)>0 ? pct(renK/(i.elec+i.pvOn)) : '—');
+    set('d_m2', A>0 ? fmt(baseEm.hcmi/A,1) : '—');
+    set('d_verify', i.verify);
+
+    /* --- etkinlik hesabı --- */
+    var em2 = N('e_m2'), eh = N('e_hours'), eg = N('e_guests'), en = N('e_nights');
+    var evRoom = isFinite(mt.meetH) ? em2*eh*mt.meetH : 0;
+    var evStay = isFinite(mt.cpor) ? en*mt.cpor : 0;
+    var evTot = evRoom + evStay;
+    set('e_room', fmt(evRoom,0)); set('e_stay', fmt(evStay,0)); set('e_total', fmt(evTot,0));
+    set('e_pp', eg>0 ? fmt(evTot/eg,1) : '—');
+    set('e_cost', tl(evTot/1000*i.pVer));
+
+    /* --- tamlık --- */
+    var sum=0, miss=[];
+    REQ.forEach(function(r){ if(N(r.id)>0) sum+=r.w; else miss.push(r.n); });
+    set('r_complete', sum);
+    el('r_completebar').style.width = Math.max(sum,4)+'%';
+    set('r_completenote', miss.length ? 'Eksik: ' + miss.slice(0,4).join(', ') + (miss.length>4?' ve '+(miss.length-4)+' alan daha':'')
+      : 'Tüm HCMI alanları dolu. 12 aylık veri kullandıysanız metrikler kurumsal müşteriye verilebilir.');
+
+    LAST = { i:i, baseEm:baseEm, mt:mt, baseT:baseT, fullT:fullT, newT:newT, newFull:newFull,
+             savedH:savedH, savedF:savedF, nmt:nmt, sc:sc, gr:gr, ref:ref, A:A, eKwh:eKwh,
+             renK:renK, offs:offs, pr:pr, ev:{room:evRoom, stay:evStay, tot:evTot, pp:eg>0?evTot/eg:NaN} };
+    links();
+  }
+
+  /* ======================= Taksonomi ======================= */
+  var RECO = {
+    t_sert:'Yeşil Anahtar veya GSTC tanınırlıklı bir sertifika süreci başlatın — taksonomide "önemli katkı"nın anahtarı.',
+    t_bina:'Enerji Kimlik Belgesi\'nizi B ve üzerine taşıyın veya LEED/BREEAM/EDGE değerlendirmesi yaptırın.',
+    t_sifir:'Sıfır Atık Belgesi\'ni alın; Platin seviye taksonomi kriterinde sayılıyor.',
+    t_su:'Armatürleri verimli modellerle değiştirin: musluk ≤6 L/dk, duş ≤8 L/dk (DNSH eşiği).',
+    t_izleme:'Aylık enerji–su izleme ve yıllık raporlama düzeni kurun.',
+    t_koruma:'Destinasyonunuzda bir koruma projesine yıllık ciro %1 katkı planlayın (biyoçeşitlilik kriteri).'
+  };
+  function taxonomy(){
+    var boxes = document.querySelectorAll('.chk input[data-w]'), s=0, recs=[];
+    Array.prototype.forEach.call(boxes, function(b){
+      if(b.checked) s += parseInt(b.getAttribute('data-w'),10)||0;
+      else if(RECO[b.id]) recs.push(RECO[b.id]);
+    });
+    set('r_skor', s);
+    el('r_skorbar').style.width = Math.max(s,4)+'%';
+    var ul = el('r_recs'); ul.innerHTML='';
+    (s===100 ? ['Taksonomi raporlamasına güçlü bir temelle hazırsınız. Doğrulanmış envanter için bizimle görüşün.'] : recs.slice(0,3))
+      .forEach(function(t){ var li=document.createElement('li'); li.textContent=t; ul.appendChild(li); });
+    return s;
+  }
+
+  /* ======================= Acente ======================= */
+  function renderAgency(){
+    var pk=N('a_paket'), yo=N('a_yolcu');
+    var r = {
+      ic:N('a_icucus')*EF.icucus, ks:N('a_kisadis')*EF.kisadis, uz:N('a_uzundis')*EF.uzundis,
+      ot:N('a_otobus')*EF.otobus, tr:N('a_transfer')*EF.transfer,
+      kn:N('a_gece')*(N('a_cpor')||0), of:N('a_ofis')*EF.elec
+    };
+    var kg = r.ic+r.ks+r.uz+r.ot+r.tr+r.kn+r.of, t = kg/1000;
+    set('ar_total', fmt(t, t<100?1:0));
+    set('ar_trees', '≈ ' + fmt(Math.round(kg/EF.agac),0) + ' ağacın yıllık emilimi');
+    set('ar_pp', yo>0 ? fmt(kg/yo,1) : '—');
+    set('ar_tour', pk>0 ? 'Tur başına ortalama ' + fmt(t/pk,2) + ' tCO₂e' : 'Tur sayısı girince tur başına ortalama görünür');
+    bars('ar_bars', [
+      {l:'İç hat uçuş', v:r.ic/1000}, {l:'Dış hat kısa', v:r.ks/1000}, {l:'Dış hat uzun', v:r.uz/1000},
+      {l:'Otobüs / tur', v:r.ot/1000}, {l:'Transfer', v:r.tr/1000},
+      {l:'Konaklama', v:r.kn/1000}, {l:'Ofis', v:r.of/1000}
+    ].filter(function(x){return x.v>0;}).sort(function(a,b){return b.v-a.v;}), 1);
+    window.__aSummary = 'Turizm Karbon Hesaplayıcısı — Acente / Tur Operatörü\n'
+      + 'Yıllık toplam: ' + fmt(t,1) + ' tCO₂e\n'
+      + (yo>0 ? 'Misafir başına: ' + fmt(kg/yo,1) + ' kgCO₂e\n' : '')
+      + (pk>0 ? 'Tur başına: ' + fmt(t/pk,2) + ' tCO₂e\n' : '')
+      + 'Hesap: commitedevents.app · HCMI / DEFRA faktörleri';
+    var wa = el('btn-awa');
+    if(wa) wa.href = 'https://wa.me/?text=' + encodeURIComponent(window.__aSummary);
+  }
+
+  /* ======================= Metinler ======================= */
+  function declText(){
+    var L = LAST; if(!L) return '';
+    var i = L.i;
+    return 'KARBON AYAK İZİ BEYANI — ' + i.name + (i.city? ' (' + i.city + ')' : '') + '\n'
+      + 'Raporlama yılı: ' + i.year + ' · ' + fmt(i.rooms,0) + ' oda · ' + fmt(i.rn,0) + ' satılan oda-gece\n'
+      + 'Metodoloji: HCMI v2.0 (Hotel Carbon Measurement Initiative) · GHG Protocol Kurumsal Standart\n'
+      + '----------------------------------------\n'
+      + 'Oda-gece başına karbon (CPOR): ' + (isFinite(L.mt.cpor)?fmt(L.mt.cpor,1):'—') + ' kgCO2e\n'
+      + 'Toplantı alanı: ' + (isFinite(L.mt.meetH)?fmt(L.mt.meetH,3):'—') + ' kgCO2e/m2/saat'
+        + (isFinite(L.mt.meetY)?' · ' + fmt(L.mt.meetY,0) + ' kgCO2e/m2/yıl':'') + '\n'
+      + 'Kapsam 1: ' + fmt(L.baseEm.s1/1000,1) + ' tCO2e\n'
+      + 'Kapsam 2 (konum bazlı): ' + fmt(L.baseEm.s2l/1000,1) + ' tCO2e\n'
+      + 'Kapsam 2 (piyasa bazlı): ' + fmt(L.baseEm.s2m/1000,1) + ' tCO2e\n'
+      + 'Kapsam 3 (dış çamaşırhane): ' + fmt(L.baseEm.s3/1000,1) + ' tCO2e\n'
+      + 'HCMI ayak izi toplamı: ' + fmt(L.baseT,1) + ' tCO2e\n'
+      + 'Alan yoğunluğu: ' + (L.A>0?fmt(L.baseEm.hcmi/L.A,1):'—') + ' kgCO2e/m2/yıl\n'
+      + 'Enerji yoğunluğu: ' + (L.A>0?fmt(L.eKwh/L.A,0):'—') + ' kWh/m2/yıl\n'
+      + 'Yenilenebilir elektrik payı: ' + ((i.elec+i.pvOn)>0?pct(L.renK/(i.elec+i.pvOn)):'—') + '\n'
+      + 'Doğrulama durumu: ' + i.verify + '\n'
+      + '----------------------------------------\n'
+      + 'Not: Değerler dengeleme (karbon kredisi) öncesi brüt emisyonu gösterir; HCMI kuralı gereği krediler brüt emisyondan düşülmez.\n'
+      + 'Hesap: commitedevents.app — cOmmited';
+  }
+  function execText(){
+    var L = LAST; if(!L) return '';
+    return 'Otel Karbon Özeti — ' + L.i.name + ' (' + L.i.year + ')\n'
+      + 'HCMI ayak izi: ' + fmt(L.baseT,1) + ' tCO2e · tam envanter ' + fmt(L.fullT,1) + ' tCO2e\n'
+      + 'CPOR: ' + (isFinite(L.mt.cpor)?fmt(L.mt.cpor,1):'—') + ' kgCO2e/oda-gece — kıyas notu ' + L.gr.k + ' (' + L.gr.t + ', referans ' + fmt(L.ref,1) + ')\n'
+      + 'Seçilen önlemlerle azaltım: ' + fmt(L.savedH,1) + ' tCO2e/yıl (' + (L.baseT>0?pct(L.savedH/L.baseT):'—') + ')\n'
+      + 'Yıllık işletme tasarrufu: ' + tl(L.sc.tl) + ' TL · yatırım ' + tl(L.sc.capex) + ' TL'
+        + (L.sc.tl>0 ? ' · geri ödeme ' + fmt(L.sc.capex/L.sc.tl,1) + ' yıl' : '') + '\n'
+      + '2030 hedefi: ' + fmt(L.pr.t2030,0) + ' tCO2e · açık ' + fmt(L.pr.gap30,0) + ' tCO2e\n'
+      + 'Tam dengeleme: ' + fmt(L.offs,0) + ' tCO2e/yıl = ' + tl(L.offs*L.i.pVer) + ' TL/yıl'
+        + (L.i.rn>0 ? ' (' + fmt(L.offs*L.i.pVer/L.i.rn,2) + ' TL/oda-gece)' : '') + '\n'
+      + 'Taksonomi hazırlık skoru: ' + taxonomy() + '/100\n'
+      + 'Hesap: commitedevents.app — cOmmited';
+  }
+  function jsonText(){
+    var L = LAST; if(!L) return '{}';
+    var i = L.i;
+    var o = {
+      schema:'commited.hotel.hcmi/1', generated:new Date().toISOString(),
+      property:{ name:i.name, city:i.city, segment:i.seg, rooms:i.rooms, reportingYear:i.year, verification:i.verify },
+      areas:{ totalM2:i.aTotal, guestroomM2:i.aRooms, meetingM2:i.aMeet, meetingHoursPerYear:i.mHours,
+              guestroomShare:+L.mt.shareR.toFixed(4), meetingShare:+L.mt.shareM.toFixed(4) },
+      occupancy:{ occupiedRoomNights:i.rn, guestNights:i.gn },
+      activity:{ gridElectricityKwh:i.elec, onsiteRenewableKwh:i.pvOn, certifiedRenewableKwh:i.rec,
+                 districtEnergyKwh:i.dist, naturalGasM3:i.gas, lpgKg:i.lpg, fuelOilL:i.fo, generatorDieselL:i.gen,
+                 vehicleDieselL:i.vd, vehiclePetrolL:i.vp, refrigerantKg:i.refKg, refrigerantGwp:i.gwp,
+                 outsourcedLaundryKg:i.laundry, waterM3:i.water, wasteLandfillT:i.waste, wasteRecycledT:i.recyc },
+      hcmi:{ scope1T:+(L.baseEm.s1/1000).toFixed(2), scope2LocationT:+(L.baseEm.s2l/1000).toFixed(2),
+             scope2MarketT:+(L.baseEm.s2m/1000).toFixed(2), scope3LaundryT:+(L.baseEm.s3/1000).toFixed(2),
+             footprintT:+L.baseT.toFixed(2),
+             carbonPerOccupiedRoomKg: isFinite(L.mt.cpor)?+L.mt.cpor.toFixed(2):null,
+             meetingPerM2PerHourKg: isFinite(L.mt.meetH)?+L.mt.meetH.toFixed(4):null,
+             meetingPerM2PerYearKg: isFinite(L.mt.meetY)?+L.mt.meetY.toFixed(2):null,
+             renewableElectricityShare: (i.elec+i.pvOn)>0 ? +(L.renK/(i.elec+i.pvOn)).toFixed(4) : null },
+      fullInventory:{ totalT:+L.fullT.toFixed(2), waterWasteT:+(L.baseEm.extra/1000).toFixed(2) },
+      intensity:{ kgCo2ePerM2: L.A>0?+(L.baseEm.hcmi/L.A).toFixed(2):null,
+                  kwhPerM2: L.A>0?+(L.eKwh/L.A).toFixed(1):null,
+                  litresWaterPerRoomNight: i.rn>0?+(i.water*1000/i.rn).toFixed(0):null },
+      benchmark:{ referenceCporKg:L.ref, ratio: isFinite(L.mt.cpor)?+(L.mt.cpor/L.ref).toFixed(3):null, grade:L.gr.k },
+      reduction:{ selected:MEAS.filter(function(m){return CK(m.id);}).map(function(m){return m.k;}),
+                  savingT:+L.savedH.toFixed(2), newFootprintT:+L.newT.toFixed(2),
+                  newCporKg: isFinite(L.nmt.cpor)?+L.nmt.cpor.toFixed(2):null,
+                  annualSavingTry:Math.round(L.sc.tl), capexTry:Math.round(L.sc.capex) },
+      netZero:{ baselineYear:i.year, target2030T:+L.pr.t2030.toFixed(2), gap2030T:+L.pr.gap30.toFixed(2),
+                offsetNeedT:+L.offs.toFixed(2), offsetCostTry:Math.round(L.offs*L.i.pVer) },
+      taxonomyScore:taxonomy(),
+      factors:EF, note:'Tarama hesabı. Doğrulanmış envanter için bağımsız doğrulama gerekir.'
+    };
+    return JSON.stringify(o,null,2);
+  }
+  function links(){
+    var wa = el('btn-wa');
+    if(wa) wa.href = 'https://wa.me/?text=' + encodeURIComponent(execText());
+  }
+
+  /* ======================= Kopyalama ======================= */
+  function toast(msg){
+    var t = el('toast'); if(!t) return;
+    t.textContent = msg || 'Kopyalandı';
+    t.classList.add('show');
+    setTimeout(function(){ t.classList.remove('show'); }, 1900);
+  }
+  function copy(text, msg){
+    function fallback(){
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.setAttribute('readonly','');
+      ta.style.position='fixed'; ta.style.left='-9999px';
+      document.body.appendChild(ta); ta.select();
+      var ok=false; try{ ok=document.execCommand('copy'); }catch(e){}
+      document.body.removeChild(ta);
+      toast(ok ? (msg||'Kopyalandı') : 'Kopyalanamadı — metni seçip elle kopyalayın');
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){ toast(msg||'Kopyalandı'); }, fallback);
+    } else { fallback(); }
+  }
+
+  /* ======================= Kalıcılık ======================= */
+  function saveAll(){
+    if(!CK('opt_save')){ try{ localStorage.removeItem(STORE); }catch(e){} return; }
+    var o = {};
+    Array.prototype.forEach.call(document.querySelectorAll('input[id],select[id]'), function(x){
+      o[x.id] = (x.type==='checkbox') ? x.checked : x.value;
+    });
+    try{ localStorage.setItem(STORE, JSON.stringify(o)); }catch(e){}
+  }
+  function restoreAll(){
+    var raw=null; try{ raw = localStorage.getItem(STORE); }catch(e){ return false; }
+    if(!raw) return false;
+    try{
+      var o = JSON.parse(raw);
+      Object.keys(o).forEach(function(k){
+        var x = el(k); if(!x) return;
+        if(x.type==='checkbox') x.checked = !!o[k]; else x.value = o[k];
+      });
+      return true;
+    }catch(e){ return false; }
+  }
+
+  /* ======================= Olaylar ======================= */
+  function all(){ renderHotel(); taxonomy(); renderAgency(); }
+
+  function setMode(m){
+    mode = m;
+    el('panel-otel').hidden = (m!=='otel');
+    el('panel-acente').hidden = (m!=='acente');
+    el('tab-otel').setAttribute('aria-selected', String(m==='otel'));
+    el('tab-acente').setAttribute('aria-selected', String(m==='acente'));
+    all();
+  }
+  el('tab-otel').addEventListener('click', function(){ setMode('otel'); });
+  el('tab-acente').addEventListener('click', function(){ setMode('acente'); });
+
+  el('h_segment').addEventListener('change', function(){
+    var s = SEG[TX('h_segment')];
+    if(s){ el('h_ref_cpor').value = s.cpor; }
+    all();
+  });
+
+  Array.prototype.forEach.call(document.querySelectorAll('input,select'), function(x){
+    x.addEventListener('input', function(){ all(); saveAll(); });
+    if(x.type==='checkbox' || x.tagName==='SELECT') x.addEventListener('change', function(){ all(); saveAll(); });
+  });
+
+  el('btn-decl').addEventListener('click', function(){ copy(declText(), 'Beyan metni kopyalandı'); });
+  el('btn-copy').addEventListener('click', function(){ copy(execText(), 'Yönetici özeti kopyalandı'); });
+  el('btn-json').addEventListener('click', function(){ copy(jsonText(), 'JSON kopyalandı — yazılım ekibinize verebilirsiniz'); });
+  el('btn-mail').addEventListener('click', function(){ copy('info@commited.app', 'E-posta adresi kopyalandı'); });
+  el('btn-acopy').addEventListener('click', function(){ copy(window.__aSummary||'', 'Özet kopyalandı'); });
+
+  window.addEventListener('resize', function(){ if(LAST) renderPath(LAST.i, LAST.baseT, LAST.newT); });
+
+  /* ======================= Başlat ======================= */
+  if(restoreAll()){
+    var nt = document.querySelector('#panel-otel .notice');
+    if(nt) nt.textContent = 'Bu tarayıcıda sakladığınız veriler yüklendi. Saklamayı kapatmak için Adım 5\'teki kutunun işaretini kaldırın.';
+  }
+  var seg0 = SEG[TX('h_segment')];
+  if(seg0 && !N('h_ref_cpor')) el('h_ref_cpor').value = seg0.cpor;
+  all();
+})();
+</script>
+</body>
+</html>
