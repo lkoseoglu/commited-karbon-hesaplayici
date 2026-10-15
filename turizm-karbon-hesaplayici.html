@@ -274,12 +274,14 @@ details.meth summary{font-weight:700; padding:12px 0; cursor:pointer; color:var(
             <div class="inwrap"><input id="h_city" type="text" value="Muğla"></div></div>
           <div class="f"><label for="h_segment">Segment (kıyas bandını belirler)</label>
             <div class="inwrap"><select id="h_segment">
-              <option value="resort5" selected>5★ tatil köyü / her şey dahil</option>
-              <option value="city5">5★ şehir oteli</option>
-              <option value="h4">4★ otel</option>
-              <option value="boutique">3★ / butik otel</option>
-              <option value="apart">Apart / pansiyon / kamp alanı</option>
-            </select></div></div>
+              <option value="resort5" selected>5★ tatil köyü / resort</option>
+              <option value="lux">Lüks (STR Luxury)</option>
+              <option value="s5">5 yıldız — şehir / genel</option>
+              <option value="s4">4 yıldız</option>
+              <option value="s3">3 yıldız</option>
+              <option value="limited">Apart / pansiyon / limited service</option>
+            </select></div>
+            <span class="hint">Kıyas değerleri CHSB 2026 Türkiye verisinden gelir</span></div>
           <div class="f"><label for="h_year">Raporlama yılı (baz yıl)</label>
             <div class="inwrap"><input id="h_year" type="number" min="2010" max="2050" step="1" value="2025"></div>
             <span class="hint">Net sıfır patikası bu yıldan başlar</span></div>
@@ -431,7 +433,7 @@ details.meth summary{font-weight:700; padding:12px 0; cursor:pointer; color:var(
         <div class="num">2</div>
         <div>
           <h2>Kıyasla — HCMI çıktıları ve segment kıyası</h2>
-          <p>Aşağıdaki dört metrik, kurumsal müşterilerin ve toplantı planlayıcılarının sorduğu resmî HCMI çıktılarıdır. Kıyas bandı kendi segmentinize göre ayarlanır; Greenview Hotel Footprinting Tool veya CHSB Index'ten şehrinize ait değeri aldıysanız referansı elle değiştirebilirsiniz.</p>
+          <p>Aşağıdaki dört metrik, kurumsal müşterilerin ve toplantı planlayıcılarının sorduğu resmî HCMI çıktılarıdır. Kıyas değerleri CHSB 2026 veri setinin Türkiye satırlarından gelir — 2024 takvim yılı, ölçülmüş tesis ortalamaları. Kendi şehriniz için başka bir kaynaktan değer aldıysanız referansı elle değiştirebilirsiniz.</p>
         </div>
       </div>
 
@@ -449,7 +451,7 @@ details.meth summary{font-weight:700; padding:12px 0; cursor:pointer; color:var(
         <div class="card hl">
           <h3>Toplantı alanı</h3>
           <p class="kpi sm"><span id="r_meet_h">—</span> <small>kgCO₂e/m²/saat</small></p>
-          <p class="sub"><span id="r_meet_y">—</span> kgCO₂e/m²/yıl · toplantı payı <span id="r_meet_share">—</span></p>
+          <p class="sub"><span id="r_meet_y">—</span> kgCO₂e/m²/yıl · toplantı payı <span id="r_meet_share">—</span> · segment ort. <b><span id="r_meet_ref">—</span></b><br>Salonunuz yılda az saat satılıyorsa bu metrik yükselir — ayak izi aynı kalır, bölen küçülür.</p>
         </div>
         <div class="card">
           <h3>Yenilenebilir pay</h3>
@@ -479,9 +481,9 @@ details.meth summary{font-weight:700; padding:12px 0; cursor:pointer; color:var(
       <div class="card" style="margin-top:14px">
         <h3>Segment kıyası — oda-gece yoğunluğu</h3>
         <div class="grid" style="margin-bottom:4px">
-          <div class="f"><label for="h_ref_cpor">Kıyas referansı (segment ortancası)</label>
-            <div class="inwrap"><input id="h_ref_cpor" type="number" min="1" step="0.5" value="45"><span class="unit">kgCO₂e/oda-gece</span></div>
-            <span class="hint">Segment seçimiyle otomatik dolar · gösterge değer, kendi kaynağınızla değiştirin</span></div>
+          <div class="f"><label for="h_ref_cpor">Kıyas referansı (segment ortalaması)</label>
+            <div class="inwrap"><input id="h_ref_cpor" type="number" min="1" step="0.5" value="48.9"><span class="unit">kgCO₂e/oda-gece</span></div>
+            <span class="hint" id="r_ref_src">—</span></div>
           <div class="f"><label>Konumunuz</label>
             <div class="pill-row" style="margin-top:6px"><span class="grade" id="r_grade"><span class="dot"></span><span id="r_grade_txt">—</span></span></div>
             <span class="hint" id="r_grade_sub">—</span></div>
@@ -507,17 +509,17 @@ details.meth summary{font-weight:700; padding:12px 0; cursor:pointer; color:var(
         <div class="card">
           <h3>Alan yoğunluğu</h3>
           <p class="kpi sm"><span id="r_int_m2">—</span> <small>kgCO₂e/m²/yıl</small></p>
-          <p class="sub">CHSB Index 2023 bandı: Norveç 13,5 — Hong Kong 214,5 kgCO₂e/m². Net Zero Methodology for Hotels'in birincil KPI'ı budur.</p>
+          <p class="sub">Segment ortalaması <b><span id="r_m2_ref">—</span></b> kgCO₂e/m² — <span id="r_m2_rel">—</span>. Net Zero Methodology for Hotels'in birincil KPI'ı budur.</p>
         </div>
         <div class="card">
           <h3>Enerji yoğunluğu</h3>
           <p class="kpi sm"><span id="r_int_kwh">—</span> <small>kWh/m²/yıl</small></p>
-          <p class="sub">CHSB'de en verimli ülke ortalaması Avusturya 134,5 kWh/m². Segment göstergesi: <span id="r_kwh_ref">—</span> kWh/m².</p>
+          <p class="sub">Segment ortalaması <b><span id="r_kwh_ref">—</span></b> kWh/m² — <span id="r_kwh_rel">—</span>.</p>
         </div>
         <div class="card">
           <h3>Su yoğunluğu</h3>
           <p class="kpi sm"><span id="r_int_water">—</span> <small>litre/oda-gece</small></p>
-          <p class="sub">Havuz ve peyzaj sulaması dahil. Resort tesislerde 500–900 L/oda-gece tipiktir.</p>
+          <p class="sub">Segment ortalaması <b><span id="r_water_ref">—</span></b> L/oda-gece — <span id="r_water_rel">—</span>. Havuz ve peyzaj sulaması dahil.</p>
         </div>
         <div class="card">
           <h3>Tam envanter (tarama)</h3>
@@ -831,8 +833,8 @@ details.meth summary{font-weight:700; padding:12px 0; cursor:pointer; color:var(
               <div class="inwrap"><input id="a_gece" type="number" min="0" value="7200"><span class="unit">oda-gece</span></div>
               <span class="hint">Otelden gerçek CPOR alamıyorsanız varsayılan katsayı kullanılır</span></div>
             <div class="f"><label for="a_cpor">Kullanılacak CPOR katsayısı</label>
-              <div class="inwrap"><input id="a_cpor" type="number" min="0" step="0.1" value="76.7"><span class="unit">kgCO₂e/oda-gece</span></div>
-              <span class="hint">Tedarikçi oteliniz HCMI değerini verdiyse onu girin — çok daha doğru sonuç verir</span></div>
+              <div class="inwrap"><input id="a_cpor" type="number" min="0" step="0.1" value="37.9"><span class="unit">kgCO₂e/oda-gece</span></div>
+              <span class="hint">Varsayılan: CHSB 2026 <b>Türkiye 4 yıldız</b> ortalaması. Diğer segmentler: lüks 59,6 · 5★ 48,9 · 3★ 25,4 · apart 20,2. Yurt dışı konaklama için o ülkenin değerini, tedarikçi otelin kendi HCMI değeri varsa onu girin — en doğrusu odur.</span></div>
             <div class="f"><label for="a_ofis">Ofis elektriği</label>
               <div class="inwrap"><input id="a_ofis" type="number" min="0" value="18000"><span class="unit">kWh/yıl</span></div></div>
           </div>
@@ -890,7 +892,24 @@ details.meth summary{font-weight:700; padding:12px 0; cursor:pointer; color:var(
       </tbody>
     </table>
     </div>
-    <p class="mini"><b>Kıyas değerleri.</b> Alan yoğunluğu bandı (Norveç 13,5 — Hong Kong 214,5 kgCO₂e/m²) ve Avusturya'nın 134,5 kWh/m² enerji yoğunluğu, Cornell Hotel Sustainability Benchmarking (CHSB) Index 2023 özetinde yayımlanan değerlerdir; aynı özet, en iyi %25'teki otellerin en kötü %25'ten 2,5 kat az karbon saldığını bildirir. <b>Segment ortancası olarak gelen oda-gece referansları gösterge niteliğindedir ve yayımlanmış bir CHSB değeri değildir</b> — kendi şehriniz ve segmentiniz için Greenview Hotel Footprinting Tool (hotelfootprints.org) veya CHSB Index'ten aldığınız değeri referans alanına girin. Azaltım önlemlerinin tasarruf yüzdeleri ve yatırım tutarları sektör ortalaması gösterge değerlerdir; bağlayıcı teklif için enerji etüdü gerekir.</p>
+    <p class="mini"><b>Kıyas değerleri — CHSB 2026, Türkiye.</b> Sayfadaki tüm segment ortalamaları Cornell Hotel Sustainability Benchmarking (CHSB) Index 2026 veri setinin <b>Türkiye satırlarından</b> alınmıştır. Veri 2024 takvim yılına aittir, yaklaşık 31.000 otelden derlenmiştir ve Cornell eCommons'ta açık olarak yayımlanır (hdl.handle.net/1813/120192). Önceki sürümde bu alanlarda gösterge tahminler vardı; hepsi ölçülmüş değerlerle değiştirildi.</p>
+    <div class="meth-tablewrap tblwrap">
+    <table class="t">
+      <thead><tr><th>Segment (CHSB 2026 · Türkiye)</th><th>Oda-gece<br>kgCO₂e</th><th>Toplantı<br>kgCO₂e/m²·sa</th><th>Karbon<br>kgCO₂e/m²</th><th>Enerji<br>kWh/m²</th><th>Su<br>L/oda-gece</th><th>Atık<br>kg/dolu oda</th></tr></thead>
+      <tbody>
+        <tr><td>Lüks (STR Luxury)</td><td>59,6</td><td>0,0616</td><td>107,3</td><td>335,4</td><td>1.353</td><td>6,1</td></tr>
+        <tr><td>5★ tatil köyü / resort</td><td>48,9*</td><td>0,0480*</td><td>103,5</td><td>314,3</td><td>970*</td><td>4,9*</td></tr>
+        <tr><td>5 yıldız</td><td>48,9</td><td>0,0480</td><td>88,8</td><td>273,8</td><td>970</td><td>4,9</td></tr>
+        <tr><td>4 yıldız</td><td>37,9</td><td>0,0476</td><td>75,2</td><td>229,9</td><td>553</td><td>3,4</td></tr>
+        <tr><td>3 yıldız</td><td>25,4</td><td>0,0231</td><td>55,1</td><td>170,4</td><td>527</td><td>—</td></tr>
+        <tr><td>Apart / pansiyon / limited service</td><td>20,2</td><td>0,0220</td><td>47,3</td><td>143,9</td><td>377</td><td>1,6</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="mini">Ölçüler sırasıyla CHSB Measure1 (HCMI oda-gece), Measure7 (HCMI toplantı alanı), Measure4, Measure6, Measure8 ve Measure15'tir; değerler o segmentteki tesislerin <b>ortalamasıdır</b> (ortanca değil) ve her hücrenin arkasında 8–149 arası tesis vardır. <b>*</b> CHSB 2026'da Türkiye için "Full Service Resort" segmentinde oda-gece, toplantı, su ve atık satırı yoktur; bu dört değer 5 yıldız ortalamasından vekil olarak alınmıştır — resort satırının kendi verisi yalnızca alan ve enerji yoğunluğudur. 3 yıldızda atık satırı yoktur.</p>
+    <p class="mini"><b>Türkiye nerede duruyor.</b> Aynı veri setinde 5 yıldızlı otellerin oda-gece emisyonu Fransa'da 11,2 · İspanya'da 20,2 · İngiltere'de 20,7 · Yunanistan'da 23,8 · Almanya'da 26,1 · İtalya'da 38,3 iken <b>Türkiye'de 48,9 kgCO₂e</b>'dir. Türkiye, 5 yıldız verisi bulunan 21 ülke içinde en yüksek 10. sıradadır ve listedeki bütün Avrupa ülkelerinin üzerindedir. Farkın büyük kısmı şebeke elektriğinin karbon yoğunluğundan ve her şey dahil işletme modelinden gelir. Kurumsal müşteriniz bu kıyası yapabildiği için ölçmek ve azaltmak ticari olarak da önemlidir.</p>
+    <p class="mini"><b>Acente sekmesindeki konaklama katsayısı.</b> Varsayılan değer <b>37,9 kgCO₂e/oda-gece</b>'dir: CHSB 2026'nın Türkiye 4 yıldız ortalaması. Önceki sürümlerde burada 76,7 vardı; o rakam Greenview Hotel Footprinting Tool'un coğrafya ve yıldız seçilmeden önce ekranda gösterdiği <b>başlangıç katsayısıdır</b>, bir dünya ortalaması değildir — CHSB 2026'da ülkeler üstü bir "dünya ortalaması" satırı zaten yoktur. Türkiye'de konaklama satın alan bir acente için 76,7 yaklaşık iki katı fazla hesaplıyordu. Yurt dışı konaklamada ilgili ülkenin değerini, tedarikçi otelin kendi HCMI değeri varsa onu kullanın.</p>
+    <p class="mini">Azaltım önlemlerinin tasarruf yüzdeleri ve yatırım tutarları sektör ortalaması gösterge değerlerdir; bağlayıcı teklif için enerji etüdü gerekir.</p>
     <p class="mini"><b>Net sıfır patikası.</b> Net Zero Methodology for Hotels 2. Baskı (Greenview / Sustainable Hospitality Alliance) kilometre taşı yıllarına (2025, 2030, 2035, 2040, 2050) ve baz yıl sınıfına göre yıllık azaltım oranlarına dayanır: 2012 öncesi baz yıl için %3/yıl, 2012–2019 için %4/yıl, 2020 sonrası için %5/yıl; 2030 için "emisyonları yarıya indirme" kuralı taban alınır. Sektör hedefi olarak Global Hotel Decarbonization Report, oda başına yıllık emisyonların 2010'a göre 2030'da %66, 2050'de %90 azalmasını öngörür. Patika hukuki veya SBTi onaylı bir hedef beyanı değildir.</p>
     <p class="mini"><b>Taksonomi kontrol listesi</b> Türkiye Yeşil Taksonomisi Yönetmeliği (Resmî Gazete 24.09.2026, Sayı 33380) ve İklim Değişikliği Başkanlığı taslak teknik tarama kriterlerinin turizm ve konaklama bölümlerine dayanır. Nihai kriterler Başkanlıkça yayımlanır ve her yıl 15 Aralık'a kadar güncellenebilir; skor hukuki uygunluk beyanı değildir.</p>
     <p class="foot">Verileriniz tarayıcınızda hesaplanır; hiçbir veri sunucuya gönderilmez. "Verilerim bu tarayıcıda saklansın" seçeneğini işaretlerseniz girdileriniz yalnızca kendi tarayıcınızın yerel deposunda tutulur ve Commited dahil hiç kimseye ulaşmaz; işareti kaldırdığınızda silinir. KVKK kapsamında kişisel veri işlenmez. © cOmmited — commited.app · Bir Fibabanka iştirakidir.</p>
@@ -914,9 +933,19 @@ details.meth summary{font-weight:700; padding:12px 0; cursor:pointer; color:var(
   var PV_YIELD = 1550;          // kWh/kWp/yıl
   var REC_PREMIUM = 0.12;       // TL/kWh YEK-G primi
   var REF_PRICE = 1200;         // TL/kg soğutucu gaz
+  /* CHSB 2026 (Cornell Hotel Sustainability Benchmarking) — 2024 takvim yılı, Türkiye satırları.
+     cpor  = Measure1 HCMI oda-gece kgCO2e · meet = Measure7 kgCO2e/m²-saat
+     co2m2 = Measure4 kgCO2e/m²           · kwh  = Measure6 kWh/m²
+     water = Measure8 L/dolu oda          · waste = Measure15 kg/dolu oda
+     n     = ilgili ölçünün tesis sayısı  · proxy = o segmentte satır yoksa kullanılan vekil */
   var SEG = {
-    resort5:{cpor:45, kwh:320}, city5:{cpor:33, kwh:280}, h4:{cpor:25, kwh:230},
-    boutique:{cpor:18, kwh:180}, apart:{cpor:13, kwh:140}
+    lux:     {ad:'Lüks (STR Luxury)',        cpor:59.6, meet:0.0616, co2m2:107.3, kwh:335.4, water:1353, waste:6.1,  n:'11–30 tesis'},
+    resort5: {ad:'5★ tatil köyü / resort',   cpor:48.9, meet:0.0480, co2m2:103.5, kwh:314.3, water:970,  waste:4.9,  n:'20 tesis (alan ölçüleri)',
+              proxy:'CHSB 2026\'da Türkiye için "Full Service Resort" segmentinde oda-gece, toplantı ve su satırı yok; bu üçü 5 yıldız ortalamasından alındı. Alan ve enerji yoğunluğu resort segmentinin kendi verisidir.'},
+    s5:      {ad:'5 yıldız',                 cpor:48.9, meet:0.0480, co2m2:88.8,  kwh:273.8, water:970,  waste:4.9,  n:'21–73 tesis'},
+    s4:      {ad:'4 yıldız',                 cpor:37.9, meet:0.0476, co2m2:75.2,  kwh:229.9, water:553,  waste:3.4,  n:'26–61 tesis'},
+    s3:      {ad:'3 yıldız',                 cpor:25.4, meet:0.0231, co2m2:55.1,  kwh:170.4, water:527,  waste:null, n:'30–64 tesis'},
+    limited: {ad:'Apart / pansiyon / limited service', cpor:20.2, meet:0.0220, co2m2:47.3, kwh:143.9, water:377, waste:1.6, n:'25–50 tesis'}
   };
   var MEAS = [
     {k:'led',     id:'m_led',     n:'LED dönüşümü ve aydınlatma kontrolü'},
@@ -1300,10 +1329,28 @@ details.meth summary{font-weight:700; padding:12px 0; cursor:pointer; color:var(
       set('tick'+p[0], fmt(ref*p[1],0));
     });
 
-    set('r_int_m2', A>0 ? fmt(baseEm.hcmi/A,1) : '—');
-    set('r_int_kwh', A>0 ? fmt(eKwh/A,0) : '—');
-    set('r_kwh_ref', SEG[i.seg] ? fmt(SEG[i.seg].kwh,0) : '—');
-    set('r_int_water', i.rn>0 ? fmt(i.water*1000/i.rn,0) : '—');
+    var S = SEG[i.seg] || null;
+    function rel(v, ref){
+      if(!isFinite(v) || !(ref>0)) return '—';
+      var p = v/ref - 1;
+      if(Math.abs(p) < 0.03) return 'segment ortalamasında';
+      return '%' + fmt(Math.abs(p)*100,0) + (p<0 ? ' altında' : ' üzerinde');
+    }
+    var m2v = A>0 ? baseEm.hcmi/A : NaN;
+    var kwv = A>0 ? eKwh/A : NaN;
+    var wav = i.rn>0 ? i.water*1000/i.rn : NaN;
+    set('r_int_m2',  isFinite(m2v)?fmt(m2v,1):'—');
+    set('r_m2_ref',  S?fmt(S.co2m2,1):'—');
+    set('r_m2_rel',  rel(m2v, S&&S.co2m2));
+    set('r_int_kwh', isFinite(kwv)?fmt(kwv,0):'—');
+    set('r_kwh_ref', S?fmt(S.kwh,0):'—');
+    set('r_kwh_rel', rel(kwv, S&&S.kwh));
+    set('r_int_water', isFinite(wav)?fmt(wav,0):'—');
+    set('r_water_ref', S?fmt(S.water,0):'—');
+    set('r_water_rel', rel(wav, S&&S.water));
+    set('r_meet_ref', S?fmt(S.meet,4):'—');
+    set('r_ref_src', S ? ('CHSB 2026 · Türkiye · ' + S.ad + ' · ' + S.n
+      + (S.proxy ? ' · vekil değer içerir' : '') + ' — kendi kaynağınızla değiştirebilirsiniz') : '—');
     set('r_full', fmt(fullT, fullT<100?1:0));
 
     /* --- yapışkan özet --- */
