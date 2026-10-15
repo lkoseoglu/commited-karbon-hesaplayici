@@ -130,6 +130,16 @@ table.t th:first-child,table.t td:first-child{text-align:left; font-variant-nume
 table.t thead th{background:var(--surface2); font-size:12px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; border-bottom:1px solid var(--line)}
 table.t tbody tr:hover{background:var(--chip)}
 table.t td.on{font-weight:700}
+table.t td.ip{padding:5px 8px}
+table.t input.tin{width:100%; max-width:130px; margin-left:auto; display:block; text-align:right; font:inherit; font-size:13.5px; font-variant-numeric:tabular-nums; color:var(--ink); background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:6px 8px}
+table.t input.tin:focus{outline:2px solid var(--brand); outline-offset:1px; border-color:var(--brand)}
+table.t tfoot td{border-top:2px solid var(--line); border-bottom:0; font-weight:700; background:var(--surface2)}
+@media (max-width:560px){
+  table.t input.tin{max-width:74px; padding:5px 6px; font-size:13px}
+  #a_split table.t th,#a_split table.t td{padding:7px 5px}
+  #a_split table.t td.ip{padding:4px 5px}
+  #a_split table.t{min-width:318px; font-size:12.5px}
+}
 .minibar{display:block; height:7px; border-radius:3px; background:var(--series); min-width:2px}
 .minibar.alt{background:var(--ref)}
 
@@ -829,14 +839,54 @@ details.meth summary{font-weight:700; padding:12px 0; cursor:pointer; color:var(
         <fieldset>
           <legend>Konaklama &amp; ofis</legend>
           <div class="grid">
+            <div class="f"><label for="a_seg">Konakladığınız otel segmenti</label>
+              <div class="inwrap"><select id="a_seg">
+                <option value="lux">Lüks</option>
+                <option value="s5">5 yıldız</option>
+                <option value="s4" selected>4 yıldız</option>
+                <option value="s3">3 yıldız</option>
+                <option value="limited">Apart / pansiyon</option>
+                <option value="custom">Kendi katsayımı gireceğim</option>
+              </select></div>
+              <span class="hint">Seçim, aşağıdaki katsayıyı CHSB 2026 Türkiye ortalamasıyla doldurur</span></div>
             <div class="f"><label for="a_gece">Satın alınan oda-gece</label>
               <div class="inwrap"><input id="a_gece" type="number" min="0" value="7200"><span class="unit">oda-gece</span></div>
-              <span class="hint">Otelden gerçek CPOR alamıyorsanız varsayılan katsayı kullanılır</span></div>
+              <span class="hint">Yıl içinde misafirleriniz için satın aldığınız toplam oda-gece</span></div>
             <div class="f"><label for="a_cpor">Kullanılacak CPOR katsayısı</label>
               <div class="inwrap"><input id="a_cpor" type="number" min="0" step="0.1" value="37.9"><span class="unit">kgCO₂e/oda-gece</span></div>
-              <span class="hint">Varsayılan: CHSB 2026 <b>Türkiye 4 yıldız</b> ortalaması. Diğer segmentler: lüks 59,6 · 5★ 48,9 · 3★ 25,4 · apart 20,2. Yurt dışı konaklama için o ülkenin değerini, tedarikçi otelin kendi HCMI değeri varsa onu girin — en doğrusu odur.</span></div>
+              <span class="hint">Tedarikçi otelin <b>kendi HCMI/CPOR değeri</b> varsa onu girin — en doğrusu odur. Yurt dışı konaklamada o ülkenin değerini kullanın.</span></div>
             <div class="f"><label for="a_ofis">Ofis elektriği</label>
               <div class="inwrap"><input id="a_ofis" type="number" min="0" value="18000"><span class="unit">kWh/yıl</span></div></div>
+          </div>
+          <label class="chk" style="margin-top:12px"><input type="checkbox" id="opt_asplit"><span>Portföyüm karışık — oda-geceleri segmentlere dağıtayım</span></label>
+          <div id="a_split" hidden>
+            <div class="tblwrap"><table class="t" style="min-width:400px">
+              <thead><tr><th scope="col">Segment</th><th scope="col">Oda-gece</th><th scope="col">kgCO₂e/oda-gece</th><th scope="col">tCO₂e</th></tr></thead>
+              <tbody>
+                <tr><td>Lüks</td>
+                  <td class="ip"><input class="tin" id="a_n_lux" type="number" min="0" value="0" aria-label="Lüks oda-gece"></td>
+                  <td class="ip"><input class="tin" id="a_c_lux" type="number" min="0" step="0.1" value="59.6" aria-label="Lüks katsayı"></td>
+                  <td id="as_lux">—</td></tr>
+                <tr><td>5 yıldız</td>
+                  <td class="ip"><input class="tin" id="a_n_s5" type="number" min="0" value="2400" aria-label="5 yıldız oda-gece"></td>
+                  <td class="ip"><input class="tin" id="a_c_s5" type="number" min="0" step="0.1" value="48.9" aria-label="5 yıldız katsayı"></td>
+                  <td id="as_s5">—</td></tr>
+                <tr><td>4 yıldız</td>
+                  <td class="ip"><input class="tin" id="a_n_s4" type="number" min="0" value="3600" aria-label="4 yıldız oda-gece"></td>
+                  <td class="ip"><input class="tin" id="a_c_s4" type="number" min="0" step="0.1" value="37.9" aria-label="4 yıldız katsayı"></td>
+                  <td id="as_s4">—</td></tr>
+                <tr><td>3 yıldız</td>
+                  <td class="ip"><input class="tin" id="a_n_s3" type="number" min="0" value="1200" aria-label="3 yıldız oda-gece"></td>
+                  <td class="ip"><input class="tin" id="a_c_s3" type="number" min="0" step="0.1" value="25.4" aria-label="3 yıldız katsayı"></td>
+                  <td id="as_s3">—</td></tr>
+                <tr><td>Apart / pansiyon</td>
+                  <td class="ip"><input class="tin" id="a_n_limited" type="number" min="0" value="0" aria-label="Apart oda-gece"></td>
+                  <td class="ip"><input class="tin" id="a_c_limited" type="number" min="0" step="0.1" value="20.2" aria-label="Apart katsayı"></td>
+                  <td id="as_limited">—</td></tr>
+              </tbody>
+              <tfoot><tr><td>Toplam</td><td id="as_n">—</td><td id="as_w">—</td><td id="as_t">—</td></tr></tfoot>
+            </table></div>
+            <p class="hint" style="margin-top:8px">Bu tablo açıkken yukarıdaki tek oda-gece ve katsayı alanları kullanılmaz; hesap satır satır yapılır. Son sütundaki <b>Toplam</b> katsayısı, oda-gece ağırlıklı ortalamanızdır — raporda bunu kullanın.</p>
           </div>
         </fieldset>
       </div>
@@ -908,7 +958,7 @@ details.meth summary{font-weight:700; padding:12px 0; cursor:pointer; color:var(
     </div>
     <p class="mini">Ölçüler sırasıyla CHSB Measure1 (HCMI oda-gece), Measure7 (HCMI toplantı alanı), Measure4, Measure6, Measure8 ve Measure15'tir; değerler o segmentteki tesislerin <b>ortalamasıdır</b> (ortanca değil) ve her hücrenin arkasında 8–149 arası tesis vardır. <b>*</b> CHSB 2026'da Türkiye için "Full Service Resort" segmentinde oda-gece, toplantı, su ve atık satırı yoktur; bu dört değer 5 yıldız ortalamasından vekil olarak alınmıştır — resort satırının kendi verisi yalnızca alan ve enerji yoğunluğudur. 3 yıldızda atık satırı yoktur.</p>
     <p class="mini"><b>Türkiye nerede duruyor.</b> Aynı veri setinde 5 yıldızlı otellerin oda-gece emisyonu Fransa'da 11,2 · İspanya'da 20,2 · İngiltere'de 20,7 · Yunanistan'da 23,8 · Almanya'da 26,1 · İtalya'da 38,3 iken <b>Türkiye'de 48,9 kgCO₂e</b>'dir. Türkiye, 5 yıldız verisi bulunan 21 ülke içinde en yüksek 10. sıradadır ve listedeki bütün Avrupa ülkelerinin üzerindedir. Farkın büyük kısmı şebeke elektriğinin karbon yoğunluğundan ve her şey dahil işletme modelinden gelir. Kurumsal müşteriniz bu kıyası yapabildiği için ölçmek ve azaltmak ticari olarak da önemlidir.</p>
-    <p class="mini"><b>Acente sekmesindeki konaklama katsayısı.</b> Varsayılan değer <b>37,9 kgCO₂e/oda-gece</b>'dir: CHSB 2026'nın Türkiye 4 yıldız ortalaması. Önceki sürümlerde burada 76,7 vardı; o rakam Greenview Hotel Footprinting Tool'un coğrafya ve yıldız seçilmeden önce ekranda gösterdiği <b>başlangıç katsayısıdır</b>, bir dünya ortalaması değildir — CHSB 2026'da ülkeler üstü bir "dünya ortalaması" satırı zaten yoktur. Türkiye'de konaklama satın alan bir acente için 76,7 yaklaşık iki katı fazla hesaplıyordu. Yurt dışı konaklamada ilgili ülkenin değerini, tedarikçi otelin kendi HCMI değeri varsa onu kullanın.</p>
+    <p class="mini"><b>Acente sekmesindeki konaklama katsayısı.</b> Varsayılan değer <b>37,9 kgCO₂e/oda-gece</b>'dir: CHSB 2026'nın Türkiye 4 yıldız ortalaması. Önceki sürümlerde burada 76,7 vardı; o rakam Greenview Hotel Footprinting Tool'un coğrafya ve yıldız seçilmeden önce ekranda gösterdiği <b>başlangıç katsayısıdır</b>, bir dünya ortalaması değildir — CHSB 2026'da ülkeler üstü bir "dünya ortalaması" satırı zaten yoktur. Türkiye'de konaklama satın alan bir acente için 76,7 yaklaşık iki katı fazla hesaplıyordu. Yurt dışı konaklamada ilgili ülkenin değerini, tedarikçi otelin kendi HCMI değeri varsa onu kullanın. Segment seçimi katsayıyı CHSB 2026 Türkiye ortalamasıyla doldurur (lüks 59,6 · 5★ 48,9 · 4★ 37,9 · 3★ 25,4 · apart 20,2); karışık portföyde <b>"oda-geceleri segmentlere dağıtayım"</b> kutusu açılınca hesap satır satır yapılır ve raporda kullanacağınız oda-gece <b>ağırlıklı ortalama</b> katsayı tablonun Toplam satırında görünür.</p>
     <p class="mini">Azaltım önlemlerinin tasarruf yüzdeleri ve yatırım tutarları sektör ortalaması gösterge değerlerdir; bağlayıcı teklif için enerji etüdü gerekir.</p>
     <p class="mini"><b>Net sıfır patikası.</b> Net Zero Methodology for Hotels 2. Baskı (Greenview / Sustainable Hospitality Alliance) kilometre taşı yıllarına (2025, 2030, 2035, 2040, 2050) ve baz yıl sınıfına göre yıllık azaltım oranlarına dayanır: 2012 öncesi baz yıl için %3/yıl, 2012–2019 için %4/yıl, 2020 sonrası için %5/yıl; 2030 için "emisyonları yarıya indirme" kuralı taban alınır. Sektör hedefi olarak Global Hotel Decarbonization Report, oda başına yıllık emisyonların 2010'a göre 2030'da %66, 2050'de %90 azalmasını öngörür. Patika hukuki veya SBTi onaylı bir hedef beyanı değildir.</p>
     <p class="mini"><b>Taksonomi kontrol listesi</b> Türkiye Yeşil Taksonomisi Yönetmeliği (Resmî Gazete 24.09.2026, Sayı 33380) ve İklim Değişikliği Başkanlığı taslak teknik tarama kriterlerinin turizm ve konaklama bölümlerine dayanır. Nihai kriterler Başkanlıkça yayımlanır ve her yıl 15 Aralık'a kadar güncellenebilir; skor hukuki uygunluk beyanı değildir.</p>
@@ -1473,12 +1523,44 @@ details.meth summary{font-weight:700; padding:12px 0; cursor:pointer; color:var(
   }
 
   /* ======================= Acente ======================= */
+  /* Acente konaklama katsayıları — CHSB 2026 Türkiye ortalamaları (SEG ile aynı kaynak) */
+  var ASEG  = { lux:59.6, s5:48.9, s4:37.9, s3:25.4, limited:20.2 };
+  var ASEGN = { lux:'Lüks', s5:'5 yıldız', s4:'4 yıldız', s3:'3 yıldız', limited:'Apart / pansiyon' };
+
+  /* Konaklama satırı: tek katsayı ya da segmentlere dağıtılmış tablo */
+  function agencyStay(){
+    var split = CK('opt_asplit');
+    var sp = el('a_split'); if(sp) sp.hidden = !split;
+    ['a_seg','a_gece','a_cpor'].forEach(function(id){
+      var e = el(id); if(!e) return;
+      e.disabled = split;
+      var w = e.closest ? e.closest('.f') : null;
+      if(w) w.style.opacity = split ? '.45' : '';
+    });
+    if(!split){
+      var n = N('a_gece'), c = N('a_cpor');
+      return { kg:n*c, nights:n, cpor:c, rows:[], split:false };
+    }
+    var tn=0, tkg=0, rows=[];
+    Object.keys(ASEG).forEach(function(k){
+      var n = N('a_n_'+k), c = N('a_c_'+k), kg = n*c;
+      set('as_'+k, n>0 ? fmt(kg/1000,1) : '—');
+      tn += n; tkg += kg;
+      if(n>0) rows.push({ ad:ASEGN[k], n:n, c:c, kg:kg });
+    });
+    set('as_n', tn>0 ? fmt(tn,0) : '—');
+    set('as_w', tn>0 ? fmt(tkg/tn,1) : '—');
+    set('as_t', tn>0 ? fmt(tkg/1000,1) : '—');
+    return { kg:tkg, nights:tn, cpor: tn>0 ? tkg/tn : 0, rows:rows, split:true };
+  }
+
   function renderAgency(){
     var pk=N('a_paket'), yo=N('a_yolcu');
+    var st = agencyStay();
     var r = {
       ic:N('a_icucus')*EF.icucus, ks:N('a_kisadis')*EF.kisadis, uz:N('a_uzundis')*EF.uzundis,
       ot:N('a_otobus')*EF.otobus, tr:N('a_transfer')*EF.transfer,
-      kn:N('a_gece')*(N('a_cpor')||0), of:N('a_ofis')*EF.elec
+      kn:st.kg, of:N('a_ofis')*EF.elec
     };
     var kg = r.ic+r.ks+r.uz+r.ot+r.tr+r.kn+r.of, t = kg/1000;
     set('ar_total', fmt(t, t<100?1:0));
@@ -1494,6 +1576,14 @@ details.meth summary{font-weight:700; padding:12px 0; cursor:pointer; color:var(
       + 'Yıllık toplam: ' + fmt(t,1) + ' tCO₂e\n'
       + (yo>0 ? 'Misafir başına: ' + fmt(kg/yo,1) + ' kgCO₂e\n' : '')
       + (pk>0 ? 'Tur başına: ' + fmt(t/pk,2) + ' tCO₂e\n' : '')
+      + (st.nights>0 ? 'Konaklama: ' + fmt(st.nights,0) + ' oda-gece × '
+          + fmt(st.cpor,1) + ' kgCO₂e/oda-gece' + (st.split?' (ağırlıklı ortalama)':'')
+          + ' = ' + fmt(st.kg/1000,1) + ' tCO₂e\n' : '')
+      + (st.rows.length>1 ? st.rows.map(function(x){
+            return '  · ' + x.ad + ': ' + fmt(x.n,0) + ' oda-gece × ' + fmt(x.c,1)
+                 + ' = ' + fmt(x.kg/1000,1) + ' tCO₂e';
+          }).join('\n') + '\n' : '')
+      + 'Konaklama katsayı kaynağı: CHSB 2026 Türkiye ortalamaları\n'
       + 'Hesap: commitedevents.app · HCMI / DEFRA faktörleri';
     var wa = el('btn-awa');
     if(wa) wa.href = 'https://wa.me/?text=' + encodeURIComponent(window.__aSummary);
@@ -1641,6 +1731,22 @@ details.meth summary{font-weight:700; padding:12px 0; cursor:pointer; color:var(
     if(s){ el('h_ref_cpor').value = s.cpor; }
     all();
   });
+
+  /* Acente: segment seçimi katsayıyı doldurur, elle değişirse seçim "kendi katsayım"a döner */
+  (function(){
+    var sel = el('a_seg'), cp = el('a_cpor');
+    if(sel) sel.addEventListener('change', function(){
+      var v = ASEG[sel.value];
+      if(v && cp){ cp.value = v; }
+      all(); saveAll();
+    });
+    if(cp) cp.addEventListener('input', function(){
+      if(!sel) return;
+      var v = parseFloat(cp.value), m = null;
+      Object.keys(ASEG).forEach(function(k){ if(Math.abs(ASEG[k]-v) < 0.05) m = k; });
+      sel.value = m || 'custom';
+    });
+  })();
 
   Array.prototype.forEach.call(document.querySelectorAll('input,select'), function(x){
     x.addEventListener('input', function(){ all(); saveAll(); });
