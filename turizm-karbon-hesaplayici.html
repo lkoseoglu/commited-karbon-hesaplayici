@@ -42,6 +42,9 @@ body{background:var(--bg); color:var(--ink); font-family:'DM Sans',system-ui,-ap
 .hero{background:linear-gradient(135deg,#0B2E22 0%,#14503A 60%,#1E6B4A 100%); color:#F2F7F3; border-radius:0 0 24px 24px; padding:40px 28px 34px; margin:0 -16px 24px}
 .hero-in{max-width:1140px; margin:0 auto; display:flex; flex-direction:column; gap:14px}
 .eyebrow{font-size:13px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:#8FCDAA; margin:0}
+/* Marka adı büyük harfe çevrilmez: tr dilinde "cOmmited" → "COMMİTED" olurdu */
+.eyebrow .brand{text-transform:none; letter-spacing:.02em; font-size:15px; font-weight:800; color:#CFE6DA}
+.eyebrow .sep{opacity:.55; white-space:pre}
 .hero h1{font-size:clamp(28px,4.5vw,44px); line-height:1.12; margin:0; font-weight:700; text-wrap:balance}
 .hero p.sub{margin:0; max-width:62ch; color:#CFE6DA; font-size:clamp(15px,1.6vw,18px); font-weight:300}
 .badges{display:flex; flex-wrap:wrap; gap:8px; margin-top:4px}
@@ -60,11 +63,13 @@ body{background:var(--bg); color:var(--ink); font-family:'DM Sans',system-ui,-ap
 :root[data-theme="dark"] .sumbar, :root:not([data-theme="light"]) .sumbar{background:#0B2E22; border:1px solid var(--line)}
 .sumbar .sb{display:flex; flex-direction:column; line-height:1.2; min-width:0}
 .sumbar .sb b{font-size:19px; font-weight:800; font-variant-numeric:tabular-nums}
-.sumbar .sb span{font-size:11.5px; letter-spacing:.08em; text-transform:uppercase; color:#8FCDAA; font-weight:600}
+.sumbar .sb span{font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:#8FCDAA; font-weight:600}
+.sumbar .sb i{font-style:normal}
+.sumbar .sb .sm{display:none}
 .sumbar .sb.gr{margin-left:auto}
 .steps{display:flex; gap:6px; overflow-x:auto; margin-top:8px; padding-bottom:2px; scrollbar-width:thin}
 .steps a{flex:0 0 auto; text-decoration:none; font-size:13px; font-weight:700; color:var(--muted); border:1px solid var(--line); background:var(--surface); border-radius:999px; padding:6px 13px; display:flex; gap:7px; align-items:center}
-.steps a .n{display:inline-grid; place-items:center; width:18px; height:18px; border-radius:50%; background:var(--surface2); color:var(--brand); font-size:11px; font-weight:800}
+.steps a .n{display:inline-grid; place-items:center; width:20px; height:20px; border-radius:50%; background:var(--surface2); color:var(--brand); font-size:12px; font-weight:800}
 .steps a:hover{border-color:var(--brand); color:var(--ink)}
 .steps a:focus-visible{outline:2px solid var(--brand); outline-offset:2px}
 
@@ -80,9 +85,12 @@ fieldset{border:1px solid var(--line); background:var(--surface); border-radius:
 legend{font-weight:700; font-size:15px; color:var(--brand); padding:0 8px; letter-spacing:.02em}
 .grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px 14px}
 .grid.wide{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+.grid.g6{grid-template-columns:repeat(6,minmax(0,1fr))}
+@media (max-width:1000px){ .grid.g6{grid-template-columns:repeat(3,minmax(0,1fr))} }
+@media (max-width:560px){ .grid.g6{grid-template-columns:repeat(2,minmax(0,1fr))} }
 .f{display:flex; flex-direction:column; gap:4px; min-width:0}
 .f label{font-size:13.5px; font-weight:600; color:var(--ink)}
-.f .hint{font-size:12px; color:var(--muted)}
+.f .hint{font-size:12.5px; color:var(--muted)}
 .inwrap{display:flex; align-items:center; border:1px solid var(--line); border-radius:10px; background:var(--bg); overflow:hidden}
 .inwrap:focus-within{outline:2px solid var(--brand); outline-offset:1px}
 .inwrap input,.inwrap select{border:0; background:transparent; color:var(--ink); font:inherit; font-size:15px; padding:9px 10px; width:100%; min-width:0}
@@ -90,7 +98,7 @@ legend{font-weight:700; font-size:15px; color:var(--brand); padding:0 8px; lette
 .unit{font-size:12.5px; color:var(--muted); padding:0 10px 0 4px; white-space:nowrap}
 
 /* ---------- Kartlar / KPI ---------- */
-.cards{display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:14px; align-items:start}
+.cards{display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:14px; align-items:stretch}
 .card{background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:16px 18px}
 .card h3{margin:0 0 10px; font-size:14.5px; font-weight:700}
 .card.total{background:var(--brand-deep); border-color:transparent; color:#F2F7F3}
@@ -118,7 +126,7 @@ legend{font-weight:700; font-size:15px; color:var(--brand); padding:0 8px; lette
 .scale-track i{flex:1; display:block}
 .scale-mark{position:absolute; top:-6px; bottom:-6px; width:3px; background:var(--ink); border-radius:2px; box-shadow:0 0 0 2px var(--surface)}
 .scale-wrap{position:relative; padding:6px 0}
-.scale-ticks{display:flex; justify-content:space-between; font-size:11.5px; color:var(--muted); margin-top:5px; font-variant-numeric:tabular-nums}
+.scale-ticks{display:flex; justify-content:space-between; font-size:12px; color:var(--muted); margin-top:5px; font-variant-numeric:tabular-nums}
 .grade{display:inline-flex; gap:6px; align-items:center; font-weight:800; border-radius:8px; padding:3px 11px; font-size:14px}
 .grade .dot{width:9px; height:9px; border-radius:50%; background:currentColor}
 
@@ -127,7 +135,7 @@ legend{font-weight:700; font-size:15px; color:var(--brand); padding:0 8px; lette
 table.t{border-collapse:collapse; width:100%; font-size:13px; min-width:540px}
 table.t th,table.t td{border-bottom:1px solid var(--line); padding:8px 10px; text-align:right; font-variant-numeric:tabular-nums}
 table.t th:first-child,table.t td:first-child{text-align:left; font-variant-numeric:normal}
-table.t thead th{background:var(--surface2); font-size:12px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; border-bottom:1px solid var(--line)}
+table.t thead th{background:var(--surface2); font-size:12.5px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; border-bottom:1px solid var(--line)}
 table.t tbody tr:hover{background:var(--chip)}
 table.t td.on{font-weight:700}
 table.t td.ip{padding:5px 8px}
@@ -139,6 +147,27 @@ table.t tfoot td{border-top:2px solid var(--line); border-bottom:0; font-weight:
   #a_split table.t th,#a_split table.t td{padding:7px 5px}
   #a_split table.t td.ip{padding:4px 5px}
   #a_split table.t{min-width:318px; font-size:12.5px}
+
+  /* --- Mobil: kahraman alanı daha az yer kaplasın --- */
+  .hero{padding:22px 20px 20px; margin-bottom:16px}
+  .hero-in{gap:10px}
+  .eyebrow{font-size:12px; letter-spacing:.1em}
+  .eyebrow .brand{font-size:14px}
+  .hero p.sub{font-size:15px; line-height:1.5}
+  .badges{gap:6px; margin-top:2px}
+  .badge{font-size:12.5px; padding:4px 11px}
+
+  /* --- Mobil: yapışkan özet tek satır, adım şeridi sığar --- */
+  .stick{padding-block:6px; margin-bottom:6px}
+  .sumbar{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:4px 8px; padding:8px 12px}
+  .sumbar .sb b{font-size:17px}
+  .sumbar .sb.gr{margin-left:0}
+  .sumbar .sb .lg{display:none}
+  .sumbar .sb .sm{display:inline; text-transform:none; white-space:nowrap}
+  .sumbar .sb span{letter-spacing:0; font-size:12px}
+  .steps{justify-content:space-between; gap:4px}
+  .steps a{padding:5px 9px; font-size:12.5px}
+  .steps a .n{display:none}
 }
 .minibar{display:block; height:7px; border-radius:3px; background:var(--series); min-width:2px}
 .minibar.alt{background:var(--ref)}
@@ -149,7 +178,7 @@ table.t tfoot td{border-top:2px solid var(--line); border-bottom:0; font-weight:
 .chk:hover{border-color:var(--brand)}
 .chk input{margin-top:3px; accent-color:var(--brand); flex:0 0 auto}
 .chk span{font-size:13.5px}
-.chk .w{color:var(--muted); font-weight:600; font-size:12px; white-space:nowrap; margin-left:auto; padding-left:8px}
+.chk .w{color:var(--muted); font-weight:600; font-size:12.5px; white-space:nowrap; margin-left:auto; padding-left:8px}
 .chk:has(input:checked){background:var(--chip); border-color:var(--brand)}
 
 /* ---------- Grafik ---------- */
@@ -208,7 +237,7 @@ table.t tfoot td{border-top:2px solid var(--line); border-bottom:0; font-weight:
 .score-track{background:var(--surface2); border-radius:7px; height:16px; overflow:hidden; margin:8px 0 4px}
 .score-fill{height:100%; border-radius:7px; background:var(--series); min-width:4px}
 .pill-row{display:flex; flex-wrap:wrap; gap:6px; margin-top:8px}
-.pill{font-size:12px; font-weight:700; border-radius:999px; padding:4px 11px; background:var(--chip); color:var(--brand); border:1px solid var(--brand-soft)}
+.pill{font-size:12.5px; font-weight:700; border-radius:999px; padding:4px 11px; background:var(--chip); color:var(--brand); border:1px solid var(--brand-soft)}
 details.fold{background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:2px 14px; margin-top:10px}
 details.fold summary{font-weight:700; padding:10px 0; cursor:pointer; color:var(--brand); font-size:13.5px}
 details.meth{background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:4px 18px; margin-top:22px}
@@ -225,7 +254,7 @@ details.meth summary{font-weight:700; padding:12px 0; cursor:pointer; color:var(
 
 <header class="hero">
   <div class="hero-in">
-    <p class="eyebrow">cOmmited Events · Ölçün, Kıyaslayın, Azaltın, Belgeleyin</p>
+    <p class="eyebrow"><span class="brand">cOmmited Events</span><span class="sep"> · </span>Ölçün, Kıyaslayın, Azaltın, Belgeleyin</p>
     <h1>Turizm Karbon Hesaplayıcısı</h1>
     <p class="sub">Oteliniz için HCMI v2.0 metodolojisiyle oda-gece ve toplantı başına resmî karbon metriklerini üretin; segment kıyasınızı görün, azaltım senaryonuzu kurun, net sıfır patikanızı çizin ve kurumsal müşterilerin sorduğu veriyi tek sayfada yanıtlayın.</p>
     <div class="badges">
@@ -249,10 +278,10 @@ details.meth summary{font-weight:700; padding:12px 0; cursor:pointer; color:var(
 
     <div class="stick" id="stick">
       <div class="sumbar">
-        <div class="sb"><b id="s_total">—</b><span>HCMI ayak izi tCO₂e</span></div>
-        <div class="sb"><b id="s_cpor">—</b><span>kgCO₂e / oda-gece</span></div>
-        <div class="sb"><b id="s_meet">—</b><span>kgCO₂e / m² / saat</span></div>
-        <div class="sb gr"><b id="s_grade">—</b><span>Segment kıyası</span></div>
+        <div class="sb"><b id="s_total">—</b><span><i class="lg">HCMI ayak izi tCO₂e</i><i class="sm">tCO₂e/yıl</i></span></div>
+        <div class="sb"><b id="s_cpor">—</b><span><i class="lg">kgCO₂e / oda-gece</i><i class="sm">kg/oda-gece</i></span></div>
+        <div class="sb"><b id="s_meet">—</b><span><i class="lg">kgCO₂e / m² / saat</i><i class="sm">kg/m²·sa</i></span></div>
+        <div class="sb gr"><b id="s_grade">—</b><span><i class="lg">Segment kıyası</i><i class="sm">Kıyas</i></span></div>
       </div>
       <nav class="steps" aria-label="Adımlar">
         <a href="#adim1"><span class="n">1</span>Ölç</a>
@@ -413,11 +442,11 @@ details.meth summary{font-weight:700; padding:12px 0; cursor:pointer; color:var(
       <fieldset>
         <legend>Birim fiyatlar — azaltım ve dengeleme hesapları için</legend>
         <p class="mini" style="margin:0 0 10px">Varsayılanlar gösterge niteliğindedir; kendi tarifelerinizi girin.</p>
-        <div class="grid">
+        <div class="grid g6">
           <div class="f"><label for="p_elec">Elektrik</label>
-            <div class="inwrap"><input id="p_elec" type="number" min="0" step="0.01" value="4.20"><span class="unit">TL/kWh</span></div></div>
+            <div class="inwrap"><input id="p_elec" type="number" min="0" step="0.01" value="4.2"><span class="unit">TL/kWh</span></div></div>
           <div class="f"><label for="p_gas">Doğal gaz</label>
-            <div class="inwrap"><input id="p_gas" type="number" min="0" step="0.01" value="16.00"><span class="unit">TL/m³</span></div></div>
+            <div class="inwrap"><input id="p_gas" type="number" min="0" step="0.01" value="16"><span class="unit">TL/m³</span></div></div>
           <div class="f"><label for="p_water">Su + atıksu</label>
             <div class="inwrap"><input id="p_water" type="number" min="0" step="0.1" value="48"><span class="unit">TL/m³</span></div></div>
           <div class="f"><label for="p_fuel">Motorin</label>
@@ -511,7 +540,7 @@ details.meth summary{font-weight:700; padding:12px 0; cursor:pointer; color:var(
           <div class="scale-ticks">
             <span id="tick1">—</span><span id="tick2">—</span><span id="tick3">—</span><span id="tick4">—</span><span id="tick5">—</span>
           </div>
-          <p class="mini" style="margin-top:8px">A: öncü · B: ortalamanın üzerinde · C: segment ortalaması bandı · D–E: azaltım önceliği yüksek</p>
+          <p class="mini" style="margin-top:8px">A: referansın %40’tan fazla altında (öncü) · B: ortalamadan iyi · C: ortalama bandında (±%15) · D: ortalamadan yüksek · E: azaltım önceliği yüksek</p>
         </div>
       </div>
 
@@ -1129,11 +1158,13 @@ details.meth summary{font-weight:700; padding:12px 0; cursor:pointer; color:var(
 
   function gradeOf(ratio){
     if(!isFinite(ratio)) return {k:'—', t:'veri bekleniyor', c:'var(--muted)'};
-    if(ratio<=0.60) return {k:'A', t:'öncü seviye',              c:'var(--good)'};
-    if(ratio<=0.85) return {k:'B', t:'ortalamanın üzerinde',     c:'var(--brand)'};
-    if(ratio<=1.15) return {k:'C', t:'segment ortalaması bandı', c:'var(--warn)'};
-    if(ratio<=1.50) return {k:'D', t:'ortalamanın altında',      c:'var(--bad)'};
-    return                 {k:'E', t:'azaltım önceliği yüksek',  c:'var(--bad)'};
+    /* Not, emisyonun segment referansına oranıdır: düşük oran = iyi. Metinler "ortalamanın
+       üzerinde/altında" gibi yönü belirsiz ifadeler yerine açıkça emisyon yönünü söyler. */
+    if(ratio<=0.60) return {k:'A', t:'referansın çok altında (öncü)', c:'var(--good)'};
+    if(ratio<=0.85) return {k:'B', t:'ortalamadan iyi',               c:'var(--brand)'};
+    if(ratio<=1.15) return {k:'C', t:'ortalama bandında',             c:'var(--warn)'};
+    if(ratio<=1.50) return {k:'D', t:'ortalamadan yüksek',            c:'var(--bad)'};
+    return                 {k:'E', t:'azaltım önceliği yüksek',       c:'var(--bad)'};
   }
 
   /* ======================= Çizim yardımcıları ======================= */
@@ -1200,7 +1231,11 @@ details.meth summary{font-weight:700; padding:12px 0; cursor:pointer; color:var(
     var ms = milestones(i, baseT);
     var x0 = by, x1 = 2050;
     if(x1<=x0) x1 = x0+1;
-    var W=640,H=270,L=54,R=16,T=16,B=36;
+    /* Grafik, kutusunun gerçek genişliğine göre çizilir; sabit 640 genişlik telefonda
+       yazıları ~6 px'e küçültüyordu. */
+    var bx = el('pathbox'), hw = bx ? bx.clientWidth : 0;
+    var W = Math.max(300, Math.min(Math.round(hw||640), 900));
+    var H = W < 480 ? 236 : 270, L = W < 480 ? 46 : 54, R = 16, T = 16, B = 36;
     var ymax = niceMax(Math.max(baseT, planT, 1)*1.08);
     function X(y){ return L + (y-x0)/(x1-x0)*(W-L-R); }
     function Y(v){ return T + (1 - Math.max(v,0)/ymax)*(H-T-B); }
@@ -1216,7 +1251,7 @@ details.meth summary{font-weight:700; padding:12px 0; cursor:pointer; color:var(
     for(var gi=0; gi<=4; gi++){
       var gv = ymax*gi/4, gy = Y(gv);
       s.push('<line x1="'+L+'" y1="'+gy.toFixed(1)+'" x2="'+(W-R)+'" y2="'+gy.toFixed(1)+'" stroke="var(--grid)" stroke-width="1" fill="none"/>');
-      s.push('<text x="'+(L-8)+'" y="'+(gy+4).toFixed(1)+'" text-anchor="end" font-size="10.5" fill="var(--muted)">'+fmt(gv,0)+'</text>');
+      s.push('<text x="'+(L-8)+'" y="'+(gy+4).toFixed(1)+'" text-anchor="end" font-size="12" fill="var(--muted)">'+fmt(gv,0)+'</text>');
     }
     // açık bandı
     var fwd = years.map(function(y,k){ return X(y).toFixed(1)+','+Y(Math.max(pln[k],tgt[k])).toFixed(1); });
@@ -1228,19 +1263,20 @@ details.meth summary{font-weight:700; padding:12px 0; cursor:pointer; color:var(
     // kilometre taşları
     ms.forEach(function(m){
       s.push('<circle cx="'+X(m.y).toFixed(1)+'" cy="'+Y(m.v).toFixed(1)+'" r="3.5" fill="var(--plot)" stroke="var(--ref)" stroke-width="2"/>');
-      s.push('<text x="'+X(m.y).toFixed(1)+'" y="'+(H-14)+'" text-anchor="middle" font-size="10.5" fill="var(--muted)">'+m.y+'</text>');
+      s.push('<text x="'+X(m.y).toFixed(1)+'" y="'+(H-14)+'" text-anchor="middle" font-size="12" fill="var(--muted)">'+m.y+'</text>');
     });
     // plan bitiş noktası + etiketi
     var pxv = X(nzD), pyv = Y(planT);
     s.push('<circle cx="'+pxv.toFixed(1)+'" cy="'+pyv.toFixed(1)+'" r="4" fill="var(--series)" stroke="var(--plot)" stroke-width="2"/>');
     var anchor = pxv > W-150 ? 'end' : 'start';
     var lx = anchor==='end' ? pxv-9 : pxv+9;
-    s.push('<text x="'+lx.toFixed(1)+'" y="'+(pyv-9).toFixed(1)+'" text-anchor="'+anchor+'" font-size="11" font-weight="700" fill="var(--series)">Plan '+fmt(planT,0)+' t</text>');
+    s.push('<text x="'+lx.toFixed(1)+'" y="'+(pyv-9).toFixed(1)+'" text-anchor="'+anchor+'" font-size="12.5" font-weight="700" fill="var(--series)">Plan '+fmt(planT,0)+' t</text>');
     // imleç + etkileşim alanı
     s.push('<line id="chx" x1="0" y1="'+T+'" x2="0" y2="'+(H-B)+'" stroke="var(--ref)" stroke-width="1" opacity="0"/>');
     s.push('<rect id="chit" x="'+L+'" y="'+T+'" width="'+(W-L-R)+'" height="'+(H-T-B)+'" fill="transparent"/>');
 
     var svg = el('pathsvg');
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
     svg.innerHTML = s.join('');
     PATH = { years:years, tgt:tgt, pln:pln, X:X, Y:Y, W:W, H:H, L:L, R:R, ms:ms, nzD:nzD };
     bindPath();
@@ -1370,7 +1406,9 @@ details.meth summary{font-weight:700; padding:12px 0; cursor:pointer; color:var(
     gEl.style.color = gr.c; gEl.style.background = 'var(--chip)'; gEl.style.border = '1px solid currentColor';
     set('r_grade_txt', gr.k + ' · ' + gr.t);
     set('r_grade_sub', isFinite(ratio)
-      ? 'Referansın ' + pct(ratio) + ' seviyesinde (' + fmt(ref,1) + ' kgCO₂e/oda-gece)'
+      ? (Math.abs(ratio-1) < 0.005 ? 'Referansla aynı düzeyde'
+          : 'Referansın ' + pct(Math.abs(ratio-1)) + (ratio<1 ? ' altında' : ' üzerinde'))
+        + ' (referans ' + fmt(ref,1) + ' kgCO₂e/oda-gece)'
       : 'Oda-gece ve alan verisi girin');
     set('s_grade', gr.k);
     var posPct = isFinite(ratio) ? Math.min(Math.max((ratio-0.4)/1.4,0),1)*100 : 0;
