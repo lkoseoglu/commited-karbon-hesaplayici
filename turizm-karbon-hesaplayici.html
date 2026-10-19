@@ -259,6 +259,41 @@ details.meth summary{font-weight:700; padding:12px 0; cursor:pointer; color:var(
 .cm-switch .cm-sm{display:none}
 @media (max-width:520px){.cm-switch{width:100%}.cm-switch a{flex:1 1 0;justify-content:center;padding:9px 10px}.cm-switch .cm-lg{display:none}.cm-switch .cm-sm{display:inline}}
 @media print{.cm-switch{display:none}}
+
+/* ---------- Üyelik / kayıt ---------- */
+.acct{display:flex; flex-wrap:wrap; gap:8px 10px; align-items:center; margin-top:6px}
+.acct .btn{padding:9px 18px; font-size:14px}
+.acct-cta{background:var(--accent); color:#14261E; border-color:var(--accent)}
+.acct-ghost{background:transparent; color:#F2F7F3; border-color:rgba(169,227,195,.6)}
+.acct-note{font-size:13.5px; color:#CFE6DA; flex:1 1 260px}
+.acct-who{font-size:14px; color:#F2F7F3; font-weight:600}
+.acct-who small{display:block; font-weight:400; color:#8FCDAA; font-size:12.5px}
+.linkbtn{background:none; border:0; padding:0; font:inherit; color:var(--brand); font-weight:700; text-decoration:underline; cursor:pointer}
+.cloud-msg{min-height:1em; margin:8px 0 0}
+.mback{position:fixed; inset:0; z-index:100; background:rgba(11,46,34,.55); display:flex; align-items:flex-start; justify-content:center; padding:24px 12px; overflow-y:auto}
+.mback[hidden]{display:none}
+.mbox{position:relative; background:var(--surface); color:var(--ink); border-radius:18px; padding:22px 20px 18px; width:100%; max-width:440px; box-shadow:0 18px 50px rgba(0,0,0,.25)}
+.mbox h3{margin:0 0 12px; font-size:20px}
+.mbox label{display:block; font-size:13.5px; font-weight:600; margin:10px 0 4px}
+.mbox .chk label, .mbox label.chk{font-weight:400}
+.mi{width:100%; font:inherit; font-size:15px; padding:10px 12px; border:1.5px solid var(--line); border-radius:10px; background:var(--surface); color:var(--ink)}
+.mi:focus{outline:2px solid var(--brand); outline-offset:1px}
+.mgrid{display:grid; grid-template-columns:1fr 1fr; gap:0 10px}
+.mclose{position:absolute; right:10px; top:8px; background:none; border:0; font-size:26px; line-height:1; cursor:pointer; color:var(--muted)}
+.mtabs{display:flex; gap:6px; margin-bottom:12px}
+.mtabs button{flex:1; font:inherit; font-weight:700; padding:8px; border-radius:10px; border:1.5px solid var(--line); background:var(--bg); color:var(--muted); cursor:pointer}
+.mtabs button.on{border-color:var(--brand); color:var(--ink); background:var(--surface2)}
+.gbtn{width:100%; font:inherit; font-weight:700; padding:10px; border-radius:999px; border:1.5px solid var(--line); background:var(--surface); color:var(--ink); cursor:pointer}
+.gbtn b{color:#4285F4}
+.msep{text-align:center; font-size:12.5px; color:var(--muted); margin:10px 0 0}
+.merr{color:var(--bad); font-size:13.5px; margin:10px 0 0; min-height:1em}
+.mbox.login .reg-only{display:none}
+.mbox:not(.login) .login-only{display:none}
+.rec{display:flex; justify-content:space-between; gap:10px; align-items:center; width:100%; text-align:left; font:inherit; padding:11px 12px; margin-bottom:8px; border:1.5px solid var(--line); border-radius:12px; background:var(--bg); color:var(--ink); cursor:pointer}
+.rec:hover{border-color:var(--brand)}
+.rec small{display:block; color:var(--muted); font-size:12.5px}
+.rec b{white-space:nowrap}
+@media (max-width:520px){ .mgrid{grid-template-columns:1fr} }
 </style>
 
 <header class="hero">
@@ -272,10 +307,15 @@ details.meth summary{font-weight:700; padding:12px 0; cursor:pointer; color:var(
     <p class="sub">Oteliniz için HCMI v2.0 metodolojisiyle oda-gece ve toplantı başına resmî karbon metriklerini üretin; segment kıyasınızı görün, azaltım senaryonuzu kurun, net sıfır patikanızı çizin ve kurumsal müşterilerin sorduğu veriyi tek sayfada yanıtlayın.</p>
     <div class="badges">
       <span class="badge gold">%100 Ücretsiz</span>
-      <span class="badge">Kayıt yok</span>
+      <span class="badge">Ücretsiz üyelik</span>
       <span class="badge">HCMI v2.0 · GHG Protocol</span>
       <span class="badge">Net Zero Methodology for Hotels</span>
       <span class="badge">Türkiye Yeşil Taksonomisi · RG 24.09.2026/33380</span>
+    </div>
+    <div class="acct" id="acct">
+      <button class="btn acct-cta" type="button" data-auth="register">Ücretsiz üye olun</button>
+      <button class="btn acct-ghost" type="button" data-auth="login">Giriş yapın</button>
+      <span class="acct-note">Tesisinizi kaydedin; verileriniz her cihazda hazır olsun, her yıl yeni ölçümünüzü ekleyin.</span>
     </div>
   </div>
 </header>
@@ -305,7 +345,7 @@ details.meth summary{font-weight:700; padding:12px 0; cursor:pointer; color:var(
       </nav>
     </div>
 
-    <p class="notice">Alanlar 120 odalı örnek bir Ege tatil köyünün değerleriyle yüklü geldi — <b>bunlar örnek verilerdir, sizin verileriniz değildir.</b> Kendi yıllık rakamlarınızı girdikçe beş adımın tamamı anında güncellenir.</p>
+    <p class="notice" id="h_notice">Alanlar boş — tesisinizin yıllık verilerini girdikçe beş adımın tamamı anında güncellenir. Önce nasıl çalıştığını görmek isterseniz <button class="linkbtn" type="button" data-example="otel">120 odalı örnek bir tatil köyüyle doldurun</button>.</p>
 
     <!-- ---------- ADIM 1: ÖLÇ ---------- -->
     <section class="sect" id="adim1">
@@ -321,9 +361,9 @@ details.meth summary{font-weight:700; padding:12px 0; cursor:pointer; color:var(
         <legend>Tesis kimliği</legend>
         <div class="grid wide">
           <div class="f"><label for="h_name">Tesis adı</label>
-            <div class="inwrap"><input id="h_name" type="text" value="Örnek Tatil Köyü" autocomplete="organization"></div></div>
+            <div class="inwrap"><input id="h_name" type="text" value="" placeholder="ör. Örnek Tatil Köyü" autocomplete="organization"></div></div>
           <div class="f"><label for="h_city">Şehir / destinasyon</label>
-            <div class="inwrap"><input id="h_city" type="text" value="Muğla"></div></div>
+            <div class="inwrap"><input id="h_city" type="text" value="" placeholder="ör. Muğla"></div></div>
           <div class="f"><label for="h_segment">Segment (kıyas bandını belirler)</label>
             <div class="inwrap"><select id="h_segment">
               <option value="resort5" selected>5★ tatil köyü / resort</option>
@@ -335,10 +375,10 @@ details.meth summary{font-weight:700; padding:12px 0; cursor:pointer; color:var(
             </select></div>
             <span class="hint">Kıyas değerleri CHSB 2026 Türkiye verisinden gelir</span></div>
           <div class="f"><label for="h_year">Raporlama yılı (baz yıl)</label>
-            <div class="inwrap"><input id="h_year" type="number" min="2010" max="2050" step="1" value="2025"></div>
+            <div class="inwrap"><input id="h_year" type="number" min="2010" max="2050" step="1" value="" placeholder="ör. 2025"></div>
             <span class="hint">Net sıfır patikası bu yıldan başlar</span></div>
           <div class="f"><label for="h_rooms">Oda sayısı</label>
-            <div class="inwrap"><input id="h_rooms" type="number" min="1" value="120"><span class="unit">oda</span></div></div>
+            <div class="inwrap"><input id="h_rooms" type="number" min="1" value="" placeholder="ör. 120"><span class="unit">oda</span></div></div>
           <div class="f"><label for="h_verify">Doğrulama durumu</label>
             <div class="inwrap"><select id="h_verify">
               <option value="Doğrulanmadı — iç hesaplama" selected>Doğrulanmadı — iç hesaplama</option>
@@ -353,16 +393,16 @@ details.meth summary{font-weight:700; padding:12px 0; cursor:pointer; color:var(
         <legend>Alanlar — HCMI tahsis tabanı</legend>
         <div class="grid">
           <div class="f"><label for="h_area_total">Toplam iklimlendirilen alan</label>
-            <div class="inwrap"><input id="h_area_total" type="number" min="0" value="11500"><span class="unit">m²</span></div>
+            <div class="inwrap"><input id="h_area_total" type="number" min="0" value="" placeholder="ör. 11500"><span class="unit">m²</span></div>
             <span class="hint">Oda, lobi, restoran, mutfak, arka ofis — tümü</span></div>
           <div class="f"><label for="h_area_rooms">Konuk odaları alanı</label>
-            <div class="inwrap"><input id="h_area_rooms" type="number" min="0" value="5200"><span class="unit">m²</span></div>
+            <div class="inwrap"><input id="h_area_rooms" type="number" min="0" value="" placeholder="ör. 5200"><span class="unit">m²</span></div>
             <span class="hint">Odalar + oda koridorları</span></div>
           <div class="f"><label for="h_area_meeting">Toplantı / etkinlik alanı</label>
-            <div class="inwrap"><input id="h_area_meeting" type="number" min="0" value="900"><span class="unit">m²</span></div>
+            <div class="inwrap"><input id="h_area_meeting" type="number" min="0" value="" placeholder="ör. 900"><span class="unit">m²</span></div>
             <span class="hint">Balo salonu, toplantı odaları, foyer</span></div>
           <div class="f"><label for="h_meeting_hours">Toplantı alanı yıllık kullanım</label>
-            <div class="inwrap"><input id="h_meeting_hours" type="number" min="0" value="1200"><span class="unit">saat/yıl</span></div>
+            <div class="inwrap"><input id="h_meeting_hours" type="number" min="0" value="" placeholder="ör. 1200"><span class="unit">saat/yıl</span></div>
             <span class="hint">Satılan salon-saati toplamı</span></div>
         </div>
         <p class="mini" id="area_note" style="margin:10px 0 2px">Ortak alanlar (lobi, restoran, mutfak, arka ofis) HCMI'ye göre oda ve toplantı alanı oranında ikiye paylaştırılır.</p>
@@ -372,10 +412,10 @@ details.meth summary{font-weight:700; padding:12px 0; cursor:pointer; color:var(
         <legend>Doluluk</legend>
         <div class="grid">
           <div class="f"><label for="h_roomnights">Satılan oda-gece (yıllık)</label>
-            <div class="inwrap"><input id="h_roomnights" type="number" min="0" value="26280"><span class="unit">oda-gece</span></div>
+            <div class="inwrap"><input id="h_roomnights" type="number" min="0" value="" placeholder="ör. 26280"><span class="unit">oda-gece</span></div>
             <span class="hint">120 oda × %60 × 365 = 26.280 · No-show sayılmaz, ücretsiz ama kullanılan odalar sayılır</span></div>
           <div class="f"><label for="h_guestnights">Misafir gecelemesi</label>
-            <div class="inwrap"><input id="h_guestnights" type="number" min="0" value="47300"><span class="unit">geceleme</span></div></div>
+            <div class="inwrap"><input id="h_guestnights" type="number" min="0" value="" placeholder="ör. 47300"><span class="unit">geceleme</span></div></div>
         </div>
       </fieldset>
 
@@ -383,15 +423,15 @@ details.meth summary{font-weight:700; padding:12px 0; cursor:pointer; color:var(
         <legend>Elektrik (Kapsam 2)</legend>
         <div class="grid">
           <div class="f"><label for="h_elec_grid">Şebekeden çekilen elektrik</label>
-            <div class="inwrap"><input id="h_elec_grid" type="number" min="0" value="1480000"><span class="unit">kWh/yıl</span></div></div>
+            <div class="inwrap"><input id="h_elec_grid" type="number" min="0" value="" placeholder="ör. 1480000"><span class="unit">kWh/yıl</span></div></div>
           <div class="f"><label for="h_elec_onsite">Yerinde üretim öz tüketimi (GES)</label>
-            <div class="inwrap"><input id="h_elec_onsite" type="number" min="0" value="95000"><span class="unit">kWh/yıl</span></div>
+            <div class="inwrap"><input id="h_elec_onsite" type="number" min="0" value="" placeholder="ör. 95000"><span class="unit">kWh/yıl</span></div>
             <span class="hint">Şebekeden çekilmeyen, çatıda üretilip tüketilen</span></div>
           <div class="f"><label for="h_elec_rec">YEK-G / I-REC ile belgelenen</label>
-            <div class="inwrap"><input id="h_elec_rec" type="number" min="0" value="0"><span class="unit">kWh/yıl</span></div>
+            <div class="inwrap"><input id="h_elec_rec" type="number" min="0" value="" placeholder="0"><span class="unit">kWh/yıl</span></div>
             <span class="hint">Piyasa bazlı Kapsam 2'de sıfırlanır</span></div>
           <div class="f"><label for="h_district">Bölgesel ısıtma / soğutma</label>
-            <div class="inwrap"><input id="h_district" type="number" min="0" value="0"><span class="unit">kWh/yıl</span></div></div>
+            <div class="inwrap"><input id="h_district" type="number" min="0" value="" placeholder="0"><span class="unit">kWh/yıl</span></div></div>
         </div>
       </fieldset>
 
@@ -399,13 +439,13 @@ details.meth summary{font-weight:700; padding:12px 0; cursor:pointer; color:var(
         <legend>Yakıtlar (Kapsam 1)</legend>
         <div class="grid">
           <div class="f"><label for="h_gas">Doğal gaz</label>
-            <div class="inwrap"><input id="h_gas" type="number" min="0" value="92000"><span class="unit">m³/yıl</span></div></div>
+            <div class="inwrap"><input id="h_gas" type="number" min="0" value="" placeholder="ör. 92000"><span class="unit">m³/yıl</span></div></div>
           <div class="f"><label for="h_lpg">LPG / tüp gaz</label>
-            <div class="inwrap"><input id="h_lpg" type="number" min="0" value="5500"><span class="unit">kg/yıl</span></div></div>
+            <div class="inwrap"><input id="h_lpg" type="number" min="0" value="" placeholder="ör. 5500"><span class="unit">kg/yıl</span></div></div>
           <div class="f"><label for="h_fueloil">Fuel-oil / kalorifer yakıtı</label>
-            <div class="inwrap"><input id="h_fueloil" type="number" min="0" value="0"><span class="unit">litre/yıl</span></div></div>
+            <div class="inwrap"><input id="h_fueloil" type="number" min="0" value="" placeholder="0"><span class="unit">litre/yıl</span></div></div>
           <div class="f"><label for="h_gen">Jeneratör dizeli</label>
-            <div class="inwrap"><input id="h_gen" type="number" min="0" value="3200"><span class="unit">litre/yıl</span></div></div>
+            <div class="inwrap"><input id="h_gen" type="number" min="0" value="" placeholder="ör. 3200"><span class="unit">litre/yıl</span></div></div>
         </div>
       </fieldset>
 
@@ -413,9 +453,9 @@ details.meth summary{font-weight:700; padding:12px 0; cursor:pointer; color:var(
         <legend>Araçlar &amp; soğutucu gazlar (Kapsam 1)</legend>
         <div class="grid">
           <div class="f"><label for="h_veh_diesel">Servis araçları — dizel</label>
-            <div class="inwrap"><input id="h_veh_diesel" type="number" min="0" value="7800"><span class="unit">litre/yıl</span></div></div>
+            <div class="inwrap"><input id="h_veh_diesel" type="number" min="0" value="" placeholder="ör. 7800"><span class="unit">litre/yıl</span></div></div>
           <div class="f"><label for="h_veh_petrol">Servis araçları — benzin</label>
-            <div class="inwrap"><input id="h_veh_petrol" type="number" min="0" value="2400"><span class="unit">litre/yıl</span></div></div>
+            <div class="inwrap"><input id="h_veh_petrol" type="number" min="0" value="" placeholder="ör. 2400"><span class="unit">litre/yıl</span></div></div>
           <div class="f"><label for="h_ref_type">Soğutucu gaz türü</label>
             <div class="inwrap"><select id="h_ref_type">
               <option value="2088" selected>R-410A (GWP 2088)</option>
@@ -426,7 +466,7 @@ details.meth summary{font-weight:700; padding:12px 0; cursor:pointer; color:var(
               <option value="1">R-290 / R-744 (doğal, GWP ≈ 1)</option>
             </select></div></div>
           <div class="f"><label for="h_ref_kg">Yıllık gaz dolumu (kaçak ikmali)</label>
-            <div class="inwrap"><input id="h_ref_kg" type="number" min="0" step="0.1" value="11"><span class="unit">kg/yıl</span></div></div>
+            <div class="inwrap"><input id="h_ref_kg" type="number" min="0" step="0.1" value="" placeholder="ör. 11"><span class="unit">kg/yıl</span></div></div>
         </div>
       </fieldset>
 
@@ -434,7 +474,7 @@ details.meth summary{font-weight:700; padding:12px 0; cursor:pointer; color:var(
         <legend>Çamaşırhane (HCMI Kapsam 3)</legend>
         <div class="grid">
           <div class="f"><label for="h_laundry">Dışarıda yıkanan tekstil</label>
-            <div class="inwrap"><input id="h_laundry" type="number" min="0" value="128000"><span class="unit">kg/yıl</span></div>
+            <div class="inwrap"><input id="h_laundry" type="number" min="0" value="" placeholder="ör. 128000"><span class="unit">kg/yıl</span></div>
             <span class="hint">Tesis içi çamaşırhanenin enerjisi yukarıdaki elektrik/gaz içinde zaten var — buraya yalnızca dış hizmeti yazın</span></div>
         </div>
       </fieldset>
@@ -444,11 +484,11 @@ details.meth summary{font-weight:700; padding:12px 0; cursor:pointer; color:var(
         <p class="mini" style="margin:0 0 10px">HCMI metrikleri yalnızca Kapsam 1, 2 ve dış çamaşırhaneyi içerir. Su ve atık kurumsal envanterinizde ve Yeşil Taksonomi raporlamasında gerekir; ayrı gösterilir.</p>
         <div class="grid">
           <div class="f"><label for="h_water">Su tüketimi</label>
-            <div class="inwrap"><input id="h_water" type="number" min="0" value="19000"><span class="unit">m³/yıl</span></div></div>
+            <div class="inwrap"><input id="h_water" type="number" min="0" value="" placeholder="ör. 19000"><span class="unit">m³/yıl</span></div></div>
           <div class="f"><label for="h_waste">Düzenli depolamaya giden atık</label>
-            <div class="inwrap"><input id="h_waste" type="number" min="0" step="0.1" value="165"><span class="unit">ton/yıl</span></div></div>
+            <div class="inwrap"><input id="h_waste" type="number" min="0" step="0.1" value="" placeholder="ör. 165"><span class="unit">ton/yıl</span></div></div>
           <div class="f"><label for="h_recycle">Geri dönüşüm / komposta ayrılan</label>
-            <div class="inwrap"><input id="h_recycle" type="number" min="0" step="0.1" value="55"><span class="unit">ton/yıl</span></div></div>
+            <div class="inwrap"><input id="h_recycle" type="number" min="0" step="0.1" value="" placeholder="ör. 55"><span class="unit">ton/yıl</span></div></div>
         </div>
       </fieldset>
 
@@ -617,7 +657,7 @@ details.meth summary{font-weight:700; padding:12px 0; cursor:pointer; color:var(
       <fieldset>
         <legend>Enerji verimliliği</legend>
         <div class="checks">
-          <label class="chk"><input type="checkbox" id="m_led" checked><span><b>LED dönüşümü ve aydınlatma kontrolü</b> — aydınlatma elektriğinin %55'i; otel elektriğinin yaklaşık %12'si aydınlatmadır</span><span class="w" data-w="led">—</span></label>
+          <label class="chk"><input type="checkbox" id="m_led"><span><b>LED dönüşümü ve aydınlatma kontrolü</b> — aydınlatma elektriğinin %55'i; otel elektriğinin yaklaşık %12'si aydınlatmadır</span><span class="w" data-w="led">—</span></label>
           <label class="chk"><input type="checkbox" id="m_keycard"><span><b>Oda enerji otomasyonu</b> — anahtar kart / varlık sensörüyle boş odada klima ve aydınlatma kesilir</span><span class="w" data-w="keycard">—</span></label>
           <label class="chk"><input type="checkbox" id="m_bms"><span><b>BMS kurulumu ve HVAC devreye alma</b> — set değerleri, çalışma saatleri ve havalandırma debilerinin optimizasyonu</span><span class="w" data-w="bms">—</span></label>
           <label class="chk"><input type="checkbox" id="m_hr"><span><b>Isı geri kazanım</b> — atık su ve havalandırma egzozundan ön ısıtma</span><span class="w" data-w="hr">—</span></label>
@@ -627,11 +667,11 @@ details.meth summary{font-weight:700; padding:12px 0; cursor:pointer; color:var(
       <fieldset>
         <legend>Yenilenebilir enerji ve elektrifikasyon</legend>
         <div class="checks">
-          <label class="chk"><input type="checkbox" id="m_pv" checked><span><b>Çatı GES</b> — öz tüketim; üretim şebeke elektriğinden düşer</span><span class="w" data-w="pv">—</span></label>
+          <label class="chk"><input type="checkbox" id="m_pv"><span><b>Çatı GES</b> — öz tüketim; üretim şebeke elektriğinden düşer</span><span class="w" data-w="pv">—</span></label>
         </div>
         <div class="grid" style="margin:10px 0 2px">
           <div class="f"><label for="h_pv_kwp">GES kurulu gücü</label>
-            <div class="inwrap"><input id="h_pv_kwp" type="number" min="0" value="250"><span class="unit">kWp</span></div>
+            <div class="inwrap"><input id="h_pv_kwp" type="number" min="0" value="" placeholder="ör. 250"><span class="unit">kWp</span></div>
             <span class="hint">Türkiye ortalaması 1.550 kWh/kWp/yıl ile üretim hesaplanır</span></div>
           <div class="f"><label for="h_pv_cost">GES birim yatırım</label>
             <div class="inwrap"><input id="h_pv_cost" type="number" min="0" step="500" value="16000"><span class="unit">TL/kWp</span></div></div>
@@ -647,7 +687,7 @@ details.meth summary{font-weight:700; padding:12px 0; cursor:pointer; color:var(
       <fieldset>
         <legend>Su, atık ve soğutucu gazlar</legend>
         <div class="checks">
-          <label class="chk"><input type="checkbox" id="m_water" checked><span><b>Verimli armatür ve debi sınırlayıcı</b> — musluk ≤6 L/dk, duş ≤8 L/dk; sıcak su ısıtma yükünü de düşürür</span><span class="w" data-w="water">—</span></label>
+          <label class="chk"><input type="checkbox" id="m_water"><span><b>Verimli armatür ve debi sınırlayıcı</b> — musluk ≤6 L/dk, duş ≤8 L/dk; sıcak su ısıtma yükünü de düşürür</span><span class="w" data-w="water">—</span></label>
           <label class="chk"><input type="checkbox" id="m_linen"><span><b>Havlu ve çarşaf değişim programı</b> — misafir onaylı değişim ve verimli yıkama çevrimiyle dış çamaşırhane hacminde %12 azalma</span><span class="w" data-w="linen">—</span></label>
           <label class="chk"><input type="checkbox" id="m_waste"><span><b>Kaynakta ayrıştırma ve kompost</b> — depolamaya giden atığın %55'i geri dönüşüme ve komposta kayar</span><span class="w" data-w="waste">—</span></label>
           <label class="chk"><input type="checkbox" id="m_refrig"><span><b>Soğutucu gaz kaçak yönetimi ve düşük GWP geçişi</b> — kaçak %55 azalır</span><span class="w" data-w="refrig">—</span></label>
@@ -813,14 +853,14 @@ details.meth summary{font-weight:700; padding:12px 0; cursor:pointer; color:var(
           <p class="mini" style="margin:0 0 10px">Bir toplantı planlayıcısı teklif isterken bu rakamı sorar. Otelin HCMI toplantı metriği üzerinden hesaplanır.</p>
           <div class="grid">
             <div class="f"><label for="e_m2">Kullanılan salon alanı</label>
-              <div class="inwrap"><input id="e_m2" type="number" min="0" value="400"><span class="unit">m²</span></div></div>
+              <div class="inwrap"><input id="e_m2" type="number" min="0" value="" placeholder="ör. 400"><span class="unit">m²</span></div></div>
             <div class="f"><label for="e_hours">Toplam kullanım</label>
-              <div class="inwrap"><input id="e_hours" type="number" min="0" value="24"><span class="unit">saat</span></div>
+              <div class="inwrap"><input id="e_hours" type="number" min="0" value="" placeholder="ör. 24"><span class="unit">saat</span></div>
               <span class="hint">Örn. 3 gün × 8 saat</span></div>
             <div class="f"><label for="e_guests">Katılımcı sayısı</label>
-              <div class="inwrap"><input id="e_guests" type="number" min="1" value="150"><span class="unit">kişi</span></div></div>
+              <div class="inwrap"><input id="e_guests" type="number" min="1" value="" placeholder="ör. 150"><span class="unit">kişi</span></div></div>
             <div class="f"><label for="e_nights">Konaklama</label>
-              <div class="inwrap"><input id="e_nights" type="number" min="0" value="300"><span class="unit">oda-gece</span></div>
+              <div class="inwrap"><input id="e_nights" type="number" min="0" value="" placeholder="ör. 300"><span class="unit">oda-gece</span></div>
               <span class="hint">Örn. 100 oda × 3 gece</span></div>
           </div>
           <div class="tblwrap" style="margin-top:12px"><table class="t" style="min-width:0"><tbody>
@@ -840,10 +880,12 @@ details.meth summary{font-weight:700; padding:12px 0; cursor:pointer; color:var(
             <button class="btn ghost" id="btn-copy" type="button">Yönetici özetini kopyala</button>
             <button class="btn ghost" id="btn-json" type="button">JSON'u kopyala</button>
             <a class="btn ghost" id="btn-wa" href="#" target="_blank" rel="noopener">WhatsApp ile paylaş</a>
+            <button class="btn primary" type="button" data-cloud-save>Hesabıma kaydet</button>
           </div>
+          <p class="mini cloud-msg" data-cloud-msg></p>
           <p class="addr">Detaylı rapor, bağımsız doğrulama, sertifika rotası ve dengeleme için: <b>info@commited.app</b> — konu satırına "Otel HCMI raporu" yazın. <button class="btn ghost" id="btn-mail" type="button" style="padding:5px 13px; font-size:13px; margin-top:8px">E-posta adresini kopyala</button></p>
-          <p class="mini" style="margin-top:12px">Yerleşik tarayıcı kısıtları nedeniyle bu sayfa dosya indirme veya yazdırma başlatamaz; tüm çıktılar panoya kopyalanır.</p>
-          <label class="chk" style="margin-top:12px"><input type="checkbox" id="opt_save"><span>Girdiğim veriler bu tarayıcıda saklansın, bir dahaki gelişimde hazır olsun</span></label>
+          <p class="mini" style="margin-top:12px">Tüm çıktılar panoya kopyalanır.</p>
+          <label class="chk" style="margin-top:12px"><input type="checkbox" id="opt_save"><span>Girdiğim veriler bu tarayıcıda saklansın, bir dahaki gelişimde hazır olsun <i class="mini" style="font-style:normal">(üye olmadan; yalnız bu cihazda)</i></span></label>
         </div>
       </div>
     </section>
@@ -851,31 +893,32 @@ details.meth summary{font-weight:700; padding:12px 0; cursor:pointer; color:var(
 
   <!-- ============================ ACENTE ============================ -->
   <section class="panel" id="panel-acente" role="tabpanel" aria-labelledby="tab-acente" hidden>
+    <p class="notice" id="a_notice">Alanlar boş — acentenizin yıllık verilerini girin. Örnek görmek isterseniz <button class="linkbtn" type="button" data-example="acente">örnek bir acenteyle doldurun</button>.</p>
     <div class="two">
       <div>
         <fieldset>
           <legend>Operasyon hacmi</legend>
           <div class="grid">
             <div class="f"><label for="a_paket">Yıllık paket / tur sayısı</label>
-              <div class="inwrap"><input id="a_paket" type="number" min="0" value="120"><span class="unit">tur</span></div></div>
+              <div class="inwrap"><input id="a_paket" type="number" min="0" value="" placeholder="ör. 120"><span class="unit">tur</span></div></div>
             <div class="f"><label for="a_yolcu">Toplam yolcu</label>
-              <div class="inwrap"><input id="a_yolcu" type="number" min="0" value="3600"><span class="unit">kişi</span></div></div>
+              <div class="inwrap"><input id="a_yolcu" type="number" min="0" value="" placeholder="ör. 3600"><span class="unit">kişi</span></div></div>
           </div>
         </fieldset>
         <fieldset>
           <legend>Ulaşım (yıllık toplam)</legend>
           <div class="grid">
             <div class="f"><label for="a_icucus">İç hat uçuş</label>
-              <div class="inwrap"><input id="a_icucus" type="number" min="0" value="1800000"><span class="unit">yolcu-km</span></div>
+              <div class="inwrap"><input id="a_icucus" type="number" min="0" value="" placeholder="ör. 1800000"><span class="unit">yolcu-km</span></div>
               <span class="hint">Yolcu × mesafe (km) × 2 (gidiş-dönüş)</span></div>
             <div class="f"><label for="a_kisadis">Dış hat — kısa (&lt;3.700 km)</label>
-              <div class="inwrap"><input id="a_kisadis" type="number" min="0" value="2400000"><span class="unit">yolcu-km</span></div></div>
+              <div class="inwrap"><input id="a_kisadis" type="number" min="0" value="" placeholder="ör. 2400000"><span class="unit">yolcu-km</span></div></div>
             <div class="f"><label for="a_uzundis">Dış hat — uzun</label>
-              <div class="inwrap"><input id="a_uzundis" type="number" min="0" value="0"><span class="unit">yolcu-km</span></div></div>
+              <div class="inwrap"><input id="a_uzundis" type="number" min="0" value="" placeholder="0"><span class="unit">yolcu-km</span></div></div>
             <div class="f"><label for="a_otobus">Otobüs / karayolu tur</label>
-              <div class="inwrap"><input id="a_otobus" type="number" min="0" value="900000"><span class="unit">yolcu-km</span></div></div>
+              <div class="inwrap"><input id="a_otobus" type="number" min="0" value="" placeholder="ör. 900000"><span class="unit">yolcu-km</span></div></div>
             <div class="f"><label for="a_transfer">Transfer araçları</label>
-              <div class="inwrap"><input id="a_transfer" type="number" min="0" value="60000"><span class="unit">araç-km</span></div></div>
+              <div class="inwrap"><input id="a_transfer" type="number" min="0" value="" placeholder="ör. 60000"><span class="unit">araç-km</span></div></div>
           </div>
         </fieldset>
         <fieldset>
@@ -892,13 +935,13 @@ details.meth summary{font-weight:700; padding:12px 0; cursor:pointer; color:var(
               </select></div>
               <span class="hint">Seçim, aşağıdaki katsayıyı CHSB 2026 Türkiye ortalamasıyla doldurur</span></div>
             <div class="f"><label for="a_gece">Satın alınan oda-gece</label>
-              <div class="inwrap"><input id="a_gece" type="number" min="0" value="7200"><span class="unit">oda-gece</span></div>
+              <div class="inwrap"><input id="a_gece" type="number" min="0" value="" placeholder="ör. 7200"><span class="unit">oda-gece</span></div>
               <span class="hint">Yıl içinde misafirleriniz için satın aldığınız toplam oda-gece</span></div>
             <div class="f"><label for="a_cpor">Kullanılacak CPOR katsayısı</label>
               <div class="inwrap"><input id="a_cpor" type="number" min="0" step="0.1" value="37.9"><span class="unit">kgCO₂e/oda-gece</span></div>
               <span class="hint">Tedarikçi otelin <b>kendi HCMI/CPOR değeri</b> varsa onu girin — en doğrusu odur. Yurt dışı konaklamada o ülkenin değerini kullanın.</span></div>
             <div class="f"><label for="a_ofis">Ofis elektriği</label>
-              <div class="inwrap"><input id="a_ofis" type="number" min="0" value="18000"><span class="unit">kWh/yıl</span></div></div>
+              <div class="inwrap"><input id="a_ofis" type="number" min="0" value="" placeholder="ör. 18000"><span class="unit">kWh/yıl</span></div></div>
           </div>
           <label class="chk" style="margin-top:12px"><input type="checkbox" id="opt_asplit"><span>Portföyüm karışık — oda-geceleri segmentlere dağıtayım</span></label>
           <div id="a_split" hidden>
@@ -906,23 +949,23 @@ details.meth summary{font-weight:700; padding:12px 0; cursor:pointer; color:var(
               <thead><tr><th scope="col">Segment</th><th scope="col">Oda-gece</th><th scope="col">kgCO₂e/oda-gece</th><th scope="col">tCO₂e</th></tr></thead>
               <tbody>
                 <tr><td>Lüks</td>
-                  <td class="ip"><input class="tin" id="a_n_lux" type="number" min="0" value="0" aria-label="Lüks oda-gece"></td>
+                  <td class="ip"><input class="tin" id="a_n_lux" type="number" min="0" value="" placeholder="0" aria-label="Lüks oda-gece"></td>
                   <td class="ip"><input class="tin" id="a_c_lux" type="number" min="0" step="0.1" value="59.6" aria-label="Lüks katsayı"></td>
                   <td id="as_lux">—</td></tr>
                 <tr><td>5 yıldız</td>
-                  <td class="ip"><input class="tin" id="a_n_s5" type="number" min="0" value="2400" aria-label="5 yıldız oda-gece"></td>
+                  <td class="ip"><input class="tin" id="a_n_s5" type="number" min="0" value="" placeholder="ör. 2400" aria-label="5 yıldız oda-gece"></td>
                   <td class="ip"><input class="tin" id="a_c_s5" type="number" min="0" step="0.1" value="48.9" aria-label="5 yıldız katsayı"></td>
                   <td id="as_s5">—</td></tr>
                 <tr><td>4 yıldız</td>
-                  <td class="ip"><input class="tin" id="a_n_s4" type="number" min="0" value="3600" aria-label="4 yıldız oda-gece"></td>
+                  <td class="ip"><input class="tin" id="a_n_s4" type="number" min="0" value="" placeholder="ör. 3600" aria-label="4 yıldız oda-gece"></td>
                   <td class="ip"><input class="tin" id="a_c_s4" type="number" min="0" step="0.1" value="37.9" aria-label="4 yıldız katsayı"></td>
                   <td id="as_s4">—</td></tr>
                 <tr><td>3 yıldız</td>
-                  <td class="ip"><input class="tin" id="a_n_s3" type="number" min="0" value="1200" aria-label="3 yıldız oda-gece"></td>
+                  <td class="ip"><input class="tin" id="a_n_s3" type="number" min="0" value="" placeholder="ör. 1200" aria-label="3 yıldız oda-gece"></td>
                   <td class="ip"><input class="tin" id="a_c_s3" type="number" min="0" step="0.1" value="25.4" aria-label="3 yıldız katsayı"></td>
                   <td id="as_s3">—</td></tr>
                 <tr><td>Apart / pansiyon</td>
-                  <td class="ip"><input class="tin" id="a_n_limited" type="number" min="0" value="0" aria-label="Apart oda-gece"></td>
+                  <td class="ip"><input class="tin" id="a_n_limited" type="number" min="0" value="" placeholder="0" aria-label="Apart oda-gece"></td>
                   <td class="ip"><input class="tin" id="a_c_limited" type="number" min="0" step="0.1" value="20.2" aria-label="Apart katsayı"></td>
                   <td id="as_limited">—</td></tr>
               </tbody>
@@ -953,7 +996,9 @@ details.meth summary{font-weight:700; padding:12px 0; cursor:pointer; color:var(
           <div class="btn-row">
             <button class="btn primary" id="btn-acopy" type="button">Özeti kopyala</button>
             <a class="btn ghost" id="btn-awa" href="#" target="_blank" rel="noopener">WhatsApp ile paylaş</a>
+            <button class="btn ghost" type="button" data-cloud-save>Hesabıma kaydet</button>
           </div>
+          <p class="mini cloud-msg" data-cloud-msg></p>
           <p class="addr"><b>info@commited.app</b></p>
         </div>
       </div>
@@ -1004,10 +1049,50 @@ details.meth summary{font-weight:700; padding:12px 0; cursor:pointer; color:var(
     <p class="mini">Azaltım önlemlerinin tasarruf yüzdeleri ve yatırım tutarları sektör ortalaması gösterge değerlerdir; bağlayıcı teklif için enerji etüdü gerekir.</p>
     <p class="mini"><b>Net sıfır patikası.</b> Net Zero Methodology for Hotels 2. Baskı (Greenview / Sustainable Hospitality Alliance) kilometre taşı yıllarına (2025, 2030, 2035, 2040, 2050) ve baz yıl sınıfına göre yıllık azaltım oranlarına dayanır: 2012 öncesi baz yıl için %3/yıl, 2012–2019 için %4/yıl, 2020 sonrası için %5/yıl; 2030 için "emisyonları yarıya indirme" kuralı taban alınır. Sektör hedefi olarak Global Hotel Decarbonization Report, oda başına yıllık emisyonların 2010'a göre 2030'da %66, 2050'de %90 azalmasını öngörür. Patika hukuki veya SBTi onaylı bir hedef beyanı değildir.</p>
     <p class="mini"><b>Taksonomi kontrol listesi</b> Türkiye Yeşil Taksonomisi Yönetmeliği (Resmî Gazete 24.09.2026, Sayı 33380) ve İklim Değişikliği Başkanlığı taslak teknik tarama kriterlerinin turizm ve konaklama bölümlerine dayanır. Nihai kriterler Başkanlıkça yayımlanır ve her yıl 15 Aralık'a kadar güncellenebilir; skor hukuki uygunluk beyanı değildir.</p>
-    <p class="foot">Verileriniz tarayıcınızda hesaplanır; hiçbir veri sunucuya gönderilmez. "Verilerim bu tarayıcıda saklansın" seçeneğini işaretlerseniz girdileriniz yalnızca kendi tarayıcınızın yerel deposunda tutulur ve Commited dahil hiç kimseye ulaşmaz; işareti kaldırdığınızda silinir. KVKK kapsamında kişisel veri işlenmez. © cOmmited — commited.app · Bir Fibabanka iştirakidir.</p>
+    <p class="foot">Hesaplama tarayıcınızda yapılır. Üye olmadan kullanırsanız hiçbir veri sunucuya gönderilmez; "bu tarayıcıda saklansın" seçeneği verileri yalnız kendi tarayıcınızda tutar. <b>Üye olup "Hesabıma kaydet" derseniz</b> e-posta adresiniz, tesis bilgileriniz ve girdiğiniz faaliyet verileri Commited Danışmanlık A.Ş. adına Google Firebase üzerinde saklanır; yalnız siz ve Commited yetkilileri görebilir. Kişisel verileriniz <a href="https://www.commitedevents.app/yeni-sayfa" target="_blank" rel="noopener">Aydınlatma Metni</a> kapsamında işlenir; silinmesi için info@commited.app'e yazabilirsiniz. © cOmmited — commited.app · Bir Fibabanka iştirakidir.</p>
   </details>
 </main>
 <div class="toast" id="toast">Kopyalandı</div>
+<div class="mback" id="authModal" hidden>
+  <div class="mbox" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+    <button class="mclose" type="button" data-auth-close aria-label="Kapat">×</button>
+    <div id="authForms">
+      <h3 id="authTitle">Tesisinizi kaydedin</h3>
+      <div class="mtabs"><button type="button" data-tab="register" class="on">Üye ol</button><button type="button" data-tab="login">Giriş yap</button></div>
+      <button class="gbtn" type="button" id="authGoogle"><b>G</b> Google ile devam et</button>
+      <div class="msep">veya e-posta ile</div>
+      <div class="reg-only">
+        <label for="r_name">Tesis / işletme adı</label><input id="r_name" class="mi" autocomplete="organization">
+        <div class="mgrid">
+          <div><label for="r_type">İşletme türü</label><select id="r_type" class="mi"><option value="otel">Otel / tatil köyü</option><option value="pansiyon">Butik otel / pansiyon</option><option value="acente">Acente / tur operatörü</option><option value="diger">Diğer</option></select></div>
+          <div><label for="r_city">Şehir</label><input id="r_city" class="mi" autocomplete="address-level2"></div>
+        </div>
+      </div>
+      <label for="r_email">E-posta</label><input id="r_email" class="mi" type="email" autocomplete="username">
+      <label for="r_pass">Şifre <span class="reg-only mini">(en az 6 karakter)</span></label><input id="r_pass" class="mi" type="password" autocomplete="current-password">
+      <label class="chk reg-only" style="margin-top:10px"><input type="checkbox" id="r_kvkk"><span><a href="https://www.commitedevents.app/yeni-sayfa" target="_blank" rel="noopener">Aydınlatma Metni</a>'ni okudum; tesis verilerimin hesabımda saklanmasını kabul ediyorum.</span></label>
+      <button class="btn primary" type="button" id="authSubmit" style="width:100%;margin-top:12px">Üye ol</button>
+      <button class="linkbtn login-only" type="button" id="authReset" style="margin-top:8px">Şifremi unuttum</button>
+    </div>
+    <div id="profForm" hidden>
+      <h3>Tesis bilgileriniz</h3>
+      <p class="mini">Kayıtlarınızda ve raporlarınızda bu ad kullanılır.</p>
+      <label for="pf_name">Tesis / işletme adı</label><input id="pf_name" class="mi">
+      <div class="mgrid">
+        <div><label for="pf_type">İşletme türü</label><select id="pf_type" class="mi"><option value="otel">Otel / tatil köyü</option><option value="pansiyon">Butik otel / pansiyon</option><option value="acente">Acente / tur operatörü</option><option value="diger">Diğer</option></select></div>
+        <div><label for="pf_city">Şehir</label><input id="pf_city" class="mi"></div>
+      </div>
+      <label class="chk" style="margin-top:10px"><input type="checkbox" id="pf_kvkk"><span><a href="https://www.commitedevents.app/yeni-sayfa" target="_blank" rel="noopener">Aydınlatma Metni</a>'ni okudum; tesis verilerimin hesabımda saklanmasını kabul ediyorum.</span></label>
+      <button class="btn primary" type="button" id="profSave" style="width:100%;margin-top:12px">Kaydı tamamla</button>
+    </div>
+    <div id="recList" hidden>
+      <h3>Kayıtlarım</h3>
+      <p class="mini">Bir kayda tıklayınca o yılın verileri forma yüklenir.</p>
+      <div id="recItems"></div>
+    </div>
+    <p class="merr" id="authErr" role="alert"></p>
+  </div>
+</div>
 
 <script>
 (function(){
@@ -1614,6 +1699,7 @@ details.meth summary{font-weight:700; padding:12px 0; cursor:pointer; color:var(
       kn:st.kg, of:N('a_ofis')*EF.elec
     };
     var kg = r.ic+r.ks+r.uz+r.ot+r.tr+r.kn+r.of, t = kg/1000;
+    window.__aTotalKg = kg;
     set('ar_total', fmt(t, t<100?1:0));
     set('ar_trees', '≈ ' + fmt(Math.round(kg/EF.agac),0) + ' ağacın yıllık emilimi');
     set('ar_pp', yo>0 ? fmt(kg/yo,1) : '—');
@@ -1745,7 +1831,7 @@ details.meth summary{font-weight:700; padding:12px 0; cursor:pointer; color:var(
   function saveAll(){
     if(!CK('opt_save')){ try{ localStorage.removeItem(STORE); }catch(e){} return; }
     var o = {};
-    Array.prototype.forEach.call(document.querySelectorAll('input[id],select[id]'), function(x){
+    Array.prototype.forEach.call(document.querySelectorAll('main input[id],main select[id]'), function(x){
       o[x.id] = (x.type==='checkbox') ? x.checked : x.value;
     });
     try{ localStorage.setItem(STORE, JSON.stringify(o)); }catch(e){}
@@ -1799,7 +1885,7 @@ details.meth summary{font-weight:700; padding:12px 0; cursor:pointer; color:var(
     });
   })();
 
-  Array.prototype.forEach.call(document.querySelectorAll('input,select'), function(x){
+  Array.prototype.forEach.call(document.querySelectorAll('main input,main select'), function(x){
     x.addEventListener('input', function(){ all(); saveAll(); });
     if(x.type==='checkbox' || x.tagName==='SELECT') x.addEventListener('change', function(){ all(); saveAll(); });
   });
@@ -1812,14 +1898,338 @@ details.meth summary{font-weight:700; padding:12px 0; cursor:pointer; color:var(
 
   window.addEventListener('resize', function(){ if(LAST) renderPath(LAST.i, LAST.baseT, LAST.newT); });
 
+
+  /* ======================= Örnek veri ve üyelik kancaları ======================= */
+  /* Sayfa boş açılır. Örnek değerler yalnız "örnekle doldurun" bağlantısıyla yüklenir. */
+  var EXAMPLE = {"h_name": "Örnek Tatil Köyü", "h_city": "Muğla", "h_year": "2025", "h_rooms": "120", "h_area_total": "11500", "h_area_rooms": "5200", "h_area_meeting": "900", "h_meeting_hours": "1200", "h_roomnights": "26280", "h_guestnights": "47300", "h_elec_grid": "1480000", "h_elec_onsite": "95000", "h_elec_rec": "0", "h_district": "0", "h_gas": "92000", "h_lpg": "5500", "h_fueloil": "0", "h_gen": "3200", "h_veh_diesel": "7800", "h_veh_petrol": "2400", "h_ref_kg": "11", "h_laundry": "128000", "h_water": "19000", "h_waste": "165", "h_recycle": "55", "h_pv_kwp": "250", "e_m2": "400", "e_hours": "24", "e_guests": "150", "e_nights": "300", "a_paket": "120", "a_yolcu": "3600", "a_icucus": "1800000", "a_kisadis": "2400000", "a_uzundis": "0", "a_otobus": "900000", "a_transfer": "60000", "a_gece": "7200", "a_ofis": "18000", "a_n_lux": "0", "a_n_s5": "2400", "a_n_s4": "3600", "a_n_s3": "1200", "a_n_limited": "0"};
+  var EXAMPLE_CHK = {"m_led": true, "m_pv": true, "m_water": true};
+  var HOTEL_KEYS = Object.keys(EXAMPLE).filter(function(k){ return k.indexOf('a_')!==0; });
+  var AGENCY_KEYS = Object.keys(EXAMPLE).filter(function(k){ return k.indexOf('a_')===0; });
+  function fillExample(which){
+    var keys = which==='acente' ? AGENCY_KEYS : HOTEL_KEYS;
+    var filled = keys.some(function(k){ var x=el(k); return x && String(x.value).trim()!==''; });
+    if(filled && !window.confirm('Girdiğiniz değerlerin yerine örnek veriler yüklenecek. Devam edilsin mi?')) return;
+    keys.forEach(function(k){ var x=el(k); if(x) x.value = EXAMPLE[k]; });
+    if(which==='acente'){ if(el('a_n_s5').value) el('opt_asplit').checked = false; }
+    else Object.keys(EXAMPLE_CHK).forEach(function(k){ var x=el(k); if(x) x.checked = EXAMPLE_CHK[k]; });
+    var n = el(which==='acente'?'a_notice':'h_notice');
+    if(n) n.innerHTML = '<b>Örnek veriler yüklendi — bunlar sizin verileriniz değildir.</b> Kendi rakamlarınızı yazdıkça sonuçlar güncellenir.';
+    all(); saveAll();
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('[data-example]'), function(b){
+    b.addEventListener('click', function(){ fillExample(b.getAttribute('data-example')); });
+  });
+  function collect(){
+    var o = {};
+    Array.prototype.forEach.call(document.querySelectorAll('main input[id],main select[id]'), function(x){
+      o[x.id] = (x.type==='checkbox') ? x.checked : x.value;
+    });
+    delete o.opt_save;
+    return o;
+  }
+  function apply(o){
+    Object.keys(o||{}).forEach(function(k){
+      var x = el(k); if(!x || k==='opt_save') return;
+      if(x.type==='checkbox') x.checked = !!o[k]; else x.value = o[k];
+    });
+    all(); saveAll();
+  }
+  function isEmpty(){
+    return HOTEL_KEYS.concat(AGENCY_KEYS).every(function(k){ var x=el(k); return !x || String(x.value).trim()===''; });
+  }
+  function summary(){
+    var L = LAST;
+    if(mode==='acente'){
+      return { type:'agency', total:window.__aTotalKg||0, label:'Acente / tur operatörü' };
+    }
+    return { type:'hotel', total:L?L.baseT*1000:0, label:'Otel (HCMI v2.0)',
+             cpor:(L&&isFinite(L.mt.cpor))?+L.mt.cpor.toFixed(2):null, grade:L?L.gr.k:null,
+             year:L?L.i.year:null, hcmi:L?JSON.parse(jsonText()):null };
+  }
+  window.__tour = { collect:collect, apply:apply, isEmpty:isEmpty, summary:summary,
+                    mode:function(){ return mode; }, setMode:function(m){ setMode(m); }, toast:toast };
+
   /* ======================= Başlat ======================= */
   if(restoreAll()){
-    var nt = document.querySelector('#panel-otel .notice');
+    var nt = el('h_notice');
     if(nt) nt.textContent = 'Bu tarayıcıda sakladığınız veriler yüklendi. Saklamayı kapatmak için Adım 5\'teki kutunun işaretini kaldırın.';
   }
   var seg0 = SEG[TX('h_segment')];
   if(seg0 && !N('h_ref_cpor')) el('h_ref_cpor').value = seg0.cpor;
   all();
+})();
+</script>
+<script type="module">
+/* =====================================================================
+   Turizm hesaplayıcısı — üyelik ve bulut kaydı
+   - Firebase projesi Kapsam 3 hesaplayıcısıyla aynıdır (kobi-karbon-hesaplama).
+   - Firebase dinamik yüklenir: CDN'e ulaşılamazsa hesaplayıcı yine çalışır,
+     yalnız üyelik düğmeleri gizlenir.
+   - Tesis profili  : firms/{uid}               (firestore.rules: kullanıcı kendi dokümanı, admin okur)
+   - Kayıtlar       : reports/{uid}/items/{id}   type = 'hotel' | 'agency'
+     Admin panelindeki "Firma Raporları" sekmesi bunları da listeler.
+   ===================================================================== */
+const firebaseConfig = {
+  apiKey: "AIzaSyA908koeADcOLR2ROU6R7fARAqjC1v-inc",
+  authDomain: "kobi-karbon-hesaplama.firebaseapp.com",
+  projectId: "kobi-karbon-hesaplama",
+  storageBucket: "kobi-karbon-hesaplama.firebasestorage.app",
+  messagingSenderId: "148732593523",
+  appId: "1:148732593523:web:505abef73a48a29469b106"
+};
+const V = "10.12.0";
+const $ = (id) => document.getElementById(id);
+const T = () => window.__tour;
+let A = null, F = null, auth = null, db = null, user = null, profile = null, authMode = "register", pendingSave = false, registering = false;
+
+const ERR = {
+  "auth/invalid-email": "Geçersiz e-posta adresi.",
+  "auth/missing-password": "Şifre girin.",
+  "auth/weak-password": "Şifre en az 6 karakter olmalı.",
+  "auth/email-already-in-use": "Bu e-posta zaten kayıtlı — \"Giriş yap\" sekmesini kullanın.",
+  "auth/invalid-credential": "E-posta veya şifre hatalı.",
+  "auth/user-not-found": "Bu e-postayla kayıtlı hesap yok.",
+  "auth/wrong-password": "E-posta veya şifre hatalı.",
+  "auth/too-many-requests": "Çok fazla deneme yapıldı; biraz sonra tekrar deneyin.",
+  "auth/popup-blocked": "Açılır pencere engellendi; tarayıcı izin verince tekrar deneyin.",
+  "auth/popup-closed-by-user": "Google penceresi kapatıldı.",
+  "auth/unauthorized-domain": "Bu alan adı Firebase'de yetkili değil (yazılım ekibi: Authentication → Settings → Authorized domains).",
+  "permission-denied": "Kayıt izni yok (Firestore kuralları)."
+};
+const errText = (e) => ERR[(e && e.code) || ""] || (e && e.message) || "Beklenmeyen bir hata oluştu.";
+const showErr = (m) => { $("authErr").textContent = m || ""; };
+const fmtKg = (kg) => (kg >= 1000 ? (kg / 1000).toLocaleString("tr-TR", { maximumFractionDigits: 1 }) + " tCO₂e"
+                                  : Math.round(kg).toLocaleString("tr-TR") + " kgCO₂e");
+const esc = (s) => String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+/* ---------- modal ---------- */
+function openModal(view, mode) {
+  $("authModal").hidden = false;
+  ["authForms", "profForm", "recList"].forEach((id) => { $(id).hidden = id !== view; });
+  showErr("");
+  if (view === "authForms") setAuthMode(mode || authMode);
+  if (view === "profForm") {
+    $("pf_name").value = (profile && profile.name) || $("h_name").value || "";
+    $("pf_city").value = (profile && profile.city) || $("h_city").value || "";
+  }
+}
+function closeModal() { $("authModal").hidden = true; pendingSave = false; }
+function setAuthMode(m) {
+  authMode = m;
+  document.querySelector("#authModal .mbox").classList.toggle("login", m === "login");
+  document.querySelectorAll("#authModal .mtabs button").forEach((b) => b.classList.toggle("on", b.dataset.tab === m));
+  $("authSubmit").textContent = m === "login" ? "Giriş yap" : "Üye ol";
+  $("authTitle").textContent = m === "login" ? "Hesabınıza giriş yapın" : "Tesisinizi ücretsiz kaydedin";
+  $("r_pass").setAttribute("autocomplete", m === "login" ? "current-password" : "new-password");
+  showErr("");
+}
+
+/* ---------- hesap çubuğu ---------- */
+function renderBar() {
+  const bar = $("acct");
+  if (!bar) return;
+  if (!user) {
+    bar.innerHTML = '<button class="btn acct-cta" type="button" data-auth="register">Ücretsiz üye olun</button>'
+      + '<button class="btn acct-ghost" type="button" data-auth="login">Giriş yapın</button>'
+      + '<span class="acct-note">Tesisinizi kaydedin; verileriniz her cihazda hazır olsun, her yıl yeni ölçümünüzü ekleyin.</span>';
+  } else {
+    const nm = (profile && profile.name) || user.displayName || "Hesabım";
+    bar.innerHTML = '<span class="acct-who">✓ ' + esc(nm) + '<small>' + esc(user.email || "") + '</small></span>'
+      + '<button class="btn acct-cta" type="button" data-act="save">Hesabıma kaydet</button>'
+      + '<button class="btn acct-ghost" type="button" data-act="records">Kayıtlarım</button>'
+      + '<button class="btn acct-ghost" type="button" data-act="logout">Çıkış</button>';
+  }
+}
+
+/* ---------- profil ---------- */
+async function loadProfile() {
+  try {
+    const s = await F.getDoc(F.doc(db, "firms", user.uid));
+    profile = s.exists() ? s.data() : null;
+  } catch (e) { profile = null; }
+}
+async function writeProfile(p) {
+  const data = Object.assign({}, p, {
+    email: user.email || "", source: "turizm-karbon-hesaplayici",
+    kvkkAccepted: true, kvkkAcceptedAt: F.serverTimestamp(), updatedAt: F.serverTimestamp()
+  });
+  if (!profile) data.createdAt = F.serverTimestamp();
+  await F.setDoc(F.doc(db, "firms", user.uid), data, { merge: true });
+  profile = Object.assign({}, profile || {}, p);
+  if (p.name && !$("h_name").value) { $("h_name").value = p.name; $("h_name").dispatchEvent(new Event("input")); }
+  if (p.city && !$("h_city").value) { $("h_city").value = p.city; $("h_city").dispatchEvent(new Event("input")); }
+}
+
+/* ---------- kayıtlar ---------- */
+async function listRecords() {
+  const q = F.query(F.collection(db, "reports", user.uid, "items"), F.orderBy("createdAt", "desc"));
+  const snap = await F.getDocs(q);
+  const out = [];
+  snap.forEach((d) => { const r = d.data(); if (r.type === "hotel" || r.type === "agency") out.push(Object.assign({ id: d.id }, r)); });
+  return out;
+}
+function loadRecord(r) {
+  if (!r || !r.inputs) return;
+  T().setMode(r.type === "agency" ? "acente" : "otel");
+  T().apply(r.inputs);
+  const n = $(r.type === "agency" ? "a_notice" : "h_notice");
+  const dt = r.createdAt && r.createdAt.toDate ? r.createdAt.toDate().toLocaleDateString("tr-TR") : "";
+  if (n) n.innerHTML = "<b>Kayıtlı verileriniz yüklendi</b> (" + esc(r.company || "") + (r.year ? " · " + r.year : "") + (dt ? " · kayıt " + dt : "")
+    + "). Değiştirip \"Hesabıma kaydet\" derseniz yeni bir kayıt olarak eklenir; eski kayıtlar silinmez.";
+}
+async function openRecords() {
+  openModal("recList");
+  const box = $("recItems");
+  box.innerHTML = '<p class="mini">Yükleniyor…</p>';
+  try {
+    const recs = await listRecords();
+    if (!recs.length) { box.innerHTML = '<p class="mini">Henüz kaydınız yok. Verilerinizi girip "Hesabıma kaydet" deyin.</p>'; return; }
+    box.innerHTML = "";
+    recs.forEach((r) => {
+      const b = document.createElement("button");
+      b.type = "button"; b.className = "rec";
+      const dt = r.createdAt && r.createdAt.toDate ? r.createdAt.toDate().toLocaleString("tr-TR") : "";
+      b.innerHTML = "<span>" + esc(r.company || "Tesis") + (r.year ? " · " + r.year : "")
+        + "<small>" + (r.type === "agency" ? "Acente" : "Otel / HCMI") + " · " + esc(dt)
+        + (r.cpor != null ? " · " + String(r.cpor).replace(".", ",") + " kg/oda-gece" : "") + "</small></span><b>" + fmtKg(r.total || 0) + "</b>";
+      b.addEventListener("click", () => { loadRecord(r); closeModal(); T().toast("Kayıt yüklendi"); });
+      box.appendChild(b);
+    });
+  } catch (e) { box.innerHTML = '<p class="merr">Kayıtlar okunamadı: ' + esc(errText(e)) + "</p>"; }
+}
+async function saveRecord() {
+  const msgs = document.querySelectorAll("[data-cloud-msg]");
+  const say = (m) => msgs.forEach((x) => { x.textContent = m; });
+  if (!user) { pendingSave = true; openModal("authForms", "register"); showErr("Kaydetmek için ücretsiz üye olun veya giriş yapın."); return; }
+  if (!profile || !profile.name) { pendingSave = true; openModal("profForm"); return; }
+  const sm = T().summary();
+  if (!(sm.total > 0)) { say("Kaydedilecek bir sonuç yok — önce verilerinizi girin."); T().toast("Önce verilerinizi girin"); return; }
+  say("Kaydediliyor…");
+  try {
+    const company = (sm.type === "hotel" ? ($("h_name").value || "").trim() : "") || profile.name;
+    const rec = {
+      type: sm.type, source: "turizm-karbon-hesaplayici",
+      sector: sm.type === "agency" ? "Turizm — Acente / tur operatörü" : "Turizm — Otel (HCMI v2.0)",
+      company: company, year: sm.year || null, total: Math.round(sm.total),
+      cpor: sm.cpor == null ? null : sm.cpor, grade: sm.grade || null,
+      inputs: T().collect(), hcmi: sm.hcmi || null,
+      userEmail: user.email || ""
+    };
+    /* JSON gidiş-dönüşü: Firestore'un kabul etmediği undefined/NaN değerlerini temizler */
+    const clean = JSON.parse(JSON.stringify(rec));
+    clean.createdAt = F.serverTimestamp();
+    await F.addDoc(F.collection(db, "reports", user.uid, "items"), clean);
+    F.setDoc(F.doc(db, "firms", user.uid), { lastSavedAt: F.serverTimestamp(), lastTotalKg: Math.round(sm.total) }, { merge: true }).catch(() => {});
+    say("✓ Hesabınıza kaydedildi (" + fmtKg(sm.total) + "). \"Kayıtlarım\"dan istediğiniz zaman açabilirsiniz.");
+    T().toast("Hesabınıza kaydedildi");
+  } catch (e) { say("Kaydedilemedi: " + errText(e)); }
+}
+
+/* ---------- olaylar ---------- */
+function bind() {
+  document.addEventListener("click", (ev) => {
+    const t = ev.target.closest("[data-auth],[data-act],[data-cloud-save],[data-auth-close],[data-tab]");
+    if (!t) { if (ev.target.id === "authModal") closeModal(); return; }
+    if (t.dataset.auth) openModal("authForms", t.dataset.auth);
+    else if (t.hasAttribute("data-auth-close")) closeModal();
+    else if (t.dataset.tab) setAuthMode(t.dataset.tab);
+    else if (t.hasAttribute("data-cloud-save") || t.dataset.act === "save") saveRecord();
+    else if (t.dataset.act === "records") openRecords();
+    else if (t.dataset.act === "logout") A.signOut(auth).then(() => T().toast("Çıkış yapıldı"));
+  });
+  document.addEventListener("keydown", (ev) => { if (ev.key === "Escape" && !$("authModal").hidden) closeModal(); });
+
+  $("authSubmit").addEventListener("click", async () => {
+    const email = $("r_email").value.trim(), pass = $("r_pass").value;
+    showErr("");
+    try {
+      if (authMode === "login") {
+        await A.signInWithEmailAndPassword(auth, email, pass);
+      } else {
+        const name = $("r_name").value.trim();
+        if (!name) return showErr("Tesis / işletme adını yazın.");
+        if (!$("r_kvkk").checked) return showErr("Devam etmek için Aydınlatma Metni onayını işaretleyin.");
+        $("authSubmit").disabled = true;
+        registering = true;
+        const cred = await A.createUserWithEmailAndPassword(auth, email, pass);
+        user = cred.user;
+        await writeProfile({ name: name, type: $("r_type").value, city: $("r_city").value.trim() });
+        registering = false;
+        A.sendEmailVerification(user).catch(() => {});
+        renderBar();
+        const again = pendingSave; closeModal();
+        T().toast("Üyeliğiniz oluşturuldu");
+        if (again) saveRecord();
+      }
+    } catch (e) { registering = false; showErr(errText(e)); }
+    finally { $("authSubmit").disabled = false; }
+  });
+  $("authGoogle").addEventListener("click", async () => {
+    showErr("");
+    try { await A.signInWithPopup(auth, new A.GoogleAuthProvider()); }
+    catch (e) {
+      if (e && e.code === "auth/popup-blocked") { try { await A.signInWithRedirect(auth, new A.GoogleAuthProvider()); return; } catch (e2) {} }
+      showErr(errText(e));
+    }
+  });
+  $("authReset").addEventListener("click", async () => {
+    const email = $("r_email").value.trim();
+    if (!email) return showErr("Önce e-posta adresinizi yazın.");
+    try { await A.sendPasswordResetEmail(auth, email); showErr(""); T().toast("Şifre sıfırlama e-postası gönderildi"); }
+    catch (e) { showErr(errText(e)); }
+  });
+  $("profSave").addEventListener("click", async () => {
+    const name = $("pf_name").value.trim();
+    if (!name) return showErr("Tesis / işletme adını yazın.");
+    if (!$("pf_kvkk").checked) return showErr("Devam etmek için Aydınlatma Metni onayını işaretleyin.");
+    try {
+      await writeProfile({ name: name, type: $("pf_type").value, city: $("pf_city").value.trim() });
+      renderBar();
+      const again = pendingSave; closeModal();
+      T().toast("Kaydınız tamamlandı");
+      if (again) saveRecord();
+    } catch (e) { showErr(errText(e)); }
+  });
+}
+
+/* ---------- oturum değişimi ---------- */
+async function onUser(u) {
+  user = u;
+  if (registering) return;           /* kayıt akışı profili kendisi yazıp çubuğu güncelliyor */
+  profile = null;
+  if (u) {
+    await loadProfile();
+    renderBar();
+    if (!profile || !profile.name) { openModal("profForm"); return; }
+    const again = pendingSave;
+    if (!$("authModal").hidden && !$("authForms").hidden) closeModal();
+    if (again) { saveRecord(); return; }
+    if (T().isEmpty()) {
+      try { const recs = await listRecords(); if (recs.length) { loadRecord(recs[0]); T().toast("Son kaydınız yüklendi"); } } catch (e) {}
+    }
+  } else {
+    renderBar();
+  }
+}
+
+(async () => {
+  bind();
+  try {
+    const base = "https://www.gstatic.com/firebasejs/" + V + "/";
+    const [appM, authM, fsM] = await Promise.all([
+      import(base + "firebase-app.js"), import(base + "firebase-auth.js"), import(base + "firebase-firestore.js")
+    ]);
+    A = authM; F = fsM;
+    const app = appM.initializeApp(firebaseConfig, "turizm");
+    auth = A.getAuth(app); db = F.getFirestore(app);
+    await A.setPersistence(auth, A.browserLocalPersistence).catch(() => {});
+    A.getRedirectResult(auth).catch(() => {});
+    A.onAuthStateChanged(auth, (u) => { onUser(u); });
+  } catch (e) {
+    console.warn("Üyelik modülü yüklenemedi; hesaplayıcı üyeliksiz çalışıyor.", e);
+    const bar = $("acct"); if (bar) bar.hidden = true;
+    document.querySelectorAll("[data-cloud-save]").forEach((b) => { b.hidden = true; });
+  }
 })();
 </script>
 </body>

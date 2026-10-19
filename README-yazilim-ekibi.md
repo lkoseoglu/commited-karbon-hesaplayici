@@ -111,6 +111,44 @@ genişlikte yatay kaydırma yok.
 5. Firestore'da eski "tedarikçi" tipi kayıtlı raporlar görüntülenebilir (renderResult'taki supplier
    dalı geriye uyumluluk için duruyor), ama yeni tedarikçi formu yok.
 
+## Turizm hesaplayıcısı — üyelik ve boş açılış (2026-10-19, ikinci tur)
+
+**Boş açılış.** Sayfa artık örnek verilerle değil **boş** açılır. Örnek 120 odalı tatil köyü ve örnek
+acente değerleri koddaki `EXAMPLE` nesnesinde durur; otel ve acente sekmelerindeki bildirimdeki
+"örnekle doldurun" bağlantısı (`data-example="otel" | "acente"`) bunları yükler. Fiyat varsayımları,
+CHSB kıyas değerleri, acente katsayıları ve net sıfır yılları parametre olduğu için dolu kalır.
+Örnekte açık gelen azaltım önlemleri (LED, GES, su armatürü) da yalnız örnekle birlikte işaretlenir.
+
+**Üyelik ("Kayıt yok" kaldırıldı).** Oteller/acenteler ücretsiz üye olup verilerini hesaplarına kaydeder:
+
+| Ne | Nerede |
+|---|---|
+| Giriş | Firebase Auth, Kapsam 3 ile aynı proje (`kobi-karbon-hesaplama`). E-posta + şifre veya Google. Şifremi unuttum var. Kayıtta doğrulama e-postası gönderilir. |
+| Tesis profili | `firms/{uid}` — `name`, `type` (otel/pansiyon/acente/diger), `city`, `email`, `kvkkAccepted`, `kvkkAcceptedAt`, `createdAt`, `lastSavedAt`, `lastTotalKg` |
+| Kayıtlar | `reports/{uid}/items/{id}` — `type: "hotel" \| "agency"`, `company`, `year`, `total` (kgCO₂e), `cpor`, `grade`, `inputs` (formdaki tüm alanlar), `hcmi` (JSON çıktısının tamamı, `commited.hotel.hcmi/1`) |
+
+- **Firestore kurallarında değişiklik gerekmez**: `firms/{uid}` ve `reports/{uid}/items` zaten
+  "kullanıcı kendi dokümanı, admin okur" kuralıyla açık.
+- "Hesabıma kaydet" her basışta **yeni** kayıt ekler (yıllık ölçüm geçmişi oluşur); eskiler silinmez.
+- Giriş yapan kullanıcının formu boşsa **son kaydı otomatik yüklenir**; "Kayıtlarım" listesinden
+  istenen kayıt açılır.
+- Kayıt formunda Aydınlatma Metni onayı zorunlu (link: commitedevents.app/yeni-sayfa — doğru
+  KVKK sayfasıysa bırakın, değilse `tourism` sayfasındaki 3 bağlantıyı güncelleyin).
+- Firebase modülü **dinamik** yüklenir: CDN'e ulaşılamazsa hesaplayıcı çalışmaya devam eder,
+  yalnız üyelik düğmeleri gizlenir.
+- Yerel saklama (`opt_save`) ve canlı hesap yalnız `<main>` içindeki alanları kapsar; üyelik
+  penceresindeki şifre alanı asla saklanmaz.
+- Admin paneli "Firma Raporları" sekmesi bu kayıtları "Turizm · Otel / Turizm · Acente" diye
+  gösterir; Kapsam 3 sayfasının "Raporlarım" listesi turizm kayıtlarını göstermez.
+- Gizlilik metni (Metodoloji altı) üyelikle saklanan verileri anlatacak şekilde güncellendi.
+
+**Test (yerel, Firebase sahte modülüyle):** boş açılışta hata yok; örnekle 1.038 tCO₂e / 33,7;
+üye olmadan "kaydet" → üyelik penceresi; KVKK onayı ve 6 karakter şifre kontrolü; kayıt sonrası
+bekleyen kayıt otomatik yapılır; acente kaydı 1.128 tCO₂e; yeniden açıp giriş yapınca son kayıt
+yüklenir; "Kayıtlarım"dan otel kaydı geri yüklenir; şifre localStorage'a yazılmaz; 390 px'te
+yatay kaydırma yok. Canlı Firebase ile kayıt/giriş, Firebase Authentication → Authorized domains
+listesinde `lkoseoglu.github.io` olduğu sürece çalışır (Kapsam 3 sayfası aynı alan adında çalışıyor).
+
 ## Squarespace'e gömme
 
 ```html
