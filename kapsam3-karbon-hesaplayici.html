@@ -1,0 +1,2106 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kapsam 3 Karbon Hesaplayıcı — Turizm</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300..800&display=swap" rel="stylesheet">
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root{
+    --green:#1E6B4A; --green-d:#0B2E22; --green-h1:#0B2E22; --green-h2:#1E6B4A;
+    --mint:#E9F2EB; --ink:#14261E; --muted:#5B6E63; --line:#D8E4DC; --card:#ffffff; --bg:#F2F7F3;
+    --s1:#f08a5d; --s2:#f4c04e; --s3:#3f9fb8;
+    --radius:18px; --radius-sm:12px;
+    --shadow:0 6px 26px rgba(14,60,40,.07); --shadow-h:0 12px 34px rgba(14,60,40,.13);
+    --font:'DM Sans',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:var(--font);color:var(--ink);background:transparent;line-height:1.55;-webkit-font-smoothing:antialiased}
+  .ck-wrap{max-width:920px;margin:0 auto;padding:10px}
+  .ck-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:26px;margin-bottom:20px}
+  h1{font-size:1.7rem;line-height:1.2;margin:0 0 6px;letter-spacing:-.02em;font-weight:800}
+  h2{font-size:1.2rem;margin:0 0 16px;color:var(--green-d);font-weight:700;letter-spacing:-.01em}
+  h3{font-size:1.02rem;margin:22px 0 8px;font-weight:700}
+  p.sub{color:var(--muted);margin:0 0 16px;font-size:.97rem}
+  /* HERO */
+  .hero{background:linear-gradient(135deg,var(--green-h1) 0%,var(--green-h2) 100%);color:#fff;border-radius:var(--radius);padding:30px 28px;margin-bottom:20px;position:relative;overflow:hidden;box-shadow:var(--shadow)}
+  .hero::after{content:"";position:absolute;right:-60px;top:-60px;width:220px;height:220px;background:radial-gradient(circle,rgba(255,255,255,.16),transparent 70%);border-radius:50%}
+  .hero .topline{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;position:relative;z-index:1}
+  .hero h1{color:#fff}
+  .hero p{color:rgba(255,255,255,.9);margin:6px 0 0;font-size:1rem;max-width:600px}
+  .freebadge{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.18);color:#fff;border:1px solid rgba(255,255,255,.35);border-radius:30px;padding:5px 14px;font-size:.82rem;font-weight:700;margin-bottom:12px;backdrop-filter:blur(4px)}
+  .trust{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;position:relative;z-index:1}
+  .trust span{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);border-radius:20px;padding:4px 12px;font-size:.78rem;font-weight:600;color:#fff}
+  .authbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .authbar .who{font-size:.85rem;color:rgba(255,255,255,.92)}
+  .authbtn{border:1px solid rgba(255,255,255,.4);background:rgba(255,255,255,.12);padding:7px 14px;border-radius:9px;cursor:pointer;font-weight:600;color:#fff;font-size:.88rem;transition:.15s}
+  .authbtn:hover{background:rgba(255,255,255,.22)}
+  .ck-lang{display:inline-flex;background:rgba(255,255,255,.12);border-radius:10px;padding:3px}
+  .ck-lang button{border:none;background:transparent;padding:6px 14px;border-radius:8px;cursor:pointer;font-weight:700;color:rgba(255,255,255,.8);font-size:.85rem;transition:.15s}
+  .ck-lang button.active{background:#fff;color:var(--green-d)}
+  /* STEPS */
+  .steps{display:flex;gap:8px;margin-bottom:20px;font-size:.82rem;color:var(--muted);flex-wrap:wrap}
+  .steps span{padding:6px 14px;border-radius:30px;background:#eef4f0;font-weight:600}
+  .steps span span{padding:0;background:none;box-shadow:none;border-radius:0;color:inherit}
+  .steps span.on{background:var(--green);color:#fff;box-shadow:0 3px 10px rgba(18,145,91,.3)}
+  /* MODE / SECTOR CARDS */
+  .ck-modes{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:600px){.ck-modes{grid-template-columns:1fr}}
+  .ck-mode{border:1.5px solid var(--line);border-radius:var(--radius);padding:20px;cursor:pointer;transition:.18s;background:var(--card);position:relative}
+  .ck-mode:hover{border-color:var(--green);transform:translateY(-3px);box-shadow:var(--shadow-h)}
+  .ck-mode.sel{border-color:var(--green);background:var(--mint);box-shadow:0 0 0 3px rgba(18,145,91,.12)}
+  .ck-mode .em{display:inline-flex;align-items:center;justify-content:center;width:52px;height:52px;border-radius:14px;background:var(--mint);font-size:1.7rem;margin-bottom:10px}
+  .ck-mode b{display:block;margin:4px 0 6px;font-size:1.05rem;font-weight:700}
+  .ck-mode span{font-size:.92rem;color:var(--muted);line-height:1.5}
+  label{display:block;font-weight:600;margin:14px 0 5px;font-size:.94rem}
+  .fieldnote{font-weight:400;color:var(--muted);font-size:.82rem}
+  input[type=number],input[type=text],input[type=email],input[type=password],select{width:100%;padding:11px 13px;border:1.5px solid var(--line);border-radius:11px;font-size:1rem;background:#fff;font-family:inherit;transition:.15s;color:var(--ink)}
+  input:focus,select:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 4px rgba(18,145,91,.12)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:600px){.grid2{grid-template-columns:1fr}}
+  .qrow{border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:10px;display:grid;grid-template-columns:1fr 120px 150px;gap:12px;align-items:end;transition:.15s;background:#fff}
+  .qrow:hover{border-color:#cfe3d7}
+  @media(max-width:640px){.qrow{grid-template-columns:1fr}}
+  .qrow .qual select{padding:9px;font-size:.85rem}
+  .qsub{margin-left:16px;border-left:3px solid var(--mint);background:#fbfefc}
+  /* BUTTONS */
+  .btn{background:linear-gradient(135deg,#13a065,#0c6a41);color:#fff;border:none;padding:13px 22px;border-radius:12px;font-size:1rem;font-weight:700;cursor:pointer;transition:.16s;box-shadow:0 4px 14px rgba(12,106,65,.25)}
+  .btn:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(12,106,65,.32)}
+  .btn.sec{background:#fff;color:var(--green-d);border:1.5px solid var(--green);box-shadow:none}
+  .btn.sec:hover{background:var(--mint)}
+  .btn.ghost{background:#f3f7f4;color:var(--muted);border:1px solid var(--line);box-shadow:none}
+  .btn.ghost:hover{background:#eaf1ec}
+  .btn.sm{padding:9px 16px;font-size:.9rem}
+  .btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
+  .hidden{display:none!important}
+  .tourhint{background:var(--mint);border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:.9rem;line-height:1.55;margin:0 0 14px;color:var(--ink)}
+  .tourhint a{color:var(--green);font-weight:700}
+  .back{background:none;border:none;color:var(--green-d);cursor:pointer;font-weight:600;padding:0;margin-bottom:10px;font-size:.92rem}
+  .back:hover{text-decoration:underline}
+  /* RESULT */
+  .total{position:relative;text-align:center;padding:28px 20px;background:linear-gradient(135deg,var(--green-h1),var(--green-h2));color:#fff;border-radius:var(--radius);margin-bottom:18px;overflow:hidden}
+  .total::after{content:"";position:absolute;left:-40px;bottom:-60px;width:200px;height:200px;background:radial-gradient(circle,rgba(255,255,255,.14),transparent 70%);border-radius:50%}
+  .total .lbl{font-size:.85rem;font-weight:600;color:rgba(255,255,255,.85);text-transform:uppercase;letter-spacing:.05em;position:relative;z-index:1}
+  .total .num{font-size:2.9rem;font-weight:800;line-height:1.05;margin-top:4px;letter-spacing:-.02em;position:relative;z-index:1}
+  .total .unit{color:rgba(255,255,255,.88);font-weight:600;position:relative;z-index:1}
+  .result-grid{display:grid;grid-template-columns:180px 1fr;gap:20px;align-items:center;margin-bottom:8px}
+  @media(max-width:600px){.result-grid{grid-template-columns:1fr;justify-items:center}}
+  .donut-wrap{position:relative;width:170px;height:170px}
+  .donut-wrap .center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+  .donut-wrap .center b{font-size:1.15rem;color:var(--green-d);line-height:1.1}
+  .donut-wrap .center span{font-size:.72rem;color:var(--muted)}
+  .scopes{display:grid;grid-template-columns:1fr;gap:10px}
+  .scope{border:1px solid var(--line);border-radius:14px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between}
+  .scope .lft{display:flex;align-items:center;gap:8px;font-weight:600;font-size:.92rem}
+  .scope .dot{width:12px;height:12px;border-radius:4px;display:inline-block}
+  .scope .v{font-size:1.15rem;font-weight:800}
+  .scope .s{font-size:.72rem;color:var(--muted)}
+  .metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:8px}
+  @media(max-width:600px){.metrics{grid-template-columns:1fr}}
+  .metric{background:linear-gradient(180deg,#fff,#f6faf7);border:1px solid var(--line);border-radius:14px;padding:16px;text-align:center}
+  .metric b{display:block;font-size:1.3rem;color:var(--green-d);font-weight:800}
+  .metric span{font-size:.8rem;color:var(--muted)}
+  .dq{background:var(--mint);border:1px solid #cfe8d9;border-radius:14px;padding:14px 16px;margin-top:14px;font-size:.9rem}
+  .dq .bar2{height:12px;border-radius:8px;background:#d5e7dc;overflow:hidden;margin-top:8px}
+  .dq .bar2 i{display:block;height:100%;background:linear-gradient(90deg,#13a065,#0c6a41);transition:width .6s}
+  table.rep{width:100%;border-collapse:collapse;font-size:.92rem;margin-top:4px}
+  table.rep th,table.rep td{padding:9px 8px;border-bottom:1px solid var(--line);text-align:left}
+  table.rep td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;font-weight:600}
+  table.rep tr.grp td{background:#f2f8f4;font-weight:700}
+  table.rep tr.tot td{font-weight:800;border-top:2px solid var(--green);color:var(--green-d)}
+  .equiv{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+  @media(max-width:600px){.equiv{grid-template-columns:1fr}}
+  .equiv div{background:linear-gradient(180deg,#fff,#f6faf7);border:1px solid var(--line);border-radius:14px;padding:14px;font-size:.92rem;display:flex;align-items:center;gap:10px}
+  .equiv .ic{font-size:1.6rem}
+  .equiv b{font-size:1.2rem;color:var(--green-d);display:block}
+  .supplier-row{display:grid;grid-template-columns:1fr 150px 42px;gap:10px;align-items:center;margin-bottom:10px}
+  @media(max-width:600px){.supplier-row{grid-template-columns:1fr 110px 36px}}
+  /* --- alici modulu --- */
+  .btools{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 10px}
+  .btools .btn{margin:0}
+  .srow{border:1px solid var(--line);border-radius:14px;padding:12px 14px 10px;margin-bottom:12px;background:#fff;transition:.15s}
+  .srow:hover{border-color:#cfe3d7}
+  .srow.warn{border-color:#f0c98a;background:#fffdf7}
+  .srow-top{display:grid;grid-template-columns:1.4fr 1.1fr 1fr 38px;gap:10px;align-items:center}
+  @media(max-width:760px){.srow-top{grid-template-columns:1fr 38px}.srow-top select{grid-column:1/-1}}
+  .srow-top .idx{display:none}
+  .fgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:10px}
+  .fgrid label{display:block;font-size:.76rem;color:var(--muted);font-weight:600;margin-bottom:4px}
+  .fgrid input,.fgrid select{width:100%}
+  .fgrid .chk{display:flex;align-items:center;gap:7px;font-size:.82rem;font-weight:600;color:var(--ink);padding-top:19px}
+  .fgrid .chk input{width:auto}
+  .trbox{margin-top:10px;border-top:1px dashed var(--line);padding-top:9px}
+  .trbox .ttl{font-size:.76rem;font-weight:700;color:var(--muted);letter-spacing:.02em}
+  .fgrid.one{grid-template-columns:minmax(200px,320px)}
+  .srow-out{margin-top:10px;border-top:1px solid var(--line);padding-top:8px;display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.8rem;color:var(--muted);align-items:center}
+  .srow-out b{color:var(--green-d);font-variant-numeric:tabular-nums}
+  .qb{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:2px 9px;font-size:.72rem;font-weight:700}
+  .qb.q1{background:#dcf5e7;color:#0b5d3b}.qb.q2{background:#e7f3dc;color:#39631b}
+  .qb.q3{background:#fdf4d8;color:#7a5a08}.qb.q4{background:#fde9d8;color:#8a4a12}
+  .qb.q5{background:#fbe0e0;color:#8f2525}
+  .flag{background:#fbe0e0;color:#8f2525;border-radius:999px;padding:2px 9px;font-size:.72rem;font-weight:700}
+  .livebox{margin-top:14px;background:var(--mint);border:1px solid #cfe7da;border-radius:14px;padding:12px 14px;display:flex;flex-wrap:wrap;gap:8px 22px;font-size:.86rem;align-items:center}
+  .livebox b{color:var(--green-d);font-variant-numeric:tabular-nums;font-size:1.02rem}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:10px;margin:6px 0 18px}
+  .kpi{border:1px solid var(--line);border-radius:14px;padding:12px;background:#fbfdfc}
+  .kpi b{display:block;font-size:1.22rem;color:var(--green-d);font-variant-numeric:tabular-nums;line-height:1.2}
+  .kpi span{display:block;font-size:.74rem;color:var(--muted);margin-top:3px;line-height:1.3}
+  .cov{margin:4px 0 18px}
+  .covbar{height:16px;border-radius:999px;background:#eef4f0;overflow:hidden;display:flex;margin:7px 0}
+  .covbar i{display:block;height:100%}
+  .covbar i.a{background:var(--green)}.covbar i.b{background:#d6c38a}
+  .leg{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.78rem;color:var(--muted)}
+  .leg s{text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+  .leg s::before{content:"";width:10px;height:10px;border-radius:3px;background:currentColor;display:inline-block}
+  .pareto{margin:6px 0 16px}
+  .pb{display:grid;grid-template-columns:minmax(90px,1.2fr) 1fr 92px;gap:10px;align-items:center;margin-bottom:7px;font-size:.8rem}
+  .pb .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pb .tr{background:#eef4f0;border-radius:999px;height:13px;position:relative;overflow:hidden}
+  .pb .tr i{display:block;height:100%;background:var(--s3);border-radius:999px}
+  .pb .tr i.hot{background:var(--green)}
+  .pb .vv{text-align:right;font-variant-numeric:tabular-nums;font-weight:700;color:var(--ink)}
+  .prio{display:grid;gap:9px;margin-bottom:16px}
+  .prio .p{display:grid;grid-template-columns:30px 1fr auto;gap:11px;align-items:center;border:1px solid var(--line);border-radius:13px;padding:10px 12px;background:#fff}
+  .prio .p .n{width:26px;height:26px;border-radius:50%;background:var(--green);color:#fff;display:grid;place-items:center;font-weight:800;font-size:.8rem}
+  .prio .p .w{font-size:.85rem}
+  .prio .p .w i{display:block;font-style:normal;font-size:.74rem;color:var(--muted);margin-top:2px}
+  .scen{border:1px solid var(--line);border-radius:16px;padding:14px;background:#fbfdfc;margin-bottom:16px}
+  .scen .lv{display:grid;grid-template-columns:1fr 120px 92px;gap:10px;align-items:center;margin-bottom:9px;font-size:.84rem}
+  @media(max-width:640px){.scen .lv{grid-template-columns:1fr 70px}.scen .lv .sv{grid-column:2}}
+  .scen input[type=range]{width:100%}
+  .scen .sv{text-align:right;font-variant-numeric:tabular-nums;font-weight:700;color:var(--green-d)}
+  .scen .res{margin-top:10px;border-top:1px solid var(--line);padding-top:10px;display:flex;flex-wrap:wrap;gap:8px 22px;align-items:baseline}
+  .scen .res b{font-size:1.3rem;color:var(--green-d);font-variant-numeric:tabular-nums}
+  .srctext{font-size:.74rem;color:var(--muted);line-height:1.5;margin:10px 0 0}
+  table.rep td.q{text-align:center}
+  .tblwrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .tblwrap table.rep{min-width:720px}
+  .del{border:none;background:#fbeae6;color:#c0492c;border-radius:10px;width:100%;height:42px;cursor:pointer;font-size:1.1rem;transition:.15s}
+  .del:hover{background:#f6d9d2}
+  .notice{font-size:.82rem;color:#7a6a3d;background:#fffaf0;border:1px solid #f0e4c4;border-radius:12px;padding:12px 14px;margin-top:16px}
+  .methnote{font-size:.82rem;color:#3f5a6b;background:#eff6fb;border:1px solid #cfe2ef;border-radius:12px;padding:12px 14px;margin-top:10px}
+  .pill{display:inline-block;background:var(--mint);color:var(--green-d);border-radius:20px;padding:2px 10px;font-size:.76rem;font-weight:700;margin-left:6px}
+  .footer{text-align:center;font-size:.82rem;color:var(--muted);padding:6px 0 14px}
+  /* MODAL */
+  .modal-bg{position:fixed;inset:0;background:rgba(10,30,20,.55);display:flex;align-items:center;justify-content:center;z-index:100;padding:12px;backdrop-filter:blur(3px)}
+  .modal{background:#fff;border-radius:var(--radius);max-width:410px;width:100%;padding:26px;box-shadow:0 18px 50px rgba(0,0,0,.28)}
+  .modal .tabbtns{display:flex;gap:6px;margin-bottom:14px;background:#f3f7f4;border-radius:12px;padding:4px}
+  .modal .tabbtns button{flex:1;border:none;background:transparent;padding:9px;border-radius:9px;cursor:pointer;font-weight:700;color:var(--muted);transition:.15s}
+  .modal .tabbtns button.on{background:#fff;color:var(--green-d);box-shadow:0 2px 8px rgba(0,0,0,.06)}
+  .gbtn{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;border:1.5px solid var(--line);background:#fff;padding:12px;border-radius:11px;cursor:pointer;font-weight:700;margin-bottom:14px;transition:.15s}
+  .gbtn:hover{background:#f6faf7;border-color:#cfe3d7}
+  .err{color:#c0492c;font-size:.85rem;margin-top:10px}
+  .rep-item{border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;gap:10px;cursor:pointer;transition:.15s}
+  .rep-item:hover{border-color:var(--green);background:var(--mint);transform:translateX(2px)}
+  .rep-item b{color:var(--green-d);font-size:1.15rem}
+  @media print{.no-print{display:none!important}body{background:#fff}.ck-card,.hero,.total{box-shadow:none}}
+
+/* ---- Ortak hesaplayıcı menüsü (turizm-karbon-hesaplayici.html ve kapsam3-karbon-hesaplayici.html'de aynıdır) ---- */
+.cm-switch{display:flex;gap:4px;padding:4px;margin:0 0 18px;background:rgba(255,255,255,.08);border:1px solid rgba(169,227,195,.38);border-radius:999px;width:max-content;max-width:100%;position:relative;z-index:2}
+.cm-switch a{display:inline-flex;align-items:center;gap:7px;color:#CFE6DA;text-decoration:none;font-weight:700;font-size:14px;line-height:1.2;padding:9px 16px;border-radius:999px;white-space:nowrap;letter-spacing:0;text-transform:none}
+.cm-switch a:hover{background:rgba(255,255,255,.1);color:#fff}
+.cm-switch a:focus-visible{outline:2px solid #E8C547;outline-offset:2px}
+.cm-switch a[aria-current="page"]{background:#E8C547;color:#14261E}
+.cm-switch .cm-sm{display:none}
+@media (max-width:520px){.cm-switch{width:100%}.cm-switch a{flex:1 1 0;justify-content:center;padding:9px 10px}.cm-switch .cm-lg{display:none}.cm-switch .cm-sm{display:inline}}
+
+</style>
+<body>
+<div class="ck-wrap">
+
+  <!-- HERO (her ekranda görünür) -->
+  <div class="hero">
+    <nav class="cm-switch no-print" aria-label="Karbon hesaplayıcıları">
+      <a href="turizm-karbon-hesaplayici.html"><span class="cm-lg">Turizm Karbon Hesaplayıcı</span><span class="cm-sm">Turizm</span></a>
+      <a href="kapsam3-karbon-hesaplayici.html" aria-current="page"><span class="cm-lg">Kapsam 3 Karbon Hesaplayıcı</span><span class="cm-sm">Kapsam 3</span></a>
+    </nav>
+    <div class="topline">
+        <div>
+          <span class="freebadge" data-t="freeBadge">🆓 %100 Ücretsiz</span>
+          <h1 data-t="title">Kapsam 3 Karbon Hesaplayıcı</h1>
+          <p data-t="subtitle">Turizm işletmeleri için tedarik zinciri emisyonları — satın alınan gıda, konaklama, ulaşım ve hizmetler (Kapsam 3.1 + 3.4)</p>
+        </div>
+        <div class="authbar no-print" id="authbar"></div>
+      </div>
+      <div class="trust no-print">
+        <span data-t="trust1">✔ GHG Protocol Kapsam 3</span>
+        <span data-t="trust2">✔ Otel · Acente · MICE</span>
+        <span data-t="trust3">✔ Gıda, konaklama, ulaşım, sarf</span>
+      </div>
+      <div class="btn-row no-print" id="intro-actions" style="margin:14px 0 0"></div>
+      <div class="ck-lang no-print" style="margin-top:12px">
+        <button id="lang-tr" class="active" onclick="setLang('tr')">TR</button>
+        <button id="lang-en" onclick="setLang('en')">EN</button>
+      </div>
+  </div>
+
+  <!-- KAPSAM 3 — TEDARİK ZİNCİRİ -->
+  <div class="ck-card hidden" id="screen-buyer">
+    <div class="steps no-print"><span class="on">1 · <span data-t="stepSuppliers">Tedarikçiler</span></span><span>2 · <span data-t="stepMethod">Yöntem & veri</span></span><span>3 · <span data-t="stepReport">Rapor</span></span></div>
+    <h2 data-t="buyerFormTitle">Tedarik zinciri emisyonlarınızı hesaplayın</h2>
+    <div class="tourhint" id="tour-hint"></div>
+    <p class="sub" data-t="buyerFormHint">Her tedarikçi için üç yöntemden birini seçin: tedarikçinin kendi raporu (alım payınıza tahsis edilir), malzeme miktarı × emisyon faktörü, ya da harcama bazlı tahmin. Araç Kapsam 3.1 + 3.4'ü hesaplar, veri kalitesini 1-5 puanlar ve kapsanmayan harcamayı tahminle tamamlar.</p>
+    <div class="grid2">
+      <div><label data-t="buyerCompany">Firmanızın adı <span class="fieldnote">(opsiyonel)</span></label><input type="text" id="b-company"></div>
+      <div><label data-t="yearLabel">Raporlama yılı</label><input type="text" id="b-year" placeholder="2026"></div>
+    </div>
+    <div class="grid2" style="margin-top:14px">
+      <div><label data-t="bTotalSpend">Yıllık toplam satın alma harcamanız (₺)</label><input type="number" min="0" step="any" id="b-totalspend" placeholder="0" oninput="updateLive()"><span class="fieldnote" data-t="bTotalSpendHint">Kapsama oranı ve eksik kısmın tahmini için kullanılır. Boş bırakabilirsiniz.</span></div>
+      <div><label data-t="bUsd">1 USD kaç ₺?</label><input type="number" min="1" step="any" id="b-usd" placeholder="49" oninput="refreshBCalc()"><span class="fieldnote" data-t="bUsdHint">Harcama bazlı faktörler USD cinsindendir; dönüşüm bu kurla yapılır.</span></div>
+    </div>
+    <div class="btools no-print">
+      <button class="btn sec sm" onclick="addSupplierRow()">+ <span data-t="addSupplier">Tedarikçi ekle</span></button>
+      <button class="btn ghost sm" onclick="downloadSupplierTemplate()">⤓ <span data-t="bTemplate">Excel şablonu indir</span></button>
+      <button class="btn ghost sm" onclick="document.getElementById('b-file').click()">⇪ <span data-t="bImport">Excel'den yükle</span></button>
+      <button class="btn ghost sm" onclick="togglePaste()">📋 <span data-t="bPaste">Yapıştır</span></button>
+      <button class="btn ghost sm" onclick="loadExample()">✦ <span data-t="bExample">Örnek otel verisi</span></button>
+      <button class="btn ghost sm" onclick="clearBRows()">🗑 <span data-t="clearBtn">Temizle</span></button>
+      <input type="file" id="b-file" accept=".xlsx,.xls,.csv" style="display:none" onchange="importSupplierFile(this)">
+    </div>
+    <div id="b-paste" class="hidden" style="margin-bottom:12px">
+      <label data-t="bPasteHint">Excel'den kopyaladığınız satırları buraya yapıştırın (sütun sırası şablondaki gibi olmalı; başlık satırı varsa atılır).</label>
+      <textarea id="b-paste-area" rows="5" style="width:100%;padding:11px 13px;border:1.5px solid var(--line);border-radius:11px;font-family:inherit;font-size:.9rem"></textarea>
+      <button class="btn sec sm no-print" style="margin-top:8px" onclick="importPaste()" data-t="bPasteBtn">Satırları ekle</button>
+    </div>
+    <div id="supplier-rows"></div>
+    <div class="livebox" id="b-live"></div>
+    <div class="btn-row no-print"><button class="btn" onclick="calcBuyer()" data-t="calcBtn">Raporu oluştur</button></div>
+    <p class="srctext" id="b-src"></p>
+  </div>
+
+  <!-- REPORTS LIST -->
+  <div class="ck-card hidden" id="screen-reports">
+    <button class="back no-print" onclick="show('screen-buyer')">‹ <span data-t="back">Geri</span></button>
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+      <h2 data-t="myReports">Önceki raporlarım</h2>
+      <button class="btn sec sm no-print" id="reports-xlsx" onclick="exportAllExcel()">⤓ <span data-t="exportAllXlsx">Tümünü Excel'e aktar</span></button>
+    </div>
+    <p class="sub" id="reports-empty" data-t="noReports">Henüz kayıtlı rapor yok.</p>
+    <div id="reports-list"></div>
+  </div>
+
+  <!-- RESULT -->
+  <div class="ck-card hidden" id="screen-result">
+    <button class="back no-print" onclick="goBackFromResult()">‹ <span data-t="editBtn">Girdileri düzenle</span></button>
+    <div class="steps no-print"><span>1 · <span data-t="stepSuppliers">Tedarikçiler</span></span><span>2 · <span data-t="stepMethod">Yöntem &amp; veri</span></span><span class="on">3 · <span data-t="stepReport">Rapor</span></span></div>
+    <h2 id="result-title" data-t="resultTitle">Karbon Ayak İzi Raporu</h2>
+    <p class="sub" id="result-meta"></p>
+    <div class="total"><div class="lbl" data-t="totalLbl">Toplam karbon ayak izi</div><div class="num" id="total-num">0</div><div class="unit" id="total-unit">kg CO₂e / yıl</div></div>
+    <div id="scopes-block">
+      <div class="result-grid">
+        <div class="donut-wrap" id="donut"></div>
+        <div class="scopes" id="scopes"></div>
+      </div>
+      <p class="sub" style="font-size:.8rem;margin-top:12px" id="scope2note"></p>
+    </div>
+    <div id="buyer-block" style="display:none"></div>
+    <h3 id="metrics-title" data-t="metricsTitle">Yoğunluk metrikleri</h3>
+    <div class="metrics" id="metrics"></div>
+    <div class="dq" id="dq-box"></div>
+    <h3 data-t="breakdownTitle">Kapsam bazında dağılım</h3>
+    <table class="rep"><tbody id="breakdown-body"></tbody></table>
+    <div class="equiv" id="equiv"></div>
+    <div class="methnote" id="meth-note"></div>
+    <div class="notice" id="factor-notice"></div>
+    <div class="btn-row no-print">
+      <button class="btn" id="pdf-btn" onclick="exportPDF()" data-t="pdfBtn">PDF rapor indir</button>
+      <button class="btn sec" id="save-btn" onclick="saveReport()" data-t="saveCloud">Bulut'a kaydet</button>
+      <button class="btn sec" onclick="exportExcel()" data-t="exportXlsx">Excel indir</button>
+      <button class="btn ghost" onclick="window.print()" data-t="printBtn">Yazdır</button>
+    </div>
+    <p class="sub no-print" id="save-hint" style="font-size:.82rem;margin-top:8px"></p>
+  </div>
+
+  <p class="sub" style="text-align:center;font-size:.8rem" data-t="footer">commitedevents.app · Turizm Kapsam 3 Modülü v4 · Ücretsiz</p>
+</div>
+
+<!-- LOGIN MODAL -->
+<div class="modal-bg hidden no-print" id="login-modal">
+  <div class="modal">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <h2 style="margin:0" data-t="loginTitle">Giriş / Kayıt</h2>
+      <button class="authbtn" onclick="closeLogin()">✕</button>
+    </div>
+    <p class="sub" data-t="loginHint">Hesaplamalarınızı kaydedip sonraki girişte görmek için giriş yapın.</p>
+    <button class="gbtn" onclick="loginGoogle()"><span style="font-weight:800;color:#4285F4">G</span> <span data-t="googleBtn">Google ile devam et</span></button>
+    <div class="tabbtns">
+      <button id="tab-login" class="on" onclick="authTab('login')" data-t="tabLogin">Giriş yap</button>
+      <button id="tab-register" onclick="authTab('register')" data-t="tabRegister">Kayıt ol</button>
+    </div>
+    <label data-t="emailLabel">E-posta</label><input type="email" id="auth-email" autocomplete="username">
+    <label data-t="passLabel">Şifre</label><input type="password" id="auth-pass" autocomplete="current-password">
+    <div class="btn-row"><button class="btn" style="width:100%" id="auth-submit" onclick="submitAuth()" data-t="tabLogin">Giriş yap</button></div>
+    <div class="err hidden" id="auth-err"></div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signInWithRedirect,
+  createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, setPersistence, browserLocalPersistence
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, collection, addDoc, getDocs, query, orderBy, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA908koeADcOLR2ROU6R7fARAqjC1v-inc",
+  authDomain: "kobi-karbon-hesaplama.firebaseapp.com",
+  projectId: "kobi-karbon-hesaplama",
+  storageBucket: "kobi-karbon-hesaplama.firebasestorage.app",
+  messagingSenderId: "148732593523",
+  appId: "1:148732593523:web:505abef73a48a29469b106"
+};
+const ADMIN_EMAILS = ["levent.koseoglu@commited.app","commitedapp@gmail.com","lkoseoglu@hotmail.com"];
+
+let fbApp, auth, db, currentUser=null;
+try{
+  fbApp = initializeApp(firebaseConfig);
+  auth = getAuth(fbApp);
+  db = getFirestore(fbApp);
+  setPersistence(auth, browserLocalPersistence).catch(()=>{});
+  onAuthStateChanged(auth, u=>{ currentUser=u; renderAuthBar(); renderIntroActions(); updateSaveUi(); });
+}catch(e){ console.warn("Firebase init hata:", e); }
+
+/* ---- VARSAYILAN AYARLAR — config.default.json ile birebir aynı tutun (tools/inject-config.py) ---- */
+const DEFAULT_CONFIG = {
+ "meta": {
+  "version": "4.0",
+  "updated": "2026-10-19",
+  "methodology": {
+   "tr": "GHG Protocol Kurumsal Standardı ve Kapsam 3 Standardı temel alınmıştır; turizm işletmeleri (otel, tatil köyü, acente, tur operatörü, MICE organizatörü) için uyarlanmıştır. Kapsam 3.1 (satın alınan mal ve hizmetler) hibrit yöntemle hesaplanır: tedarikçiye özgü veri (tahsisatlı), faaliyet verisi × emisyon faktörü (gıda, konaklama, ulaşım, sarf malzemesi) veya harcama bazlı (EEIO) tahmin. Kapsam 3.4 tedarik nakliyesini kapsar. Her satır 1-5 veri kalitesi puanı ve belirsizlik aralığı taşır; kapsanmayan satın alma harcaması portföy yoğunluğuyla ekstrapole edilir. Otelin kendi Kapsam 1-2 ayak izi ve HCMI metrikleri Turizm Karbon Hesaplayıcısı'nda hesaplanır.",
+   "en": "Based on the GHG Protocol Corporate and Scope 3 Standards, adapted for tourism businesses (hotels, resorts, travel agencies, tour operators, MICE organisers). Scope 3.1 uses a hybrid approach: supplier-specific data (allocated), activity data × emission factor (food, accommodation, transport, consumables) or spend-based (EEIO) estimation. Scope 3.4 covers inbound transport. Each line carries a 1-5 data quality score and uncertainty range; uncovered procurement spend is extrapolated using portfolio intensity. The hotel's own Scope 1-2 footprint and HCMI metrics are calculated in the Tourism Carbon Calculator."
+  },
+  "notice": {
+   "tr": "Emisyon faktörleri VARSAYILAN referans değerlerdir (CHSB 2026, DEFRA 2025, Poore & Nemecek 2018, EPA SEF v1.3). Resmi raporlama öncesi güncel değerlerle doğrulayın; tedarikçinin kendi verisi varsa onu kullanın. Bu araç tam LCA değil, tarama ve önceliklendirme seviyesinde tahmin sağlar.",
+   "en": "Emission factors are DEFAULT reference values (CHSB 2026, DEFRA 2025, Poore & Nemecek 2018, EPA SEF v1.3). Verify before official reporting and use supplier-specific data where available. This is a screening-level estimate, not a full LCA."
+  },
+  "factorSources": {
+   "stay_*": "CHSB 2026 Türkiye ortalaması (Cornell, 2024 verisi) — HCMI oda-gece",
+   "flight_*": "DEFRA 2025, radyatif zorlama (RF) dahil",
+   "coach_pkm, transfer_vkm": "DEFRA 2025",
+   "food_*": "Poore & Nemecek (2018), Our World in Data — küresel ortalama, tedarik zinciri dahil — yazılım ekibi: OWID 'ghg-per-kg-poore' veri setiyle karşılaştırıp doğrulayın",
+   "spendFactors": "EPA Supply Chain GHG Emission Factors v1.3 (2022 USD, alıcı fiyatı) — önceki sürümden aynen taşındı"
+  }
+ },
+ "profile": {
+  "fields": [
+   {
+    "id": "employees",
+    "name": {
+     "tr": "Çalışan sayısı (TZE)",
+     "en": "Employees (FTE)"
+    },
+    "type": "number",
+    "hint": {
+     "tr": "Yoğunluk için",
+     "en": "For intensity"
+    }
+   },
+   {
+    "id": "revenue",
+    "name": {
+     "tr": "Yıllık ciro",
+     "en": "Annual revenue"
+    },
+    "type": "number",
+    "unit": {
+     "tr": "₺/yıl",
+     "en": "₺/yr"
+    },
+    "hint": {
+     "tr": "Yoğunluk için",
+     "en": "For intensity"
+    }
+   },
+   {
+    "id": "output",
+    "name": {
+     "tr": "Yıllık üretim/çıktı (ops.)",
+     "en": "Annual output (opt.)"
+    },
+    "type": "number",
+    "unit": {
+     "tr": "birim/yıl",
+     "en": "units/yr"
+    },
+    "hint": {
+     "tr": "ör. kg kumaş, oda-gece",
+     "en": "e.g. kg fabric"
+    }
+   },
+   {
+    "id": "market",
+    "name": {
+     "tr": "Pazar",
+     "en": "Market"
+    },
+    "type": "select",
+    "options": [
+     {
+      "value": "domestic",
+      "label": {
+       "tr": "Yurtiçi",
+       "en": "Domestic"
+      }
+     },
+     {
+      "value": "export",
+      "label": {
+       "tr": "İhracat ağırlıklı",
+       "en": "Export-focused"
+      }
+     },
+     {
+      "value": "both",
+      "label": {
+       "tr": "Karma",
+       "en": "Mixed"
+      }
+     }
+    ]
+   }
+  ],
+  "sizeClasses": [
+   {
+    "max": 10,
+    "label": {
+     "tr": "Mikro (<10)",
+     "en": "Micro (<10)"
+    }
+   },
+   {
+    "max": 50,
+    "label": {
+     "tr": "Küçük (10-50)",
+     "en": "Small (10-50)"
+    }
+   },
+   {
+    "max": 500,
+    "label": {
+     "tr": "Orta (50-500)",
+     "en": "Medium (50-500)"
+    }
+   },
+   {
+    "max": 100000000,
+    "label": {
+     "tr": "Büyük (500+)",
+     "en": "Large (500+)"
+    }
+   }
+  ]
+ },
+ "intensity": {
+  "perEmployee": true,
+  "perRevenue": true,
+  "revenueBase": 1000000,
+  "revenueBaseLabel": {
+   "tr": "milyon ₺",
+   "en": "million ₺"
+  },
+  "perOutput": true
+ },
+ "dataQuality": {
+  "enabled": true
+ },
+ "factors": {
+  "stay_lux_night": {
+   "name": {
+    "tr": "Konaklama — lüks otel",
+    "en": "Accommodation — luxury hotel"
+   },
+   "value": 59.6,
+   "unit": "kgCO2e/oda-gece",
+   "scope": 3,
+   "cat": "3.1",
+   "src": "CHSB 2026 Türkiye ortalaması (Cornell, 2024 verisi) — HCMI oda-gece"
+  },
+  "stay_5_night": {
+   "name": {
+    "tr": "Konaklama — 5 yıldız",
+    "en": "Accommodation — 5-star"
+   },
+   "value": 48.9,
+   "unit": "kgCO2e/oda-gece",
+   "scope": 3,
+   "cat": "3.1",
+   "src": "CHSB 2026 Türkiye ortalaması (Cornell, 2024 verisi) — HCMI oda-gece"
+  },
+  "stay_4_night": {
+   "name": {
+    "tr": "Konaklama — 4 yıldız",
+    "en": "Accommodation — 4-star"
+   },
+   "value": 37.9,
+   "unit": "kgCO2e/oda-gece",
+   "scope": 3,
+   "cat": "3.1",
+   "src": "CHSB 2026 Türkiye ortalaması (Cornell, 2024 verisi) — HCMI oda-gece"
+  },
+  "stay_3_night": {
+   "name": {
+    "tr": "Konaklama — 3 yıldız",
+    "en": "Accommodation — 3-star"
+   },
+   "value": 25.4,
+   "unit": "kgCO2e/oda-gece",
+   "scope": 3,
+   "cat": "3.1",
+   "src": "CHSB 2026 Türkiye ortalaması (Cornell, 2024 verisi) — HCMI oda-gece"
+  },
+  "stay_apart_night": {
+   "name": {
+    "tr": "Konaklama — apart / pansiyon",
+    "en": "Accommodation — apart / guesthouse"
+   },
+   "value": 20.2,
+   "unit": "kgCO2e/oda-gece",
+   "scope": 3,
+   "cat": "3.1",
+   "src": "CHSB 2026 Türkiye ortalaması (Cornell, 2024 verisi) — HCMI oda-gece"
+  },
+  "flight_dom_pkm": {
+   "name": {
+    "tr": "Uçuş — iç hat",
+    "en": "Flight — domestic"
+   },
+   "value": 0.246,
+   "unit": "kgCO2e/yolcu·km",
+   "scope": 3,
+   "cat": "3.1",
+   "src": "DEFRA 2025, radyatif zorlama (RF) dahil"
+  },
+  "flight_short_pkm": {
+   "name": {
+    "tr": "Uçuş — kısa dış hat (<3.700 km)",
+    "en": "Flight — short-haul international"
+   },
+   "value": 0.154,
+   "unit": "kgCO2e/yolcu·km",
+   "scope": 3,
+   "cat": "3.1",
+   "src": "DEFRA 2025, radyatif zorlama (RF) dahil"
+  },
+  "flight_long_pkm": {
+   "name": {
+    "tr": "Uçuş — uzun dış hat",
+    "en": "Flight — long-haul"
+   },
+   "value": 0.191,
+   "unit": "kgCO2e/yolcu·km",
+   "scope": 3,
+   "cat": "3.1",
+   "src": "DEFRA 2025, radyatif zorlama (RF) dahil"
+  },
+  "coach_pkm": {
+   "name": {
+    "tr": "Otobüs / karayolu tur",
+    "en": "Coach / road tour"
+   },
+   "value": 0.027,
+   "unit": "kgCO2e/yolcu·km",
+   "scope": 3,
+   "cat": "3.1",
+   "src": "DEFRA 2025"
+  },
+  "transfer_vkm": {
+   "name": {
+    "tr": "Transfer aracı (minibüs/VIP)",
+    "en": "Transfer vehicle"
+   },
+   "value": 0.17,
+   "unit": "kgCO2e/araç·km",
+   "scope": 3,
+   "cat": "3.1",
+   "src": "DEFRA 2025"
+  },
+  "food_beef_kg": {
+   "name": {
+    "tr": "Sığır eti",
+    "en": "Beef"
+   },
+   "value": 99.48,
+   "unit": "kgCO2e/kg",
+   "scope": 3,
+   "cat": "3.1",
+   "src": "Poore & Nemecek (2018), Our World in Data — küresel ortalama, tedarik zinciri dahil"
+  },
+  "food_lamb_kg": {
+   "name": {
+    "tr": "Kuzu / koyun eti",
+    "en": "Lamb & mutton"
+   },
+   "value": 39.72,
+   "unit": "kgCO2e/kg",
+   "scope": 3,
+   "cat": "3.1",
+   "src": "Poore & Nemecek (2018), Our World in Data — küresel ortalama, tedarik zinciri dahil"
+  },
+  "food_chicken_kg": {
+   "name": {
+    "tr": "Tavuk / hindi",
+    "en": "Poultry"
+   },
+   "value": 9.87,
+   "unit": "kgCO2e/kg",
+   "scope": 3,
+   "cat": "3.1",
+   "src": "Poore & Nemecek (2018), Our World in Data — küresel ortalama, tedarik zinciri dahil"
+  },
+  "food_fish_kg": {
+   "name": {
+    "tr": "Balık (çiftlik)",
+    "en": "Fish (farmed)"
+   },
+   "value": 13.63,
+   "unit": "kgCO2e/kg",
+   "scope": 3,
+   "cat": "3.1",
+   "src": "Poore & Nemecek (2018), Our World in Data — küresel ortalama, tedarik zinciri dahil"
+  },
+  "food_prawn_kg": {
+   "name": {
+    "tr": "Karides (çiftlik)",
+    "en": "Prawns (farmed)"
+   },
+   "value": 26.87,
+   "unit": "kgCO2e/kg",
+   "scope": 3,
+   "cat": "3.1",
+   "src": "Poore & Nemecek (2018), Our World in Data — küresel ortalama, tedarik zinciri dahil"
+  },
+  "food_cheese_kg": {
+   "name": {
+    "tr": "Peynir",
+    "en": "Cheese"
+   },
+   "value": 23.88,
+   "unit": "kgCO2e/kg",
+   "scope": 3,
+   "cat": "3.1",
+   "src": "Poore & Nemecek (2018), Our World in Data — küresel ortalama, tedarik zinciri dahil"
+  },
+  "food_milk_kg": {
+   "name": {
+    "tr": "Süt ve yoğurt (1 kg ≈ 1 L)",
+    "en": "Milk & yoghurt"
+   },
+   "value": 3.15,
+   "unit": "kgCO2e/kg",
+   "scope": 3,
+   "cat": "3.1",
+   "src": "Poore & Nemecek (2018), Our World in Data — küresel ortalama, tedarik zinciri dahil"
+  },
+  "food_eggs_kg": {
+   "name": {
+    "tr": "Yumurta",
+    "en": "Eggs"
+   },
+   "value": 4.67,
+   "unit": "kgCO2e/kg",
+   "scope": 3,
+   "cat": "3.1",
+   "src": "Poore & Nemecek (2018), Our World in Data — küresel ortalama, tedarik zinciri dahil"
+  },
+  "food_rice_kg": {
+   "name": {
+    "tr": "Pirinç",
+    "en": "Rice"
+   },
+   "value": 4.45,
+   "unit": "kgCO2e/kg",
+   "scope": 3,
+   "cat": "3.1",
+   "src": "Poore & Nemecek (2018), Our World in Data — küresel ortalama, tedarik zinciri dahil"
+  },
+  "food_wheat_kg": {
+   "name": {
+    "tr": "Un, ekmek, makarna",
+    "en": "Flour, bread, pasta"
+   },
+   "value": 1.57,
+   "unit": "kgCO2e/kg",
+   "scope": 3,
+   "cat": "3.1",
+   "src": "Poore & Nemecek (2018), Our World in Data — küresel ortalama, tedarik zinciri dahil"
+  },
+  "food_oliveoil_kg": {
+   "name": {
+    "tr": "Zeytinyağı",
+    "en": "Olive oil"
+   },
+   "value": 5.42,
+   "unit": "kgCO2e/kg",
+   "scope": 3,
+   "cat": "3.1",
+   "src": "Poore & Nemecek (2018), Our World in Data — küresel ortalama, tedarik zinciri dahil"
+  },
+  "food_tomato_kg": {
+   "name": {
+    "tr": "Domates",
+    "en": "Tomatoes"
+   },
+   "value": 2.09,
+   "unit": "kgCO2e/kg",
+   "scope": 3,
+   "cat": "3.1",
+   "src": "Poore & Nemecek (2018), Our World in Data — küresel ortalama, tedarik zinciri dahil"
+  },
+  "food_veg_kg": {
+   "name": {
+    "tr": "Diğer sebzeler",
+    "en": "Other vegetables"
+   },
+   "value": 0.53,
+   "unit": "kgCO2e/kg",
+   "scope": 3,
+   "cat": "3.1",
+   "src": "Poore & Nemecek (2018), Our World in Data — küresel ortalama, tedarik zinciri dahil"
+  },
+  "food_potato_kg": {
+   "name": {
+    "tr": "Patates",
+    "en": "Potatoes"
+   },
+   "value": 0.46,
+   "unit": "kgCO2e/kg",
+   "scope": 3,
+   "cat": "3.1",
+   "src": "Poore & Nemecek (2018), Our World in Data — küresel ortalama, tedarik zinciri dahil"
+  },
+  "food_fruit_kg": {
+   "name": {
+    "tr": "Meyve",
+    "en": "Fruit"
+   },
+   "value": 1.05,
+   "unit": "kgCO2e/kg",
+   "scope": 3,
+   "cat": "3.1",
+   "src": "Poore & Nemecek (2018), Our World in Data — küresel ortalama, tedarik zinciri dahil"
+  },
+  "food_citrus_kg": {
+   "name": {
+    "tr": "Narenciye",
+    "en": "Citrus"
+   },
+   "value": 0.39,
+   "unit": "kgCO2e/kg",
+   "scope": 3,
+   "cat": "3.1",
+   "src": "Poore & Nemecek (2018), Our World in Data — küresel ortalama, tedarik zinciri dahil"
+  },
+  "food_coffee_kg": {
+   "name": {
+    "tr": "Kahve",
+    "en": "Coffee"
+   },
+   "value": 28.53,
+   "unit": "kgCO2e/kg",
+   "scope": 3,
+   "cat": "3.1",
+   "src": "Poore & Nemecek (2018), Our World in Data — küresel ortalama, tedarik zinciri dahil"
+  },
+  "food_choc_kg": {
+   "name": {
+    "tr": "Çikolata / kakao",
+    "en": "Chocolate / cocoa"
+   },
+   "value": 46.65,
+   "unit": "kgCO2e/kg",
+   "scope": 3,
+   "cat": "3.1",
+   "src": "Poore & Nemecek (2018), Our World in Data — küresel ortalama, tedarik zinciri dahil"
+  },
+  "food_wine_kg": {
+   "name": {
+    "tr": "Şarap (1 kg ≈ 1 L)",
+    "en": "Wine"
+   },
+   "value": 1.79,
+   "unit": "kgCO2e/kg",
+   "scope": 3,
+   "cat": "3.1",
+   "src": "Poore & Nemecek (2018), Our World in Data — küresel ortalama, tedarik zinciri dahil"
+  },
+  "meal_unit": {
+   "name": {
+    "tr": "Dışarıdan alınan öğün (catering)",
+    "en": "Outsourced meal (catering)"
+   },
+   "value": 1.9,
+   "unit": "kgCO2e/öğün",
+   "scope": 3,
+   "cat": "3.1"
+  },
+  "laundry_kg": {
+   "name": {
+    "tr": "Dış çamaşırhane hizmeti (kuru kg)",
+    "en": "Outsourced laundry (dry kg)"
+   },
+   "value": 0.65,
+   "unit": "kgCO2e/kg",
+   "scope": 3,
+   "cat": "3.1",
+   "src": "HCMI v2.0 dış çamaşırhane tahmin yaklaşımı (Turizm hesaplayıcısı ile aynı)"
+  },
+  "linen_cotton_kg": {
+   "name": {
+    "tr": "Nevresim ve havlu (pamuklu)",
+    "en": "Bed linen & towels (cotton)"
+   },
+   "value": 16.5,
+   "unit": "kgCO2e/kg",
+   "scope": 3,
+   "cat": "3.1"
+  },
+  "chemicals_kg": {
+   "name": {
+    "tr": "Kimyasallar (temizlik, havuz, boya)",
+    "en": "Chemicals (cleaning, pool, paint)"
+   },
+   "value": 3.4,
+   "unit": "kgCO2e/kg",
+   "scope": 3,
+   "cat": "3.1"
+  },
+  "cardboard_kg": {
+   "name": {
+    "tr": "Karton ambalaj",
+    "en": "Cardboard packaging"
+   },
+   "value": 0.94,
+   "unit": "kgCO2e/kg",
+   "scope": 3,
+   "cat": "3.1"
+  },
+  "paper_kg": {
+   "name": {
+    "tr": "Kağıt (birincil)",
+    "en": "Paper (virgin)"
+   },
+   "value": 1.1,
+   "unit": "kgCO2e/kg",
+   "scope": 3,
+   "cat": "3.1"
+  },
+  "paper_recycled_kg": {
+   "name": {
+    "tr": "Kağıt (geri dönüşümlü)",
+    "en": "Paper (recycled)"
+   },
+   "value": 0.7,
+   "unit": "kgCO2e/kg",
+   "scope": 3,
+   "cat": "3.1"
+  },
+  "plastic_kg": {
+   "name": {
+    "tr": "Plastik ambalaj",
+    "en": "Plastic packaging"
+   },
+   "value": 2.7,
+   "unit": "kgCO2e/kg",
+   "scope": 3,
+   "cat": "3.1"
+  },
+  "plastic_recycled_kg": {
+   "name": {
+    "tr": "Plastik (geri dönüşümlü)",
+    "en": "Plastic (recycled)"
+   },
+   "value": 1.0,
+   "unit": "kgCO2e/kg",
+   "scope": 3,
+   "cat": "3.1"
+  },
+  "glass_kg": {
+   "name": {
+    "tr": "Cam",
+    "en": "Glass"
+   },
+   "value": 0.85,
+   "unit": "kgCO2e/kg",
+   "scope": 3,
+   "cat": "3.1"
+  },
+  "wood_kg": {
+   "name": {
+    "tr": "Ahşap / mobilya",
+    "en": "Wood / furniture"
+   },
+   "value": 0.45,
+   "unit": "kgCO2e/kg",
+   "scope": 3,
+   "cat": "3.1"
+  },
+  "freight_road_tkm": {
+   "name": {
+    "tr": "Karayolu yük taşıma",
+    "en": "Road freight"
+   },
+   "value": 0.107,
+   "unit": "kgCO2e/ton·km",
+   "scope": 3,
+   "cat": "3.4"
+  },
+  "freight_rail_tkm": {
+   "name": {
+    "tr": "Demiryolu yük taşıma",
+    "en": "Rail freight"
+   },
+   "value": 0.028,
+   "unit": "kgCO2e/ton·km",
+   "scope": 3,
+   "cat": "3.4"
+  },
+  "freight_sea_tkm": {
+   "name": {
+    "tr": "Deniz yük taşıma",
+    "en": "Sea freight"
+   },
+   "value": 0.016,
+   "unit": "kgCO2e/ton·km",
+   "scope": 3,
+   "cat": "3.4"
+  },
+  "freight_air_tkm": {
+   "name": {
+    "tr": "Hava kargo",
+    "en": "Air freight"
+   },
+   "value": 0.8,
+   "unit": "kgCO2e/ton·km",
+   "scope": 3,
+   "cat": "3.4"
+  }
+ },
+ "sectors": {},
+ "scope3cats": {
+  "3.1": {
+   "tr": "Satın alınan mal ve hizmetler",
+   "en": "Purchased goods & services"
+  },
+  "3.4": {
+   "tr": "Yukarı yön taşıma ve dağıtım",
+   "en": "Upstream transport"
+  }
+ },
+ "benchmarks": {
+  "tree_kg_per_year": 25,
+  "car_km_equiv_factor": 0.17
+ },
+ "spendBase": {
+  "currency": "TRY",
+  "usdRate": 49.0,
+  "source": {
+   "tr": "Harcama bazlı faktörler EPA Supply Chain GHG Emission Factors v1.3 (2022 USD, alıcı fiyatı) referans alınarak türetilmiştir.",
+   "en": "Spend-based factors derived from EPA Supply Chain GHG Emission Factors v1.3 (2022 USD, purchaser price)."
+  },
+  "note": {
+   "tr": "Harcama bazlı yöntem tarama (screening) amaçlıdır: fiyat farklılıkları ve kur etkisi nedeniyle belirsizliği yüksektir. Önemli tedarikçiler için birincil veriye geçin.",
+   "en": "The spend-based method is for screening only: price and FX differences make it highly uncertain. Move key suppliers to primary data."
+  }
+ },
+ "spendFactors": {
+  "food": {
+   "name": {
+    "tr": "Gıda ürünleri (işlenmiş, kuru gıda)",
+    "en": "Food products (processed)"
+   },
+   "value": 0.45,
+   "unit": "kgCO2e/USD"
+  },
+  "agriculture": {
+   "name": {
+    "tr": "Taze ürün: et, süt, sebze-meyve",
+    "en": "Fresh produce: meat, dairy, fruit & veg"
+   },
+   "value": 0.9,
+   "unit": "kgCO2e/USD"
+  },
+  "catering": {
+   "name": {
+    "tr": "Catering ve yiyecek-içecek hizmeti",
+    "en": "Catering & food services"
+   },
+   "value": 0.45,
+   "unit": "kgCO2e/USD"
+  },
+  "hotel": {
+   "name": {
+    "tr": "Konaklama (satın alınan oda-gece)",
+    "en": "Accommodation (purchased room-nights)"
+   },
+   "value": 0.3,
+   "unit": "kgCO2e/USD"
+  },
+  "linen": {
+   "name": {
+    "tr": "Nevresim, havlu, perde, üniforma",
+    "en": "Linen, towels, curtains, uniforms"
+   },
+   "value": 0.45,
+   "unit": "kgCO2e/USD"
+  },
+  "cleaning": {
+   "name": {
+    "tr": "Temizlik, kat hizmetleri, tesis yönetimi",
+    "en": "Cleaning, housekeeping & facility mgmt"
+   },
+   "value": 0.2,
+   "unit": "kgCO2e/USD"
+  },
+  "chemicals": {
+   "name": {
+    "tr": "Kimyasallar (temizlik, havuz, boya)",
+    "en": "Chemicals (cleaning, pool, paint)"
+   },
+   "value": 0.85,
+   "unit": "kgCO2e/USD"
+  },
+  "paper": {
+   "name": {
+    "tr": "Kağıt, karton ve ambalaj",
+    "en": "Paper, board & packaging"
+   },
+   "value": 0.55,
+   "unit": "kgCO2e/USD"
+  },
+  "plastics": {
+   "name": {
+    "tr": "Plastik ürünler ve tek kullanımlıklar",
+    "en": "Plastic products & disposables"
+   },
+   "value": 0.6,
+   "unit": "kgCO2e/USD"
+  },
+  "glass": {
+   "name": {
+    "tr": "Cam, porselen ve seramik",
+    "en": "Glass, porcelain & ceramics"
+   },
+   "value": 0.9,
+   "unit": "kgCO2e/USD"
+  },
+  "wood": {
+   "name": {
+    "tr": "Mobilya ve dekorasyon",
+    "en": "Furniture & décor"
+   },
+   "value": 0.45,
+   "unit": "kgCO2e/USD"
+  },
+  "electronics": {
+   "name": {
+    "tr": "Elektronik, TV, bilgisayar",
+    "en": "Electronics, TVs & computers"
+   },
+   "value": 0.35,
+   "unit": "kgCO2e/USD"
+  },
+  "machinery": {
+   "name": {
+    "tr": "Mutfak, çamaşırhane ve teknik ekipman",
+    "en": "Kitchen, laundry & technical equipment"
+   },
+   "value": 0.4,
+   "unit": "kgCO2e/USD"
+  },
+  "construction": {
+   "name": {
+    "tr": "İnşaat ve tadilat",
+    "en": "Construction & renovation"
+   },
+   "value": 0.35,
+   "unit": "kgCO2e/USD"
+  },
+  "maintenance": {
+   "name": {
+    "tr": "Bakım, onarım, teknik servis",
+    "en": "Maintenance & repair"
+   },
+   "value": 0.25,
+   "unit": "kgCO2e/USD"
+  },
+  "vehicles": {
+   "name": {
+    "tr": "Araç ve araç parçaları (transfer filosu)",
+    "en": "Vehicles & parts (transfer fleet)"
+   },
+   "value": 0.35,
+   "unit": "kgCO2e/USD"
+  },
+  "fuel": {
+   "name": {
+    "tr": "Akaryakıt ve petrol ürünleri",
+    "en": "Fuel & petroleum products"
+   },
+   "value": 1.85,
+   "unit": "kgCO2e/USD"
+  },
+  "freight_road": {
+   "name": {
+    "tr": "Karayolu taşıma hizmeti",
+    "en": "Road freight services"
+   },
+   "value": 1.0,
+   "unit": "kgCO2e/USD"
+  },
+  "freight_air": {
+   "name": {
+    "tr": "Hava kargo hizmeti",
+    "en": "Air freight services"
+   },
+   "value": 1.3,
+   "unit": "kgCO2e/USD"
+  },
+  "warehouse": {
+   "name": {
+    "tr": "Depolama ve lojistik hizmeti",
+    "en": "Warehousing & logistics services"
+   },
+   "value": 0.4,
+   "unit": "kgCO2e/USD"
+  },
+  "marketing": {
+   "name": {
+    "tr": "Reklam, ajans, basım, etkinlik materyali",
+    "en": "Advertising, agency, print & event material"
+   },
+   "value": 0.15,
+   "unit": "kgCO2e/USD"
+  },
+  "it_services": {
+   "name": {
+    "tr": "Yazılım, rezervasyon sistemi, bulut",
+    "en": "Software, booking systems & cloud"
+   },
+   "value": 0.11,
+   "unit": "kgCO2e/USD"
+  },
+  "consulting": {
+   "name": {
+    "tr": "Danışmanlık ve profesyonel hizmetler",
+    "en": "Consulting & professional services"
+   },
+   "value": 0.12,
+   "unit": "kgCO2e/USD"
+  },
+  "legal": {
+   "name": {
+    "tr": "Hukuk, mali müşavirlik, denetim",
+    "en": "Legal, accounting & audit"
+   },
+   "value": 0.09,
+   "unit": "kgCO2e/USD"
+  },
+  "finance": {
+   "name": {
+    "tr": "Finans ve sigorta hizmetleri",
+    "en": "Financial & insurance services"
+   },
+   "value": 0.08,
+   "unit": "kgCO2e/USD"
+  },
+  "office": {
+   "name": {
+    "tr": "Ofis malzemesi ve kırtasiye",
+    "en": "Office supplies & stationery"
+   },
+   "value": 0.45,
+   "unit": "kgCO2e/USD"
+  },
+  "other": {
+   "name": {
+    "tr": "Diğer / sınıflandırılmamış",
+    "en": "Other / unclassified"
+   },
+   "value": 0.45,
+   "unit": "kgCO2e/USD"
+  }
+ },
+ "purchaseMaterials": [
+  "stay_lux_night",
+  "stay_5_night",
+  "stay_4_night",
+  "stay_3_night",
+  "stay_apart_night",
+  "flight_dom_pkm",
+  "flight_short_pkm",
+  "flight_long_pkm",
+  "coach_pkm",
+  "transfer_vkm",
+  "food_beef_kg",
+  "food_lamb_kg",
+  "food_chicken_kg",
+  "food_fish_kg",
+  "food_prawn_kg",
+  "food_cheese_kg",
+  "food_milk_kg",
+  "food_eggs_kg",
+  "food_rice_kg",
+  "food_wheat_kg",
+  "food_oliveoil_kg",
+  "food_tomato_kg",
+  "food_veg_kg",
+  "food_potato_kg",
+  "food_fruit_kg",
+  "food_citrus_kg",
+  "food_coffee_kg",
+  "food_choc_kg",
+  "food_wine_kg",
+  "meal_unit",
+  "laundry_kg",
+  "linen_cotton_kg",
+  "chemicals_kg",
+  "cardboard_kg",
+  "paper_kg",
+  "paper_recycled_kg",
+  "plastic_kg",
+  "plastic_recycled_kg",
+  "glass_kg",
+  "wood_kg"
+ ],
+ "freightModes": [
+  "freight_road_tkm",
+  "freight_rail_tkm",
+  "freight_sea_tkm",
+  "freight_air_tkm"
+ ],
+ "dqScale": [
+  {
+   "score": 1,
+   "unc": 10,
+   "label": {
+    "tr": "Doğrulanmış tedarikçi verisi",
+    "en": "Verified supplier data"
+   }
+  },
+  {
+   "score": 2,
+   "unc": 20,
+   "label": {
+    "tr": "Tedarikçi beyanı (doğrulanmamış)",
+    "en": "Supplier-reported (unverified)"
+   }
+  },
+  {
+   "score": 3,
+   "unc": 35,
+   "label": {
+    "tr": "Malzeme miktarı × sektör faktörü",
+    "en": "Activity data × average factor"
+   }
+  },
+  {
+   "score": 4,
+   "unc": 50,
+   "label": {
+    "tr": "Vekil (proxy) faktör",
+    "en": "Proxy factor"
+   }
+  },
+  {
+   "score": 5,
+   "unc": 80,
+   "label": {
+    "tr": "Harcama bazlı tahmin (EEIO)",
+    "en": "Spend-based estimate (EEIO)"
+   }
+  }
+ ],
+ "buyerScenario": {
+  "greenElecShare": 0.25,
+  "recycledCutPct": 0.35,
+  "topN": 5,
+  "modeShiftFrom": "freight_road_tkm",
+  "modeShiftTo": "freight_rail_tkm",
+  "recycledPairs": {
+   "food_beef_kg": "food_chicken_kg",
+   "food_lamb_kg": "food_chicken_kg",
+   "food_prawn_kg": "food_fish_kg",
+   "paper_kg": "paper_recycled_kg",
+   "cardboard_kg": "paper_recycled_kg",
+   "plastic_kg": "plastic_recycled_kg",
+   "flight_dom_pkm": "coach_pkm"
+  },
+  "outlierMultiple": 3
+ }
+};
+
+
+const UI = {
+  freeBadge:{tr:"🆓 %100 Ücretsiz",en:"🆓 100% Free"},
+  trust1:{tr:"✔ GHG Protocol Kapsam 3",en:"✔ GHG Protocol Scope 3"},trust2:{tr:"✔ Otel · Acente · MICE",en:"✔ Hotel · Agency · MICE"},trust3:{tr:"✔ Gıda, konaklama, ulaşım, sarf",en:"✔ Food, stays, transport, supplies"},
+  totalLbl:{tr:"Toplam karbon ayak izi",en:"Total carbon footprint"},
+  title:{tr:"Kapsam 3 Karbon Hesaplayıcı",en:"Scope 3 Carbon Calculator"},
+  subtitle:{tr:"Turizm işletmeleri için tedarik zinciri emisyonları — satın alınan gıda, konaklama, ulaşım ve hizmetler (Kapsam 3.1 + 3.4)",en:"Supply-chain emissions for tourism businesses — purchased food, accommodation, transport and services (Scope 3.1 + 3.4)"},
+  footer:{tr:"commitedevents.app · Turizm Kapsam 3 Modülü v4 · Ücretsiz",en:"commitedevents.app · Tourism Scope 3 Module v4 · Free"},
+  chooseMode:{tr:"Ne yapmak istiyorsunuz?",en:"What would you like to do?"},
+  supplierTitle:{tr:"Tedarikçiyim — kendi ayak izimi hesaplayacağım",en:"I'm a supplier — calculate my footprint"},
+  supplierDesc:{tr:"Ana firmalara üretim yapan KOBİ. Kapsam 1-2-3 emisyonlarını ölçer, yoğunlukla birlikte müşterine sunabileceğin bir rapor üretir.",en:"An SME producing for larger customers. Scope 1-2-3 with intensity, ready to share."},
+  buyerTitle:{tr:"Alıcıyım — tedarikçilerimin emisyonlarını topluyorum",en:"I'm a buyer — collecting supplier emissions"},
+  buyerDesc:{tr:"Mal alan büyük firma. Tedarikçi raporlarını girerek Kapsam 3.1 toplamını ölçer.",en:"A larger buyer. Measures Scope 3.1 from supplier reports."},
+  chooseSector:{tr:"Sektörünüzü seçin",en:"Choose your sector"},
+  back:{tr:"Geri",en:"Back"},stepSector:{tr:"Sektör",en:"Sector"},stepData:{tr:"Veri",en:"Data"},stepReport:{tr:"Rapor",en:"Report"},
+  profileTitle:{tr:"Firma profili",en:"Company profile"},profileHint:{tr:"Yoğunluk metrikleri için kullanılır.",en:"Used for intensity metrics."},
+  dataTitle:{tr:"Yıllık faaliyet verileri",en:"Annual activity data"},
+  formHint:{tr:"Yıllık tüketim değerlerinizi girin. Bilmediğiniz alanları boş bırakabilirsiniz. Her satırda verinin ölçüm mü tahmin mi olduğunu işaretleyebilirsiniz.",en:"Enter annual consumption. Leave unknown fields blank. Flag each row as measured or estimated."},
+  companyName:{tr:"Firma adı",en:"Company name"},yearLabel:{tr:"Raporlama yılı",en:"Reporting year"},
+  calcBtn:{tr:"Raporu oluştur",en:"Generate report"},clearBtn:{tr:"Temizle",en:"Clear"},
+  buyerFormTitle:{tr:"Tedarikçi emisyonlarını girin",en:"Enter supplier emissions"},
+  buyerFormHint:{tr:"Her tedarikçiden aldığınız raporun toplam emisyonunu (kg CO₂e) girin.",en:"Enter each supplier's total reported emissions (kg CO₂e)."},
+  buyerCompany:{tr:"Firmanızın adı",en:"Your company name"},supName:{tr:"Tedarikçi adı",en:"Supplier name"},supEmis:{tr:"Emisyon (kg CO₂e)",en:"Emissions (kg CO₂e)"},addSupplier:{tr:"Tedarikçi ekle",en:"Add supplier"},
+  resultTitle:{tr:"Karbon Ayak İzi Raporu",en:"Carbon Footprint Report"},metricsTitle:{tr:"Yoğunluk metrikleri",en:"Intensity metrics"},breakdownTitle:{tr:"Kapsam bazında dağılım",en:"Breakdown by scope"},
+  printBtn:{tr:"Yazdır",en:"Print"},exportXlsx:{tr:"Excel indir",en:"Download Excel"},exportAllXlsx:{tr:"Tümünü Excel'e aktar",en:"Export all to Excel"},editBtn:{tr:"Girdileri düzenle",en:"Edit inputs"},saveCloud:{tr:"Bulut'a kaydet",en:"Save to cloud"},
+  pdfBtn:{tr:"PDF rapor indir",en:"Download PDF report"},pdfMaking:{tr:"PDF hazırlanıyor…",en:"Preparing PDF…"},pdfReportSub:{tr:"GHG Protocol Kapsam 3 — turizm tedarik zinciri raporu",en:"GHG Protocol Scope 3 — tourism supply-chain report"},pdfBreakdown:{tr:"Kapsam bazında dağılım",en:"Breakdown by scope"},pdfCats:{tr:"Kapsam 3 kategorileri",en:"Scope 3 categories"},pdfFree:{tr:"%100 ÜCRETSİZ",en:"100% FREE"},pdfGenerated:{tr:"Rapor tarihi",en:"Report date"},pdfFreeTool:{tr:"Ücretsiz araç",en:"Free tool"},pdfFail:{tr:"PDF oluşturulamadı. Lütfen 'Yazdır' ile tarayıcıdan PDF alın.",en:"PDF failed. Please use 'Print' to save as PDF."},
+  totalUnit:{tr:"kg CO₂e / yıl (pazar-bazlı)",en:"kg CO₂e / yr (market-based)"},
+  s1:{tr:"Kapsam 1 · Doğrudan",en:"Scope 1 · Direct"},s2:{tr:"Kapsam 2 · Enerji",en:"Scope 2 · Energy"},s3:{tr:"Kapsam 3 · Diğer",en:"Scope 3 · Other"},
+  s2loc:{tr:"konum-bazlı",en:"location-based"},scope2noteTxt:{tr:"Kapsam 2 çift raporlanır. Grafik ve toplam pazar-bazlı değeri kullanır.",en:"Scope 2 is dual-reported. Chart/total use market-based."},
+  perEmployee:{tr:"çalışan başına",en:"per employee"},perRevenue:{tr:"başına",en:"per"},perOutput:{tr:"üretim birimi başına",en:"per output unit"},kgco2e:{tr:"kg CO₂e",en:"kg CO₂e"},
+  equivTree:{tr:"ağacın yıllık yuttuğu CO₂'ye eşdeğer",en:"equivalent to trees' yearly absorption"},equivCar:{tr:"km binek araç sürüşüne eşdeğer",en:"equivalent to driving a car"},
+  buyerScope3:{tr:"Kapsam 3 — Turizm tedarik zinciri",en:"Scope 3 — Tourism supply chain"},supplierWord:{tr:"tedarikçi",en:"suppliers"},
+  scope1:{tr:"Kapsam 1 (doğrudan)",en:"Scope 1 (direct)"},scope2locrow:{tr:"Kapsam 2 (konum-bazlı)",en:"Scope 2 (location-based)"},scope2mktrow:{tr:"Kapsam 2 (pazar-bazlı)",en:"Scope 2 (market-based)"},scope3row:{tr:"Kapsam 3 (diğer)",en:"Scope 3 (other)"},totalRow:{tr:"TOPLAM (pazar-bazlı)",en:"TOTAL (market-based)"},
+  sizeLabel:{tr:"Boyut",en:"Size"},marketLabel:{tr:"Pazar",en:"Market"},
+  loginTitle:{tr:"Giriş / Kayıt",en:"Sign in / Register"},loginHint:{tr:"Hesaplamalarınızı kaydedip sonraki girişte görmek için giriş yapın.",en:"Sign in to save your calculations and see them next time."},
+  googleBtn:{tr:"Google ile devam et",en:"Continue with Google"},tabLogin:{tr:"Giriş yap",en:"Sign in"},tabRegister:{tr:"Kayıt ol",en:"Register"},emailLabel:{tr:"E-posta",en:"Email"},passLabel:{tr:"Şifre",en:"Password"},
+  myReports:{tr:"Önceki raporlarım",en:"My previous reports"},noReports:{tr:"Henüz kayıtlı rapor yok.",en:"No saved reports yet."},
+  loginBtn:{tr:"Giriş yap",en:"Sign in"},logoutBtn:{tr:"Çıkış",en:"Sign out"},reportsBtn:{tr:"Raporlarım",en:"My reports"},adminBadge:{tr:"admin",en:"admin"},
+  savedOk:{tr:"✔ Rapor buluta kaydedildi.",en:"✔ Report saved to cloud."},saveNeedLogin:{tr:"Kaydetmek için giriş yapın.",en:"Sign in to save."},saving:{tr:"Kaydediliyor…",en:"Saving…"},
+  loginToSave:{tr:"Bu raporu buluta kaydetmek ve sonraki girişte görmek için giriş yapın.",en:"Sign in to save this report and see it next time."},
+  qMeasured:{tr:"Veri: ölçüm",en:"Data: measured"},qEstimate:{tr:"Veri: tahmin",en:"Data: estimate"},qNone:{tr:"Veri: belirtilmemiş",en:"Data: unspecified"},
+  dqTitle:{tr:"Veri kalitesi",en:"Data quality"},dqText:{tr:"Emisyonların %{p}'i ölçüm-bazlı veriye dayanıyor; kalanı tahmin/belirtilmemiş. Denetime hazırlık için ölçüm oranını artırın.",en:"{p}% of emissions are based on measured data; the rest are estimated/unspecified."},
+  colItem:{tr:"Kalem",en:"Item"},colScope:{tr:"Kapsam",en:"Scope"},colCat:{tr:"Kategori",en:"Category"},colAmount:{tr:"Miktar",en:"Amount"},colUnit:{tr:"Birim",en:"Unit"},colEmis:{tr:"Emisyon (kg CO₂e)",en:"Emissions (kg CO₂e)"},colQuality:{tr:"Veri kalitesi",en:"Data quality"}
+  ,
+  /* --- alıcı modülü v3.1 --- */
+  buyerFormTitle:{tr:"Tedarikçi emisyonlarını hesaplayın",en:"Calculate supplier emissions"},
+  buyerFormHint:{tr:"Her tedarikçi için üç yöntemden birini seçin: tedarikçinin kendi raporu (alım payınıza tahsis edilir), malzeme miktarı × emisyon faktörü, ya da harcama bazlı tahmin. Araç Kapsam 3.1 + 3.4'ü hesaplar, veri kalitesini 1-5 puanlar ve kapsanmayan harcamayı tahminle tamamlar.",en:"Pick one of three methods per supplier: the supplier's own report (allocated to your share), material quantity × emission factor, or a spend-based estimate. The tool calculates Scope 3.1 + 3.4, scores data quality 1-5 and extrapolates uncovered spend."},
+  stepSuppliers:{tr:"Tedarikçiler",en:"Suppliers"},stepMethod:{tr:"Yöntem & veri",en:"Method & data"},
+  bTotalSpend:{tr:"Yıllık toplam satın alma harcamanız (₺)",en:"Your total annual procurement spend (₺)"},
+  bTotalSpendHint:{tr:"Kapsama oranı ve eksik kısmın tahmini için kullanılır. Boş bırakabilirsiniz.",en:"Used for coverage and extrapolation of the uncovered part. Optional."},
+  bUsd:{tr:"1 USD kaç ₺?",en:"1 USD in ₺"},
+  bUsdHint:{tr:"Harcama bazlı faktörler USD cinsindendir; dönüşüm bu kurla yapılır.",en:"Spend-based factors are USD-denominated; this rate converts them."},
+  bTemplate:{tr:"Excel şablonu indir",en:"Download Excel template"},bImport:{tr:"Excel'den yükle",en:"Import from Excel"},
+  bPaste:{tr:"Yapıştır",en:"Paste"},bPasteBtn:{tr:"Satırları ekle",en:"Add rows"},
+  bPasteHint:{tr:"Excel'den kopyaladığınız satırları buraya yapıştırın (sütun sırası şablondaki gibi olmalı; başlık satırı varsa atılır).",en:"Paste rows copied from Excel (same column order as the template; a header row is skipped)."},
+  bClearAsk:{tr:"Tüm tedarikçi satırları silinecek. Emin misiniz?",en:"All supplier rows will be cleared. Are you sure?"},
+  bNoData:{tr:"Hesaplamak için en az bir tedarikçiye veri girin.",en:"Enter data for at least one supplier."},
+  m_supplier:{tr:"Tedarikçi raporu (tahsisatlı)",en:"Supplier report (allocated)"},
+  m_activity:{tr:"Malzeme miktarı × faktör",en:"Material quantity × factor"},
+  m_spend:{tr:"Harcama bazlı tahmin",en:"Spend-based estimate"},
+  catCol:{tr:"Satın alma kategorisi",en:"Purchase category"},methodCol:{tr:"Yöntem",en:"Method"},
+  fSupTon:{tr:"Tedarikçinin toplam emisyonu (t CO₂e/yıl)",en:"Supplier's total emissions (t CO₂e/yr)"},
+  fAllocMode:{tr:"Tahsis tabanı",en:"Allocation basis"},
+  fAllocRev:{tr:"Ciro / harcama payı",en:"Revenue / spend share"},fAllocVol:{tr:"Fiziksel miktar payı",en:"Physical volume share"},
+  fAllocNum:{tr:"Sizin alımınız",en:"Your purchase"},fAllocDen:{tr:"Tedarikçinin toplamı",en:"Supplier's total"},
+  fSpend:{tr:"Yıllık harcamanız (₺)",en:"Your annual spend (₺)"},
+  fSpendOpt:{tr:"Yıllık harcamanız (₺) — opsiyonel",en:"Your annual spend (₺) — optional"},
+  fVerified:{tr:"Üçüncü taraf doğrulamalı",en:"Third-party verified"},
+  fMaterial:{tr:"Malzeme / hizmet",en:"Material / service"},fQty:{tr:"Miktar",en:"Quantity"},fUnit:{tr:"Birim",en:"Unit"},
+  fSpendFactor:{tr:"Kategori faktörü",en:"Category factor"},fRate:{tr:"Kur",en:"FX rate"},
+  unitTon:{tr:"ton",en:"tonne"},delRow:{tr:"Satırı sil",en:"Delete row"},
+  needSupTon:{tr:"Tedarikçi emisyonu girin",en:"Enter supplier emissions"},
+  needAlloc:{tr:"Tahsis payı eksik",en:"Allocation missing"},
+  needMaterial:{tr:"Malzeme seçin",en:"Select a material"},
+  needQty:{tr:"Miktar girin",en:"Enter quantity"},
+  needSpend:{tr:"Harcama girin",en:"Enter spend"},
+  needKm:{tr:"Mesafe girin",en:"Enter distance"},
+  allocShare:{tr:"Tahsis payı",en:"Allocated share"},dqShort:{tr:"Veri kalitesi",en:"Data quality"},
+  perK:{tr:"kg CO₂e / 1.000 ₺",en:"kg CO₂e / 1,000 ₺"},
+  liveCount:{tr:"Tedarikçi",en:"Suppliers"},liveSubtotal:{tr:"Ara toplam",en:"Running total"},
+  liveSpend:{tr:"Kapsanan harcama",en:"Covered spend"},liveCoverage:{tr:"kapsama",en:"coverage"},
+  kpiS31:{tr:"Kapsam 3.1 — satın alınan mal ve hizmetler",en:"Scope 3.1 — purchased goods & services"},
+  kpiS34:{tr:"Kapsam 3.4 — tedarik nakliyesi",en:"Scope 3.4 — upstream transport"},
+  kpiDq:{tr:"Veri kalitesi skoru (1 en iyi)",en:"Data quality score (1 is best)"},
+  kpiPrimary:{tr:"Birincil veriye dayanan pay",en:"Share based on primary data"},
+  kpiUnc:{tr:"Tahmini belirsizlik",en:"Estimated uncertainty"},
+  kpiSuppliers:{tr:"Hesaba katılan tedarikçi",en:"Suppliers included"},
+  uncRange:{tr:"Belirsizlik aralığı",en:"Uncertainty range"},
+  covTitle:{tr:"Harcama kapsama analizi",en:"Spend coverage analysis"},
+  covCovered:{tr:"Hesaplanan",en:"Calculated"},covUncovered:{tr:"Kapsanmayan",en:"Uncovered"},
+  covExtra:{tr:"Kapsanmayan harcama {m} ile ekstrapole edildi: +{e} kg CO₂e (veri kalitesi 5/5).",en:"Uncovered spend extrapolated using {m}: +{e} kg CO₂e (data quality 5/5)."},
+  covPortfolio:{tr:"portföyünüzün ortalama harcama yoğunluğu",en:"your portfolio's average spend intensity"},
+  covDefault:{tr:"genel sektör ortalaması faktörü",en:"a generic sector-average factor"},
+  covMissing:{tr:"Toplam satın alma harcamanızı girerseniz araç kapsama oranını hesaplar ve kapsanmayan kısmı tahminle tamamlar — raporun eksiksizliği için önemlidir.",en:"Enter your total procurement spend and the tool will compute coverage and extrapolate the uncovered part — important for completeness."},
+  tblTitle:{tr:"Tedarikçi bazında döküm",en:"Supplier-level breakdown"},
+  tblName:{tr:"Tedarikçi",en:"Supplier"},tblMethod:{tr:"Yöntem",en:"Method"},tblSpend:{tr:"Harcama (₺)",en:"Spend (₺)"},
+  tblE31:{tr:"3.1 (kg)",en:"3.1 (kg)"},tblE34:{tr:"3.4 (kg)",en:"3.4 (kg)"},tblTotal:{tr:"Toplam (kg)",en:"Total (kg)"},
+  tblShare:{tr:"Pay",en:"Share"},tblCum:{tr:"Kümülatif",en:"Cumulative"},tblQ:{tr:"Kalite",en:"Quality"},
+  tblInt:{tr:"kg/1.000₺",en:"kg/1,000₺"},
+  tblNote:{tr:"Kümülatif sütunu hesaplanan tedarikçiler üzerinden, pay sütunu ekstrapolasyon dahil toplam üzerinden verilir. Veri kalitesi 1 = doğrulanmış tedarikçi verisi, 5 = harcama bazlı tahmin.",en:"Cumulative is over calculated suppliers; share is over the total including extrapolation. Quality 1 = verified supplier data, 5 = spend-based estimate."},
+  outlier:{tr:"yoğunluk aykırı",en:"intensity outlier"},
+  extrapRow:{tr:"Kapsanmayan harcama (ekstrapolasyon)",en:"Uncovered spend (extrapolated)"},
+  paretoTitle:{tr:"Emisyon yoğunlaşması (Pareto)",en:"Emission concentration (Pareto)"},
+  paretoNote:{tr:"Hesaplanan emisyonun %80'i ilk {n} tedarikçiden geliyor — azaltım ve veri toplama çabanızı önce buraya verin.",en:"80% of calculated emissions come from the first {n} suppliers — focus reduction and data collection there."},
+  prioTitle:{tr:"Önce kimden birincil veri isteyin?",en:"Who to ask for primary data first"},
+  prioNote:{tr:"Emisyon payı ile veri kalitesi zayıflığının çarpımına göre sıralanır: büyük ama tahmine dayalı kalemler üstte.",en:"Ranked by emission share × data-quality weakness: large but estimated items come first."},
+  prioReason:{tr:"Toplamın {s}'i · veri kalitesi {q}/5 · {m}",en:"{s} of total · data quality {q}/5 · {m}"},
+  scenTitle:{tr:"Azaltım senaryosu",en:"Reduction scenario"},
+  scenGreen:{tr:"İlk {n} tedarikçi yeşil elektriğe geçerse",en:"If the top {n} suppliers switch to green electricity"},
+  scenMode:{tr:"Karayolu yükün bir kısmı denize kayarsa",en:"If part of road freight shifts to sea"},
+  scenRec:{tr:"Malzemelerin bir kısmı geri dönüşümlü muadille değişirse",en:"If part of materials switch to recycled equivalents"},
+  scenNew:{tr:"Senaryo sonrası toplam:",en:"Total after scenario:"},
+  scenAssump:{tr:"Varsayımlar: tedarikçi ayak izinde elektriğin payı %{g}; geri dönüşümlü muadile geçişte azalma ilgili faktör çiftinden hesaplanır (tipik ≈%{r}); mod değişimi karayolu ve deniz ton·km faktörlerinin oranıyla hesaplanır. Senaryo göstergedir, taahhüt değildir.",en:"Assumptions: electricity is {g}% of a supplier's footprint; the recycled-substitution saving is computed from the relevant factor pair (typically ≈{r}%); the modal shift uses the road/sea tonne·km factor ratio. Indicative only, not a commitment."},
+  impOk:{tr:"{n} satır eklendi.",en:"{n} rows added."},
+  impEmpty:{tr:"Okunabilir satır bulunamadı.",en:"No readable rows found."},
+  impErr:{tr:"Dosya okunamadı:",en:"Could not read the file:"},
+  trTitle:{tr:"Tedarik nakliyesi (Kapsam 3.4) — opsiyonel",en:"Inbound transport (Scope 3.4) — optional"},
+  trMode:{tr:"Taşıma modu",en:"Transport mode"},
+  trNone:{tr:"— hesaplama —",en:"— skip —"},
+  trTon:{tr:"Taşınan yük (ton)",en:"Freight (tonnes)"},
+  trKm:{tr:"Mesafe (km)",en:"Distance (km)"},
+  totalUnitB:{tr:"kg CO₂e / yıl",en:"kg CO₂e / yr"},
+  totalRowB:{tr:"TOPLAM (Kapsam 3)",en:"TOTAL (Scope 3)"},
+  scope3rowB:{tr:"Kapsam 3 — tedarik zinciri",en:"Scope 3 — supply chain"},
+  buyerFormTitle:{tr:"Tedarik zinciri emisyonlarınızı hesaplayın",en:"Calculate your supply-chain emissions"},
+  buyerFormHint:{tr:"Her satın alma kalemi veya tedarikçi için üç yöntemden birini seçin: tedarikçinin kendi raporu (alım payınıza tahsis edilir), miktar × emisyon faktörü (gıda kg, konaklama oda-gece, uçuş yolcu-km, nevresim, kimyasal…), ya da harcama bazlı tahmin. Araç Kapsam 3.1 + 3.4'ü hesaplar, veri kalitesini 1-5 puanlar ve kapsanmayan harcamayı tahminle tamamlar.",en:"For each purchase line or supplier choose one of three methods: the supplier's own report (allocated to your share), quantity × emission factor (food kg, room-nights, flight passenger-km, linen, chemicals…), or a spend-based estimate. The tool calculates Scope 3.1 + 3.4, scores data quality 1-5 and extrapolates uncovered spend."},
+  tourHint:{tr:"<b>Otel / tatil köyü:</b> gıda ve içecek, nevresim-havlu, kimyasal, dış çamaşırhane, mobilya ve tadilat alımlarınızı girin. <b>Acente / tur operatörü / MICE:</b> müşterileriniz için satın aldığınız konaklama (oda-gece), uçuş ve transferleri girin. Otelinizin kendi enerji tüketimi (Kapsam 1-2) ve HCMI oda-gece metriği için <a href=\"turizm-karbon-hesaplayici.html\">Turizm Karbon Hesaplayıcı</a>'yı kullanın.",en:"<b>Hotel / resort:</b> enter food & beverage, linen, chemicals, outsourced laundry, furniture and renovation purchases. <b>Agency / tour operator / MICE:</b> enter accommodation (room-nights), flights and transfers you buy for clients. For your hotel's own energy (Scope 1-2) and HCMI room-night metric use the <a href=\"turizm-karbon-hesaplayici.html\">Tourism Carbon Calculator</a>."},
+  bExample:{tr:"Örnek otel verisi",en:"Sample hotel data"},
+  exampleAsk:{tr:"Mevcut satırların yerine 120 odalı örnek bir tatil köyünün alımları yüklenecek. Devam edilsin mi?",en:"Rows will be replaced with sample purchases of a 120-room resort. Continue?"},
+  exampleNote:{tr:"Örnek veriler yüklendi — bunlar sizin verileriniz değildir.",en:"Sample data loaded — these are not your figures."},
+  m_activity:{tr:"Miktar × emisyon faktörü",en:"Quantity × emission factor"},
+  fMaterial:{tr:"Kalem (gıda, konaklama, ulaşım, sarf…)",en:"Item (food, stay, transport, supplies…)"},
+  supName:{tr:"Tedarikçi / kalem adı",en:"Supplier / item name"},
+  scenMode:{tr:"Karayolu yükün bir kısmı demiryoluna kayarsa",en:"If part of road freight shifts to rail"},
+  scenRec:{tr:"Düşük karbonlu muadile geçiş (kırmızı et → beyaz et, karides → balık, iç hat uçuş → otobüs, geri dönüşümlü ambalaj)",en:"Switch to lower-carbon alternatives (red meat → poultry, prawns → fish, domestic flight → coach, recycled packaging)"},
+  scenAssump:{tr:"Varsayımlar: tedarikçi ayak izinde elektriğin payı %{g}; muadile geçişteki azalma ilgili faktör çiftinden hesaplanır, kaydırıcı ilgili kalemlerin ne kadarının değişeceğini gösterir; mod değişimi karayolu ve demiryolu ton·km faktörlerinin oranıyla hesaplanır. Senaryo göstergedir, taahhüt değildir.",en:"Assumptions: electricity share of supplier footprint {g}%; the cut from switching is derived from the factor pair and the slider sets how much of those items switch; mode shift uses the road vs rail tonne-km factor ratio. Indicative, not a commitment."}
+
+};
+
+let CONFIG = DEFAULT_CONFIG;
+let lang='tr', mode='buyer', lastResult=null, authMode='login';
+
+async function loadRemoteConfig(){
+  try{ if(!db) return; const s=await getDoc(doc(db,'config','current'));
+    if(s.exists()){ const c=s.data();
+      if(c&&c.factors&&c.spendFactors&&c.meta&&c.meta.version===DEFAULT_CONFIG.meta.version){ CONFIG=c; renderBRows(); }
+      // Sürüm eşleşmezse (ör. tekstil sektörünü içeren eski v3.1 bulut kaydı) gömülü v4.0 kullanılır.
+    }
+  }catch(e){ console.warn('config yüklenemedi',e); }
+}
+loadRemoteConfig();
+
+function t(k){return (UI[k]&&UI[k][lang])||k;}
+function L(o){return o?(o[lang]||o.tr||o.en||''):'';}
+function fmt(n){return Math.round(n).toLocaleString(lang==='tr'?'tr-TR':'en-US');}
+function fmt1(n){return (Math.round(n*10)/10).toLocaleString(lang==='tr'?'tr-TR':'en-US');}
+function isAdmin(){return currentUser&&currentUser.email&&ADMIN_EMAILS.indexOf(currentUser.email)>=0;}
+function qualLabel(q){return q==='measured'?t('qMeasured'):q==='estimate'?t('qEstimate'):t('qNone');}
+
+window.setLang=function(l){lang=l;document.getElementById('lang-tr').classList.toggle('active',l==='tr');document.getElementById('lang-en').classList.toggle('active',l==='en');document.documentElement.lang=l;applyStatic();renderAuthBar();renderIntroActions();renderTourHint();renderBRows();if(lastResult)renderResult(lastResult);updateSaveUi();};
+function applyStatic(){document.querySelectorAll('[data-t]').forEach(el=>{el.textContent=t(el.getAttribute('data-t'));});}
+window.show=function(id){['screen-buyer','screen-result','screen-reports'].forEach(s=>document.getElementById(s).classList.toggle('hidden',s!==id));window.scrollTo({top:0,behavior:'smooth'});};
+
+function renderAuthBar(){const b=document.getElementById('authbar');if(!b)return;if(currentUser){const badge=isAdmin()?' <span class="pill">'+t('adminBadge')+'</span>':'';b.innerHTML='<span class="who">'+(currentUser.email||currentUser.displayName||'')+badge+'</span><button class="authbtn" onclick="doLogout()">'+t('logoutBtn')+'</button>';}else{b.innerHTML='<button class="authbtn" onclick="openLogin()">'+t('loginBtn')+'</button>';}}
+function renderIntroActions(){const a=document.getElementById('intro-actions');if(!a)return;a.innerHTML=currentUser?('<button class="btn sec sm" onclick="openReports()">📁 '+t('reportsBtn')+'</button>'):'';}
+window.openLogin=function(){document.getElementById('auth-err').classList.add('hidden');document.getElementById('login-modal').classList.remove('hidden');};
+window.closeLogin=function(){document.getElementById('login-modal').classList.add('hidden');};
+window.authTab=function(m){authMode=m;document.getElementById('tab-login').classList.toggle('on',m==='login');document.getElementById('tab-register').classList.toggle('on',m==='register');document.getElementById('auth-submit').textContent=m==='login'?t('tabLogin'):t('tabRegister');};
+window.submitAuth=async function(){const email=document.getElementById('auth-email').value.trim();const pass=document.getElementById('auth-pass').value;const err=document.getElementById('auth-err');err.classList.add('hidden');if(!auth){err.textContent='Firebase yüklenemedi.';err.classList.remove('hidden');return;}try{if(authMode==='register')await createUserWithEmailAndPassword(auth,email,pass);else await signInWithEmailAndPassword(auth,email,pass);closeLogin();}catch(e){err.textContent=authErr(e);err.classList.remove('hidden');}};
+window.loginGoogle=async function(){const err=document.getElementById('auth-err');err.classList.add('hidden');if(!auth){err.textContent='Firebase yüklenemedi.';err.classList.remove('hidden');return;}const provider=new GoogleAuthProvider();try{await signInWithPopup(auth,provider);closeLogin();}catch(e){try{await signInWithRedirect(auth,provider);}catch(e2){err.textContent=authErr(e)+' '+(lang==='tr'?'(Google engellendiyse e-posta/şifre kullanın.)':'(If Google is blocked, use email/password.)');err.classList.remove('hidden');}}};
+window.doLogout=async function(){try{await signOut(auth);}catch(e){}show('screen-buyer');};
+function authErr(e){const c=(e&&e.code)||'';const m={'auth/invalid-email':{tr:'Geçersiz e-posta.',en:'Invalid email.'},'auth/missing-password':{tr:'Şifre girin.',en:'Enter a password.'},'auth/weak-password':{tr:'Şifre en az 6 karakter olmalı.',en:'Password must be 6+ chars.'},'auth/email-already-in-use':{tr:'Bu e-posta zaten kayıtlı. Giriş yapın.',en:'Email already registered.'},'auth/invalid-credential':{tr:'E-posta veya şifre hatalı.',en:'Wrong email or password.'},'auth/popup-blocked':{tr:'Açılır pencere engellendi.',en:'Popup blocked.'},'auth/popup-closed-by-user':{tr:'Giriş penceresi kapatıldı.',en:'Popup closed.'}};return (m[c]&&m[c][lang])||(e&&e.message)||'Hata';}
+
+window.chooseMode=function(){mode='buyer';if(!bRows.length){bRows.push(newBRow());bRows.push(newBRow());}renderBRows();show('screen-buyer');};
+function renderTourHint(){const h=document.getElementById('tour-hint');if(h)h.innerHTML=t('tourHint');}
+function dqOn(){return CONFIG.dataQuality&&CONFIG.dataQuality.enabled;}
+function scopeName(s){return s===1?t('s1'):s===2?t('s2'):t('s3');}
+function scopeColor(s){return s===1?'var(--s1)':s===2?'var(--s2)':'var(--s3)';}
+function sizeClass(emp){const sc=CONFIG.profile&&CONFIG.profile.sizeClasses||[];for(const c of sc){if(emp<c.max)return L(c.label);}return '';}
+/* ============ ALICI MODÜLÜ — KAPSAM 3.1 HİBRİT HESAP MOTORU ============ */
+let bRows=[];
+function nz(v){const x=parseFloat(v);return (isFinite(x)&&x>0)?x:0;}
+function el(id){return document.getElementById(id);}
+function val(id){const e=el(id);return e?e.value:'';}
+function SF(){return CONFIG.spendFactors||{};}
+function BS(){return CONFIG.buyerScenario||{};}
+function dqOf(q){const sc=CONFIG.dqScale||[];return sc.find(x=>x.score===q)||{score:q,unc:50,label:{tr:'',en:''}};}
+function usdRate(){const v=parseFloat(val('b-usd'));return (isFinite(v)&&v>0)?v:((CONFIG.spendBase&&CONFIG.spendBase.usdRate)||49);}
+function matKeys(){return (CONFIG.purchaseMaterials||[]).filter(k=>CONFIG.factors[k]);}
+function isPerKg(k){const f=CONFIG.factors[k]||{};return /\/kg$/.test(f.unit||'');}
+function fmtTL(n){return Math.round(n).toLocaleString(lang==='tr'?'tr-TR':'en-US');}
+function esc(s){return (''+(s==null?'':s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function newBRow(o){return Object.assign({name:'',cat:'other',method:'spend',spend:'',supTon:'',allocMode:'revenue',allocNum:'',allocDen:'',verified:false,matKey:'',qty:'',qtyUnit:'kg',trMode:'',trTon:'',trKm:''},o||{});}
+
+window.addSupplierRow=function(o){bRows.push(newBRow(o&&o.name!==undefined?o:null));renderBRows();};
+window.delBRow=function(i){bRows.splice(i,1);if(!bRows.length)bRows.push(newBRow());renderBRows();};
+window.clearBRows=function(){if(!confirm(t('bClearAsk')))return;bRows=[newBRow(),newBRow()];renderBRows();};
+window.setB=function(i,k,v,re){if(!bRows[i])return;bRows[i][k]=v;if(re)renderBRows();else refreshBCalc();};
+window.togglePaste=function(){el('b-paste').classList.toggle('hidden');};
+
+/* ---- tek satır hesabı ---- */
+function calcBRow(r){
+  const o={emis31:0,emis34:0,emis:0,q:5,unc:80,spend:nz(r.spend),share:0,intensity:0,missing:''};
+  if(r.method==='supplier'){
+    const tot=nz(r.supTon)*1000;
+    const den=nz(r.allocDen);
+    const numr=r.allocMode==='revenue'?(nz(r.allocNum)||o.spend):nz(r.allocNum);
+    const sh=den>0?Math.min(1,numr/den):0;
+    o.share=sh;o.emis31=tot*sh;o.q=r.verified?1:2;
+    if(tot<=0)o.missing=t('needSupTon');else if(den<=0||numr<=0)o.missing=t('needAlloc');
+  }else if(r.method==='activity'){
+    const f=CONFIG.factors[r.matKey];
+    if(!f)o.missing=t('needMaterial');
+    else{const q=nz(r.qty)*(r.qtyUnit==='ton'&&isPerKg(r.matKey)?1000:1);o.emis31=q*f.value;o.q=3;if(q<=0)o.missing=t('needQty');}
+  }else{
+    const fv=((SF()[r.cat]||SF()['other']||{}).value)||0;
+    o.emis31=o.spend>0?(o.spend/usdRate())*fv:0;o.q=5;
+    if(o.spend<=0)o.missing=t('needSpend');
+  }
+  if(r.trMode&&CONFIG.factors[r.trMode]){
+    const tn=nz(r.trTon),km=nz(r.trKm);
+    o.emis34=tn*km*CONFIG.factors[r.trMode].value;
+    if(tn>0&&km<=0)o.missing=o.missing||t('needKm');
+  }
+  o.emis=o.emis31+o.emis34;
+  o.unc=dqOf(o.q).unc||50;
+  o.intensity=o.spend>0?o.emis/(o.spend/1000):0;
+  return o;
+}
+
+/* ---- satır arayüzü ---- */
+function optList(obj,sel,keyName){return Object.keys(obj).map(k=>'<option value="'+k+'"'+(k===sel?' selected':'')+'>'+esc(L(obj[k].name)||k)+'</option>').join('');}
+function methodFields(r,i){
+  if(r.method==='supplier'){
+    const volu=r.allocMode==='revenue'?'₺':t('unitTon');
+    return '<div class="fgrid">'+
+      '<div><label>'+t('fSupTon')+'</label><input type="number" min="0" step="any" value="'+esc(r.supTon)+'" placeholder="0" oninput="setB('+i+",'supTon',this.value)\"></div>"+
+      '<div><label>'+t('fAllocMode')+'</label><select onchange="setB('+i+",'allocMode',this.value,1)\"><option value=\"revenue\""+(r.allocMode==='revenue'?' selected':'')+'>'+t('fAllocRev')+'</option><option value="volume"'+(r.allocMode==='volume'?' selected':'')+'>'+t('fAllocVol')+'</option></select></div>'+
+      '<div><label>'+t('fAllocNum')+' ('+volu+')</label><input type="number" min="0" step="any" value="'+esc(r.allocNum)+'" placeholder="0" oninput="setB('+i+",'allocNum',this.value)\"></div>"+
+      '<div><label>'+t('fAllocDen')+' ('+volu+')</label><input type="number" min="0" step="any" value="'+esc(r.allocDen)+'" placeholder="0" oninput="setB('+i+",'allocDen',this.value)\"></div>"+
+      '<div><label>'+t('fSpendOpt')+'</label><input type="number" min="0" step="any" value="'+esc(r.spend)+'" placeholder="0" oninput="setB('+i+",'spend',this.value)\"></div>"+
+      '<div class="chk"><input type="checkbox" id="vf'+i+'"'+(r.verified?' checked':'')+' onchange="setB('+i+",'verified',this.checked)\"><label for=\"vf"+i+'" style="margin:0">'+t('fVerified')+'</label></div>'+
+      '</div>';
+  }
+  if(r.method==='activity'){
+    const mk=matKeys();
+    const opts='<option value="">—</option>'+mk.map(k=>{const f=CONFIG.factors[k];return '<option value="'+k+'"'+(k===r.matKey?' selected':'')+'>'+esc(L(f.name))+' · '+f.value+' '+esc(f.unit||'')+'</option>';}).join('');
+    const unitSel=isPerKg(r.matKey)?'<select onchange="setB('+i+",'qtyUnit',this.value)\"><option value=\"kg\""+(r.qtyUnit==='kg'?' selected':'')+'>kg</option><option value="ton"'+(r.qtyUnit==='ton'?' selected':'')+'>'+t('unitTon')+'</option></select>':'<input type="text" disabled value="'+esc((CONFIG.factors[r.matKey]||{}).unit||'')+'">';
+    return '<div class="fgrid">'+
+      '<div style="grid-column:span 2"><label>'+t('fMaterial')+'</label><select onchange="setB('+i+",'matKey',this.value,1)\">"+opts+'</select></div>'+
+      '<div><label>'+t('fQty')+'</label><input type="number" min="0" step="any" value="'+esc(r.qty)+'" placeholder="0" oninput="setB('+i+",'qty',this.value)\"></div>"+
+      '<div><label>'+t('fUnit')+'</label>'+unitSel+'</div>'+
+      '<div><label>'+t('fSpendOpt')+'</label><input type="number" min="0" step="any" value="'+esc(r.spend)+'" placeholder="0" oninput="setB('+i+",'spend',this.value)\"></div>"+
+      '</div>';
+  }
+  const fv=((SF()[r.cat]||SF()['other']||{}).value)||0;
+  return '<div class="fgrid">'+
+    '<div><label>'+t('fSpend')+'</label><input type="number" min="0" step="any" value="'+esc(r.spend)+'" placeholder="0" oninput="setB('+i+",'spend',this.value)\"></div>"+
+    '<div><label>'+t('fSpendFactor')+'</label><input type="text" disabled value="'+fv+' kgCO₂e/USD"></div>'+
+    '<div><label>'+t('fRate')+'</label><input type="text" disabled value="1 USD = '+fmtTL(usdRate())+' ₺"></div>'+
+    '</div>';
+}
+function transportFields(r,i){
+  const modes=(CONFIG.freightModes||[]).filter(k=>CONFIG.factors[k]);
+  const opts='<option value="">'+t('trNone')+'</option>'+modes.map(k=>'<option value="'+k+'"'+(k===r.trMode?' selected':'')+'>'+esc(L(CONFIG.factors[k].name))+' · '+CONFIG.factors[k].value+'</option>').join('');
+  let f='<div class="trbox"><div class="ttl">'+t('trTitle')+'</div><div class="fgrid'+(r.trMode?'':' one')+'">'+
+    '<div><label>'+t('trMode')+'</label><select onchange="setB('+i+",'trMode',this.value,1)\">"+opts+'</select></div>';
+  if(r.trMode){
+    f+='<div><label>'+t('trTon')+'</label><input type="number" min="0" step="any" value="'+esc(r.trTon)+'" placeholder="0" oninput="setB('+i+",'trTon',this.value)\"></div>"+
+       '<div><label>'+t('trKm')+'</label><input type="number" min="0" step="any" value="'+esc(r.trKm)+'" placeholder="0" oninput="setB('+i+",'trKm',this.value)\"></div>";
+  }
+  return f+'</div></div>';
+}
+function renderBRows(){
+  const box=el('supplier-rows');if(!box)return;
+  if(!bRows.length)bRows.push(newBRow());
+  const mOpt=(v,k)=>'<option value="'+k+'"'+(v===k?' selected':'')+'>'+t('m_'+k)+'</option>';
+  box.innerHTML=bRows.map((r,i)=>
+    '<div class="srow" id="srow-'+i+'">'+
+      '<div class="srow-top">'+
+        '<input type="text" class="s-name" placeholder="'+t('supName')+' '+(i+1)+'" value="'+esc(r.name)+'" oninput="setB('+i+",'name',this.value)\">"+
+        '<select onchange="setB('+i+",'cat',this.value,1)\">"+optList(SF(),r.cat)+'</select>'+
+        '<select onchange="setB('+i+",'method',this.value,1)\">"+mOpt(r.method,'supplier')+mOpt(r.method,'activity')+mOpt(r.method,'spend')+'</select>'+
+        '<button class="del" title="'+t('delRow')+'" onclick="delBRow('+i+')">×</button>'+
+      '</div>'+
+      methodFields(r,i)+transportFields(r,i)+
+      '<div class="srow-out" id="sout-'+i+'"></div>'+
+    '</div>').join('');
+  refreshBCalc();
+}
+function refreshBCalc(){
+  bRows.forEach((r,i)=>{
+    const o=calcBRow(r),box=el('sout-'+i);if(!box)return;
+    const dq=dqOf(o.q);
+    const parts=['<span>3.1: <b>'+fmt(o.emis31)+'</b> kg</span>'];
+    if(o.emis34>0)parts.push('<span>3.4: <b>'+fmt(o.emis34)+'</b> kg</span>');
+    if(r.method==='supplier'&&o.share>0)parts.push('<span>'+t('allocShare')+': <b>%'+fmt1(o.share*100)+'</b></span>');
+    parts.push('<span class="qb q'+o.q+'">'+t('dqShort')+' '+o.q+'/5 · ±%'+dq.unc+'</span>');
+    if(o.intensity>0)parts.push('<span>'+fmt1(o.intensity)+' '+t('perK')+'</span>');
+    if(o.missing)parts.push('<span class="flag">'+o.missing+'</span>');
+    box.innerHTML=parts.join('');
+    const sr=el('srow-'+i);if(sr)sr.classList.toggle('warn',!!o.missing);
+  });
+  updateLive();
+}
+window.refreshBCalc=refreshBCalc;
+function updateLive(){
+  const box=el('b-live');if(!box)return;
+  let e=0,sp=0,n=0;
+  bRows.forEach(r=>{const o=calcBRow(r);if(o.emis>0||o.spend>0){n++;e+=o.emis;sp+=o.spend;}});
+  const tot=nz(val('b-totalspend'));
+  const cov=tot>0?Math.min(100,Math.round(sp/tot*100)):0;
+  box.innerHTML='<span>'+t('liveCount')+': <b>'+n+'</b></span>'+
+    '<span>'+t('liveSubtotal')+': <b>'+fmt(e)+'</b> kg CO₂e</span>'+
+    (sp>0?'<span>'+t('liveSpend')+': <b>'+fmtTL(sp)+'</b> ₺'+(tot>0?' (%'+cov+' '+t('liveCoverage')+')':'')+'</span>':'');
+  const src=el('b-src');
+  if(src)src.textContent=L((CONFIG.spendBase||{}).source)+' '+L((CONFIG.spendBase||{}).note);
+}
+window.updateLive=updateLive;
+
+/* ---- toplu hesap ---- */
+function computeBuyer(){
+  const rate=usdRate();
+  const rows=[];let e31=0,e34=0,covered=0;
+  bRows.forEach((r,i)=>{
+    const o=calcBRow(r);
+    if(o.emis<=0&&o.spend<=0)return;
+    rows.push({name:(r.name||'').trim()||(t('supName')+' '+(i+1)),cat:r.cat,method:r.method,matKey:r.matKey||'',
+      trMode:r.trMode||'',verified:!!r.verified,spend:o.spend,emis31:o.emis31,emis34:o.emis34,emis:o.emis,
+      q:o.q,unc:o.unc,alloc:o.share,intensity:o.intensity,share:0,cum:0,outlier:false});
+    e31+=o.emis31;e34+=o.emis34;covered+=o.spend;
+  });
+  rows.sort((a,b)=>b.emis-a.emis);
+  const totalSpend=nz(val('b-totalspend'));
+  const uncovered=Math.max(0,totalSpend-covered);
+  let extra=0,extraBasis='';
+  if(uncovered>0){
+    const ws=rows.filter(x=>x.spend>0);
+    const ss=ws.reduce((a,b)=>a+b.spend,0),se=ws.reduce((a,b)=>a+b.emis,0);
+    if(ss>0&&se>0){extra=uncovered*(se/ss);extraBasis='portfolio';}
+    else{extra=(uncovered/rate)*(((SF().other)||{}).value||0.45);extraBasis='default';}
+  }
+  const measured=e31+e34, total=measured+extra;
+  let run=0;rows.forEach(x=>{x.share=total>0?x.emis/total:0;run+=x.emis;x.cum=measured>0?run/measured:0;});
+  let top80=0,acc=0;
+  for(const x of rows){acc+=x.emis;top80++;if(measured>0&&acc>=0.8*measured)break;}
+  let wq=0,wu=0;
+  rows.forEach(x=>{wq+=x.emis*x.q;wu+=x.emis*x.unc;});
+  if(extra>0){wq+=extra*5;wu+=extra*(dqOf(5).unc||80);}
+  const dqScore=total>0?wq/total:0,uncPct=total>0?wu/total:0;
+  const primary=rows.filter(x=>x.q<=2).reduce((a,b)=>a+b.emis,0);
+  const primaryPct=total>0?Math.round(primary/total*100):0;
+  const ints=rows.filter(x=>x.intensity>0).map(x=>x.intensity).sort((a,b)=>a-b);
+  const med=ints.length?ints[Math.floor(ints.length/2)]:0;
+  const om=BS().outlierMultiple||3;
+  rows.forEach(x=>{x.outlier=med>0&&x.intensity>om*med;});
+  const prio=rows.filter(x=>x.q>=3&&x.emis>0).map(x=>({name:x.name,q:x.q,emis:x.emis,share:x.share,method:x.method,score:x.share*100*x.q}))
+    .sort((a,b)=>b.score-a.score).slice(0,5);
+  const items=[];
+  rows.forEach(x=>{
+    items.push({name:x.name,scope:3,cat:'3.1',amount:x.spend||x.emis31,unit:x.spend?'₺':'kg CO₂e',emis:x.emis31,quality:x.q<=2?'measured':'estimate',method:x.method,q:x.q});
+    if(x.emis34>0)items.push({name:x.name+' — '+t('trTitle'),scope:3,cat:'3.4',amount:x.emis34,unit:'kg CO₂e',emis:x.emis34,quality:'estimate',method:x.trMode,q:x.q});
+  });
+  if(extra>0)items.push({name:t('extrapRow'),scope:3,cat:'3.1',amount:uncovered,unit:'₺',emis:extra,quality:'estimate',method:'spend',q:5});
+  const cats={};
+  if(e31+extra>0)cats['3.1']=e31+extra;
+  if(e34>0)cats['3.4']=e34;
+  return {type:'buyer',company:val('b-company'),year:val('b-year'),sector:t('buyerScope3'),
+    rows:rows,items:items,usdRate:rate,totalSpend:totalSpend,coveredSpend:covered,uncoveredSpend:uncovered,
+    coveragePct:totalSpend>0?Math.round(covered/totalSpend*100):0,extraEmis:extra,extraBasis:extraBasis,
+    e31:e31+extra,e34:e34,s1:0,s2loc:0,s2mkt:0,s3:total,cats:cats,total:total,
+    supplierCount:rows.length,dqScore:dqScore,uncPct:uncPct,primaryPct:primaryPct,measuredPct:primaryPct,
+    top80:top80,medianIntensity:med,priority:prio,scenario:{green:0,mode:0,rec:0}};
+}
+window.calcBuyer=function(){
+  const r=computeBuyer();
+  if(!r.rows.length){alert(t('bNoData'));return;}
+  lastResult=r;renderResult(r);show('screen-result');
+};
+
+/* ---- alıcı rapor ekranı ---- */
+function qBadge(q){return '<span class="qb q'+q+'">'+q+'/5</span>';}
+function methodName(m){return t('m_'+m)||m;}
+function renderBuyerResult(r){
+  const box=el('buyer-block');if(!box)return;box.style.display='';
+  r.rows=r.rows||[];r.priority=r.priority||[];
+  if(r.e31==null)r.e31=(r.cats&&r.cats['3.1'])||r.s3||0;
+  r.e34=r.e34||0;r.dqScore=r.dqScore||0;r.uncPct=r.uncPct||0;r.primaryPct=r.primaryPct||0;
+  r.supplierCount=r.supplierCount||r.rows.length;r.totalSpend=r.totalSpend||0;
+  const H=[];
+  /* KPI */
+  H.push('<div class="kpis">'+
+    '<div class="kpi"><b>'+fmt(r.e31)+'</b><span>'+t('kpiS31')+' (kg CO₂e)</span></div>'+
+    (r.e34>0?'<div class="kpi"><b>'+fmt(r.e34)+'</b><span>'+t('kpiS34')+' (kg CO₂e)</span></div>':'')+
+    (r.dqScore>0?'<div class="kpi"><b>'+fmt1(r.dqScore)+'/5</b><span>'+t('kpiDq')+'</span></div>':'')+
+    '<div class="kpi"><b>%'+r.primaryPct+'</b><span>'+t('kpiPrimary')+'</span></div>'+
+    (r.uncPct>0?'<div class="kpi"><b>±%'+Math.round(r.uncPct)+'</b><span>'+t('kpiUnc')+'</span></div>':'')+
+    '<div class="kpi"><b>'+r.supplierCount+'</b><span>'+t('kpiSuppliers')+'</span></div>'+
+  '</div>');
+  /* belirsizlik araligi */
+  if(r.uncPct>0){const lo=r.total*(1-r.uncPct/100),hi=r.total*(1+r.uncPct/100);
+  H.push('<p class="sub" style="font-size:.84rem;margin:-8px 0 16px">'+t('uncRange')+': <b>'+fmt(lo)+' – '+fmt(hi)+'</b> kg CO₂e</p>');}
+  /* kapsama */
+  if(r.totalSpend>0){
+    const cp=Math.min(100,r.coveragePct),up=100-cp;
+    H.push('<h3>'+t('covTitle')+'</h3><div class="cov">'+
+      '<div class="covbar"><i class="a" style="width:'+cp+'%"></i><i class="b" style="width:'+up+'%"></i></div>'+
+      '<div class="leg"><s style="color:var(--green)">'+t('covCovered')+': '+fmtTL(r.coveredSpend)+' ₺ (%'+cp+')</s>'+
+      '<s style="color:#d6c38a">'+t('covUncovered')+': '+fmtTL(r.uncoveredSpend)+' ₺ (%'+up+')</s></div>'+
+      (r.extraEmis>0?'<p class="srctext">'+t('covExtra').replace('{e}',fmt(r.extraEmis)).replace('{m}',t(r.extraBasis==='portfolio'?'covPortfolio':'covDefault'))+'</p>':'')+
+    '</div>');
+  }else{
+    H.push('<p class="srctext" style="margin-bottom:14px">'+t('covMissing')+'</p>');
+  }
+  if(!r.rows.length){
+    H.push('<h3>'+t('tblTitle')+'</h3><div class="tblwrap"><table class="rep"><tbody>');
+    (r.items||[]).forEach(it=>H.push('<tr><td>'+esc(it.name)+'</td><td class="n">'+fmt(it.emis)+'</td></tr>'));
+    H.push('</tbody></table></div>');box.innerHTML=H.join('');return;
+  }
+  /* tedarikci tablosu */
+  H.push('<h3>'+t('tblTitle')+'</h3><div class="tblwrap"><table class="rep"><thead><tr>'+
+    ['tblName','tblMethod','tblSpend','tblE31','tblE34','tblTotal','tblShare','tblCum','tblQ','tblInt'].map(k=>'<th'+(['tblSpend','tblE31','tblE34','tblTotal','tblShare','tblCum','tblInt'].indexOf(k)>=0?' style="text-align:right"':'')+'>'+t(k)+'</th>').join('')+
+    '</tr></thead><tbody>');
+  r.rows.forEach(x=>{
+    H.push('<tr><td>'+esc(x.name)+(x.outlier?' <span class="flag">'+t('outlier')+'</span>':'')+'</td>'+
+      '<td>'+methodName(x.method)+'</td>'+
+      '<td class="n">'+(x.spend>0?fmtTL(x.spend):'—')+'</td>'+
+      '<td class="n">'+fmt(x.emis31)+'</td>'+
+      '<td class="n">'+(x.emis34>0?fmt(x.emis34):'—')+'</td>'+
+      '<td class="n">'+fmt(x.emis)+'</td>'+
+      '<td class="n">%'+fmt1(x.share*100)+'</td>'+
+      '<td class="n">%'+fmt1(x.cum*100)+'</td>'+
+      '<td class="q">'+qBadge(x.q)+'</td>'+
+      '<td class="n">'+(x.intensity>0?fmt1(x.intensity):'—')+'</td></tr>');
+  });
+  if(r.extraEmis>0)H.push('<tr class="grp"><td>'+t('extrapRow')+'</td><td>'+t('m_spend')+'</td><td class="n">'+fmtTL(r.uncoveredSpend)+'</td><td class="n">'+fmt(r.extraEmis)+'</td><td class="n">—</td><td class="n">'+fmt(r.extraEmis)+'</td><td class="n">%'+fmt1(r.total>0?r.extraEmis/r.total*100:0)+'</td><td class="n">—</td><td class="q">'+qBadge(5)+'</td><td class="n">—</td></tr>');
+  H.push('</tbody></table></div><p class="srctext">'+t('tblNote')+'</p>');
+  /* pareto */
+  if(r.rows.length>1){
+    const top=r.rows.slice(0,10),mx=top[0]?top[0].emis:1;
+    H.push('<h3>'+t('paretoTitle')+'</h3><div class="pareto">');
+    top.forEach((x,i)=>{H.push('<div class="pb"><span class="nm">'+esc(x.name)+'</span><span class="tr"><i class="'+(i<r.top80?'hot':'')+'" style="width:'+Math.max(2,x.emis/mx*100)+'%"></i></span><span class="vv">%'+fmt1(x.share*100)+'</span></div>');});
+    H.push('</div><p class="srctext">'+t('paretoNote').replace('{n}',r.top80)+'</p>');
+  }
+  /* oncelik */
+  if(r.priority.length){
+    H.push('<h3>'+t('prioTitle')+'</h3><p class="sub" style="font-size:.84rem">'+t('prioNote')+'</p><div class="prio">');
+    r.priority.forEach((p,i)=>{H.push('<div class="p"><span class="n">'+(i+1)+'</span><span class="w">'+esc(p.name)+'<i>'+t('prioReason').replace('{s}','%'+fmt1(p.share*100)).replace('{q}',p.q).replace('{m}',methodName(p.method))+'</i></span>'+qBadge(p.q)+'</div>');});
+    H.push('</div>');
+  }
+  /* senaryo */
+  const S=BS();
+  H.push('<h3>'+t('scenTitle')+'</h3><div class="scen">'+
+    '<div class="lv"><span>'+t('scenGreen').replace('{n}',S.topN||5)+'</span><input type="range" id="sc-green" min="0" max="100" step="5" value="0" oninput="applyScenario()"><span class="sv" id="sc-green-v">%0</span></div>'+
+    '<div class="lv"><span>'+t('scenMode')+'</span><input type="range" id="sc-mode" min="0" max="100" step="5" value="0" oninput="applyScenario()"><span class="sv" id="sc-mode-v">%0</span></div>'+
+    '<div class="lv"><span>'+t('scenRec')+'</span><input type="range" id="sc-rec" min="0" max="100" step="5" value="0" oninput="applyScenario()"><span class="sv" id="sc-rec-v">%0</span></div>'+
+    '<div class="res"><span>'+t('scenNew')+'</span><b id="sc-total">'+fmt(r.total)+'</b><span>kg CO₂e</span><span id="sc-saving" style="color:var(--green);font-weight:700"></span></div>'+
+    '<p class="srctext">'+t('scenAssump').replace('{g}',Math.round((S.greenElecShare||0.25)*100)).replace('{r}',Math.round((S.recycledCutPct||0.35)*100))+'</p>'+
+  '</div>');
+  H.push('<p class="srctext">'+esc(L((CONFIG.spendBase||{}).source)+' '+L((CONFIG.spendBase||{}).note))+'</p>');
+  box.innerHTML=H.join('');
+}
+window.applyScenario=function(){
+  const r=lastResult;if(!r||r.type!=='buyer')return;
+  const S=BS(),g=nz(val('sc-green'))/100,m=nz(val('sc-mode'))/100,c=nz(val('sc-rec'))/100;
+  const topN=S.topN||5,es=S.greenElecShare||0.25,rc=S.recycledCutPct||0.35;
+  const sGreen=r.rows.slice(0,topN).reduce((a,x)=>a+x.emis31,0)*es*g;
+  const rf=(CONFIG.factors[S.modeShiftFrom]||{}).value||0.107,sv=(CONFIG.factors[S.modeShiftTo]||{}).value||0.016;
+  const sMode=r.rows.filter(x=>x.trMode===S.modeShiftFrom).reduce((a,x)=>a+x.emis34,0)*Math.max(0,1-sv/rf)*m;
+  const pairs=S.recycledPairs||{};
+  const sRec=r.rows.filter(x=>x.method==='activity'&&pairs[x.matKey]).reduce((a,x)=>{
+    const f1=(CONFIG.factors[x.matKey]||{}).value||0,f2=(CONFIG.factors[pairs[x.matKey]]||{}).value||0;
+    return a+(f1>0?x.emis31*Math.max(0,1-f2/f1):0);},0)*c;
+  const save=sGreen+sMode+sRec,nt=Math.max(0,r.total-save);
+  r.scenario={green:g*100,mode:m*100,rec:c*100,saving:save};
+  ['green','mode','rec'].forEach(k=>{const e=el('sc-'+k+'-v');if(e)e.textContent='%'+Math.round(nz(val('sc-'+k)));});
+  const tEl=el('sc-total');if(tEl)tEl.textContent=fmt(nt);
+  const sEl=el('sc-saving');
+  if(sEl)sEl.textContent=save>0?('−'+fmt(save)+' kg  (−%'+fmt1(r.total>0?save/r.total*100:0)+')'):'';
+};
+
+/* ---- Excel şablonu / içe aktarma ---- */
+const B_COLS=['name','cat','method','spend','supTon','allocNum','allocDen','allocMode','verified','matKey','qty','qtyUnit','trMode','trTon','trKm'];
+function tplHead(){return [t('supName'),t('catCol'),t('methodCol'),t('fSpendOpt'),t('fSupTon'),t('fAllocNum'),t('fAllocDen'),t('fAllocMode'),t('fVerified'),t('fMaterial'),t('fQty'),t('fUnit'),t('trMode'),t('trTon'),t('trKm')];}
+window.downloadSupplierTemplate=function(){
+  if(!window.XLSX){alert('Excel kütüphanesi yüklenemedi.');return;}
+  const wb=XLSX.utils.book_new();
+  const rows=[tplHead(),
+    ['Örnek: Et tedarikçisi','agriculture','activity','2400000','','','','','','food_beef_kg','6000','kg','freight_road_tkm','6','180'],
+    ['Örnek: Kimyasal tedarikçisi','chemicals','supplier','520000','180','520000','26000000','revenue','E','','','','',''],
+    ['Örnek: Acentenin aldığı otel','hotel','activity','','','','','','','stay_4_night','3600','','',''],
+    ['Örnek: Charter uçuş','other','activity','','','','','','','flight_short_pkm','2400000','','',''],
+    ['Örnek: Danışmanlık','consulting','spend','180000','','','','','','','','','','']];
+  const ws=XLSX.utils.aoa_to_sheet(rows);ws['!cols']=B_COLS.map(()=>({wch:16}));
+  XLSX.utils.book_append_sheet(wb,ws,'Tedarikciler');
+  const c1=[[t('catCol'),'kod / code','kgCO2e/USD']];
+  Object.keys(SF()).forEach(k=>c1.push([L(SF()[k].name),k,SF()[k].value]));
+  const w1=XLSX.utils.aoa_to_sheet(c1);w1['!cols']=[{wch:40},{wch:18},{wch:14}];
+  XLSX.utils.book_append_sheet(wb,w1,'Kategori kodlari');
+  const c2=[[t('fMaterial'),'kod / code',t('colEmis'),'birim / unit']];
+  matKeys().forEach(k=>c2.push([L(CONFIG.factors[k].name),k,CONFIG.factors[k].value,CONFIG.factors[k].unit]));
+  (CONFIG.freightModes||[]).forEach(k=>{if(CONFIG.factors[k])c2.push([L(CONFIG.factors[k].name),k,CONFIG.factors[k].value,CONFIG.factors[k].unit]);});
+  const w2=XLSX.utils.aoa_to_sheet(c2);w2['!cols']=[{wch:36},{wch:22},{wch:14},{wch:16}];
+  XLSX.utils.book_append_sheet(wb,w2,'Malzeme kodlari');
+  const c3=[[t('methodCol'),'kod / code',t('dqTitle')],
+    [t('m_supplier'),'supplier','1-2'],[t('m_activity'),'activity','3'],[t('m_spend'),'spend','5']];
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(c3),'Yontem kodlari');
+  XLSX.writeFile(wb,'kapsam3-turizm-veri-sablonu.xlsx');
+};
+function normMethod(v){
+  const s=(''+v).toLowerCase().trim();
+  if(!s)return 'spend';
+  if(s.indexOf('tedarik')>=0||s.indexOf('suppl')>=0)return 'supplier';
+  if(s.indexOf('malzeme')>=0||s.indexOf('activ')>=0||s.indexOf('faaliyet')>=0)return 'activity';
+  if(s.indexOf('harcama')>=0||s.indexOf('spend')>=0)return 'spend';
+  return 'spend';
+}
+function rowsFromMatrix(m){
+  let added=0;
+  m.forEach(a=>{
+    if(!a||!a.length)return;
+    const first=(''+(a[0]||'')).trim();
+    if(!first)return;
+    if(first===t('supName')||/^(tedarik[çc]i ad|supplier name)/i.test(first))return;
+    const o=newBRow();
+    o.name=first;
+    o.cat=(''+(a[1]||'other')).trim()||'other';
+    if(!SF()[o.cat])o.cat='other';
+    o.method=normMethod(a[2]);
+    o.spend=a[3]||'';o.supTon=a[4]||'';o.allocNum=a[5]||'';o.allocDen=a[6]||'';
+    const am=(''+(a[7]||'')).toLowerCase();
+    o.allocMode=(am.indexOf('vol')>=0||am.indexOf('mikt')>=0||am.indexOf('ton')>=0)?'volume':'revenue';
+    const vf=(''+(a[8]||'')).toLowerCase().trim();
+    o.verified=(vf==='e'||vf==='evet'||vf==='y'||vf==='yes'||vf==='true'||vf==='1'||vf==='x');
+    o.matKey=(''+(a[9]||'')).trim();if(o.matKey&&!CONFIG.factors[o.matKey])o.matKey='';
+    o.qty=a[10]||'';
+    o.qtyUnit=(''+(a[11]||'kg')).toLowerCase().indexOf('ton')>=0?'ton':'kg';
+    o.trMode=(''+(a[12]||'')).trim();if(o.trMode&&!CONFIG.factors[o.trMode])o.trMode='';
+    o.trTon=a[13]||'';o.trKm=a[14]||'';
+    bRows.push(o);added++;
+  });
+  if(added){bRows=bRows.filter(r=>(r.name||'').trim()||nz(r.spend)||nz(r.supTon)||nz(r.qty));renderBRows();}
+  return added;
+}
+window.importSupplierFile=function(input){
+  const f=input.files&&input.files[0];if(!f)return;
+  if(!window.XLSX){alert('Excel kütüphanesi yüklenemedi.');return;}
+  const rd=new FileReader();
+  rd.onload=function(ev){
+    try{
+      const wb=XLSX.read(new Uint8Array(ev.target.result),{type:'array'});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const m=XLSX.utils.sheet_to_json(ws,{header:1,raw:true,defval:''});
+      const n=rowsFromMatrix(m);
+      alert(n>0?t('impOk').replace('{n}',n):t('impEmpty'));
+    }catch(e){alert(t('impErr')+' '+(e.message||e));}
+    input.value='';
+  };
+  rd.readAsArrayBuffer(f);
+};
+const EXAMPLE_ROWS=[
+    ['Et ve şarküteri tedarikçisi','agriculture','activity','2400000','','','','','','food_beef_kg','6000','kg','freight_road_tkm','6','180'],
+    ['Kuzu eti','agriculture','activity','950000','','','','','','food_lamb_kg','2500','kg','',''],
+    ['Tavuk ve hindi','agriculture','activity','1100000','','','','','','food_chicken_kg','14000','kg','',''],
+    ['Süt ürünleri ve peynir','agriculture','activity','1300000','','','','','','food_cheese_kg','5500','kg','',''],
+    ['Sebze-meyve hali','agriculture','activity','1500000','','','','','','food_veg_kg','60000','kg','freight_road_tkm','60','120'],
+    ['Kuru gıda toptancısı','food','spend','2800000','','','','','','','','','',''],
+    ['İçecek tedarikçisi','food','spend','1900000','','','','','','','','','',''],
+    ['Kahve','food','activity','420000','','','','','','food_coffee_kg','1200','kg','',''],
+    ['Nevresim ve havlu','linen','activity','650000','','','','','','linen_cotton_kg','2200','kg','',''],
+    ['Dış çamaşırhane','cleaning','activity','780000','','','','','','laundry_kg','90000','kg','',''],
+    ['Temizlik ve havuz kimyasalları','chemicals','supplier','520000','180','520000','26000000','revenue','H','','','','',''],
+    ['Tadilat ve mobilya','wood','spend','1600000','','','','','','','','','','']];
+window.loadExample=function(){
+  const filled=bRows.some(r=>(r.name||'').trim()||nz(r.spend)||nz(r.qty)||nz(r.supTon));
+  if(filled&&!confirm(t('exampleAsk')))return;
+  bRows=[];rowsFromMatrix(EXAMPLE_ROWS);
+  const b=el('b-company'),y=el('b-year'),ts=el('b-totalspend');
+  if(b&&!b.value)b.value='Örnek Ege Tatil Köyü (120 oda)';if(y&&!y.value)y.value='2025';if(ts&&!ts.value)ts.value='19000000';
+  updateLive();const lv=el('b-live');if(lv)lv.insertAdjacentHTML('afterbegin','<span class="flag">'+t('exampleNote')+'</span>');
+};
+window.importPaste=function(){
+  const txt=val('b-paste-area');
+  if(!txt.trim()){alert(t('impEmpty'));return;}
+  const m=txt.replace(/\r/g,'').split('\n').filter(l=>l.trim()).map(l=>l.split('\t'));
+  const n=rowsFromMatrix(m);
+  alert(n>0?t('impOk').replace('{n}',n):t('impEmpty'));
+  if(n>0){el('b-paste-area').value='';el('b-paste').classList.add('hidden');}
+};
+function renderResult(r){document.getElementById('total-num').textContent=fmt(r.total);document.getElementById('total-unit').textContent=t(r.type==='buyer'?'totalUnitB':'totalUnit');document.getElementById('result-title').textContent=t('resultTitle');const meta=[];if(r.company)meta.push(r.company);if(r.year)meta.push(r.year);meta.push(r.sector);if(r.type==='supplier'&&r.profile){const emp=parseFloat(r.profile.employees)||0;if(emp>0)meta.push(t('sizeLabel')+': '+sizeClass(emp));if(r.profile.market){const mf=(CONFIG.profile.fields.find(f=>f.id==='market')||{}).options||[];const mo=mf.find(o=>o.value===r.profile.market);if(mo)meta.push(t('marketLabel')+': '+L(mo.label));}}if(r.type==='buyer'&&r.supplierCount!=null)meta.push(r.supplierCount+' '+t('supplierWord'));document.getElementById('result-meta').textContent=meta.join(' · ');
+  const scEl=document.getElementById('scopes'),donutEl=document.getElementById('donut');if(r.type==='buyer'){document.getElementById('scopes-block').style.display='none';renderBuyerResult(r);}else{document.getElementById('scopes-block').style.display='';var _bb=document.getElementById('buyer-block');if(_bb)_bb.style.display='none';scEl.innerHTML='';const vals={1:r.s1,2:r.s2mkt,3:r.s3};
+    const R=70,C=2*Math.PI*R;let off=0,segs='';[1,2,3].forEach(s=>{const v=vals[s]||0;const len=(r.total>0?v/r.total:0)*C;segs+='<circle cx="85" cy="85" r="'+R+'" fill="none" stroke="'+scopeColor(s)+'" stroke-width="22" stroke-dasharray="'+len+' '+(C-len)+'" stroke-dashoffset="'+(-off)+'" transform="rotate(-90 85 85)"></circle>';off+=len;});
+    const big=r.total>=10000?fmt(r.total/1000)+' t':fmt(r.total)+' kg';
+    donutEl.innerHTML='<svg viewBox="0 0 170 170" width="170" height="170"><circle cx="85" cy="85" r="70" fill="none" stroke="#eef4f0" stroke-width="22"></circle>'+segs+'</svg><div class="center"><b>'+big+'</b><span>CO₂e/yıl</span></div>';
+    [1,2,3].forEach(s=>{const v=vals[s]||0;const pct=r.total>0?Math.round(v/r.total*100):0;const d=document.createElement('div');d.className='scope';const sub=s===2?'<div class="s">'+t('s2loc')+': '+fmt(r.s2loc)+'</div>':'';d.innerHTML='<div class="lft"><span class="dot" style="background:'+scopeColor(s)+'"></span><div>'+scopeName(s)+sub+'</div></div><div style="text-align:right"><div class="v">'+fmt(v)+'</div><div class="s">%'+pct+'</div></div>';scEl.appendChild(d);});
+    document.getElementById('scope2note').textContent=t('scope2noteTxt');}
+  const mBox=document.getElementById('metrics');mBox.innerHTML='';const mt=document.getElementById('metrics-title');if(r.type==='supplier'&&CONFIG.intensity){const p=r.profile||{};let any=false;const emp=parseFloat(p.employees)||0,rev=parseFloat(p.revenue)||0,out=parseFloat(p.output)||0;if(CONFIG.intensity.perEmployee&&emp>0){any=true;mBox.appendChild(metricEl(fmt(r.total/emp)+' '+t('kgco2e'),t('perEmployee')));}if(CONFIG.intensity.perRevenue&&rev>0){any=true;const base=CONFIG.intensity.revenueBase||1000000;mBox.appendChild(metricEl(fmt(r.total/(rev/base))+' '+t('kgco2e'),t('perRevenue')+' '+L(CONFIG.intensity.revenueBaseLabel)));}if(CONFIG.intensity.perOutput&&out>0){any=true;mBox.appendChild(metricEl(fmt1(r.total/out)+' '+t('kgco2e'),t('perOutput')));}mt.style.display=any?'':'none';mBox.style.display=any?'':'none';if(!any){mBox.innerHTML='<div class="metric" style="grid-column:1/-1"><span>'+(lang==='tr'?'Yoğunluk için firma profilini doldurun.':'Fill company profile for intensity.')+'</span></div>';mBox.style.display='';mt.style.display='';}}else{mt.style.display='none';mBox.style.display='none';}
+  const dqBox=document.getElementById('dq-box');if(r.type==='supplier'&&dqOn()){const p=r.measuredPct||0;dqBox.style.display='';dqBox.innerHTML='<b>'+t('dqTitle')+'</b><div>'+t('dqText').replace('{p}',p)+'</div><div class="bar2"><i style="width:'+p+'%"></i></div>';}else{dqBox.style.display='none';}
+  const tb=document.getElementById('breakdown-body');tb.innerHTML='';const addRow=(label,val,cls)=>{const tr=document.createElement('tr');if(cls)tr.className=cls;tr.innerHTML='<td>'+label+'</td><td class="n">'+fmt(val)+'</td>';tb.appendChild(tr);};if(r.type!=='buyer'){addRow(t('scope1'),r.s1);addRow(t('scope2locrow'),r.s2loc);addRow(t('scope2mktrow'),r.s2mkt);}addRow(t(r.type==='buyer'?'scope3rowB':'scope3row'),r.s3,'grp');const cats=CONFIG.scope3cats||{};Object.keys(r.cats).sort().forEach(c=>{const nm=cats[c]?L(cats[c]):c;addRow('&nbsp;&nbsp;'+c+' · '+nm,r.cats[c]);});addRow(t(r.type==='buyer'?'totalRowB':'totalRow'),r.total,'tot');
+  const trees=r.total/((CONFIG.benchmarks&&CONFIG.benchmarks.tree_kg_per_year)||21);const km=r.total/((CONFIG.benchmarks&&CONFIG.benchmarks.car_km_equiv_factor)||0.170);document.getElementById('equiv').innerHTML='<div><span class="ic">🌳</span><div><b>'+fmt(trees)+'</b>'+t('equivTree')+'</div></div><div><span class="ic">🚗</span><div><b>'+fmt(km)+'</b>'+t('equivCar')+'</div></div>';document.getElementById('meth-note').textContent=L(CONFIG.meta.methodology);document.getElementById('factor-notice').textContent=L(CONFIG.meta.notice);updateSaveUi();}
+function metricEl(big,small){const d=document.createElement('div');d.className='metric';d.innerHTML='<b>'+big+'</b><span>'+small+'</span>';return d;}
+window.goBackFromResult=function(){show('screen-buyer');};
+
+/* ---- EXCEL ---- */
+function reportRows(r){
+  const rows=[];
+  rows.push([t('resultTitle')]);
+  rows.push([t('companyName'),r.company||'']);
+  rows.push([t('yearLabel'),r.year||'']);
+  rows.push(['Sektör / Sector',r.sector||'']);
+  rows.push([]);
+  if(r.type!=='buyer'){rows.push([t('scope1'),Math.round(r.s1)]);rows.push([t('scope2locrow'),Math.round(r.s2loc)]);rows.push([t('scope2mktrow'),Math.round(r.s2mkt)]);}
+  rows.push([t('scope3row'),Math.round(r.s3)]);
+  rows.push([t('totalRow'),Math.round(r.total)]);
+  if(r.type==='supplier'&&r.measuredPct!=null)rows.push([t('dqTitle')+' (% ölçüm)',r.measuredPct]);
+  rows.push([]);
+  if(r.type==='buyer'){
+    rows.push([t('kpiS31'),Math.round(r.e31||r.s3||0)]);
+    if(r.e34)rows.push([t('kpiS34'),Math.round(r.e34)]);
+    if(r.dqScore)rows.push([t('kpiDq'),Math.round(r.dqScore*10)/10]);
+    rows.push([t('kpiPrimary')+' (%)',r.primaryPct||0]);
+    if(r.uncPct)rows.push([t('kpiUnc')+' (+/-%)',Math.round(r.uncPct)]);
+    if(r.totalSpend){rows.push([t('bTotalSpend'),Math.round(r.totalSpend)]);rows.push([t('covCovered'),Math.round(r.coveredSpend||0)]);rows.push([t('covUncovered'),Math.round(r.uncoveredSpend||0)]);rows.push([t('extrapRow'),Math.round(r.extraEmis||0)]);}
+    if(r.usdRate)rows.push([t('bUsd'),r.usdRate]);
+    rows.push([]);
+    rows.push([t('tblName'),t('tblMethod'),t('catCol'),t('tblSpend'),t('tblE31'),t('tblE34'),t('tblTotal'),t('tblShare')+' %',t('tblQ'),t('tblInt')]);
+    (r.rows||[]).forEach(x=>{const cn=((CONFIG.spendFactors||{})[x.cat]||{}).name;rows.push([x.name,t('m_'+x.method)||x.method,cn?L(cn):x.cat,Math.round(x.spend||0),Math.round(x.emis31||0),Math.round(x.emis34||0),Math.round(x.emis||0),Math.round((x.share||0)*1000)/10,x.q,Math.round((x.intensity||0)*10)/10]);});
+    if(r.extraEmis)rows.push([t('extrapRow'),t('m_spend'),'',Math.round(r.uncoveredSpend||0),Math.round(r.extraEmis),0,Math.round(r.extraEmis),'',5,'']);
+    if(r.priority&&r.priority.length){rows.push([]);rows.push([t('prioTitle')]);r.priority.forEach((p,i)=>rows.push([(i+1)+'. '+p.name,t('m_'+p.method)||p.method,'',' ',' ',' ',Math.round(p.emis),Math.round((p.share||0)*1000)/10,p.q,'']));}
+    return rows;
+  }
+  rows.push([t('colItem'),t('colScope'),t('colCat'),t('colAmount'),t('colUnit'),t('colEmis'),t('colQuality')]);
+  (r.items||[]).forEach(it=>{rows.push([it.name,it.scope,it.cat||'',it.amount,it.unit,Math.round(it.emis),qualLabel(it.quality)]);});
+  return rows;
+}
+window.exportExcel=function(){ if(!window.XLSX||!lastResult){alert('Excel kütüphanesi yüklenemedi.');return;} const ws=XLSX.utils.aoa_to_sheet(reportRows(lastResult)); ws['!cols']=[{wch:34},{wch:10},{wch:10},{wch:14},{wch:12},{wch:16},{wch:16}]; const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Rapor'); XLSX.writeFile(wb,'karbon-raporu-'+((lastResult.company||'firma')+'').replace(/\s+/g,'_')+'.xlsx'); };
+window.exportAllExcel=function(){ if(!window.XLSX){alert('Excel kütüphanesi yüklenemedi.');return;} const data=window._allReports||[]; if(!data.length){alert(lang==='tr'?'Aktarılacak rapor yok.':'No reports to export.');return;} const head=['Tarih/Date','Firma/Company','E-posta','Sektör/Sector','Tür/Type','Toplam kg CO2e','Kapsam1','Kapsam2 (pazar)','Kapsam3','% ölçüm']; const rows=[head]; data.forEach(d=>{rows.push([d._date||'',d.company||'',d.userEmail||'',d.sector||'',d.type==='buyer'?'Alıcı':'Tedarikçi',Math.round(d.total||0),Math.round(d.s1||0),Math.round(d.s2mkt||0),Math.round(d.s3||0),d.measuredPct||0]);}); const ws=XLSX.utils.aoa_to_sheet(rows); ws['!cols']=[{wch:18},{wch:22},{wch:24},{wch:20},{wch:12},{wch:16},{wch:12},{wch:14},{wch:12},{wch:10}]; const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Raporlar'); XLSX.writeFile(wb,'karbon-raporlarim.xlsx'); };
+
+/* ---- SAVE / REPORTS ---- */
+function updateSaveUi(){const btn=document.getElementById('save-btn');const hint=document.getElementById('save-hint');if(!btn)return;if(currentUser){btn.style.opacity=1;hint.textContent='';}else{btn.style.opacity=.85;hint.textContent=t('loginToSave');}}
+window.saveReport=async function(){const hint=document.getElementById('save-hint');if(!currentUser){openLogin();return;}if(!db||!lastResult)return;hint.textContent=t('saving');try{const payload=Object.assign({},lastResult,{createdAt:serverTimestamp(),userEmail:currentUser.email||''});await addDoc(collection(db,'reports',currentUser.uid,'items'),payload);hint.textContent=t('savedOk');}catch(e){hint.textContent=(lang==='tr'?'Kaydedilemedi: ':'Save failed: ')+(e.message||e);}};
+window.openReports=async function(){show('screen-reports');const list=document.getElementById('reports-list');const empty=document.getElementById('reports-empty');list.innerHTML='';empty.style.display='none';window._allReports=[];if(!currentUser){empty.textContent=t('saveNeedLogin');empty.style.display='';return;}try{const snap=await getDocs(query(collection(db,'reports',currentUser.uid,'items'),orderBy('createdAt','desc')));if(snap.empty){empty.textContent=t('noReports');empty.style.display='';return;}const all=[];snap.forEach(docSnap=>{const d=docSnap.data();const dt=d.createdAt&&d.createdAt.toDate?d.createdAt.toDate().toLocaleString(lang==='tr'?'tr-TR':'en-US'):'';d._date=dt;all.push(d);const el=document.createElement('div');el.className='rep-item';el.innerHTML='<div><b>'+fmt(d.total||0)+'</b> kg CO₂e<br><span class="fieldnote">'+((d.company||'')+' · '+(d.sector||'')+' · '+dt)+'</span></div><span>›</span>';el.onclick=()=>{lastResult=d;renderResult(d);show('screen-result');};list.appendChild(el);});window._allReports=all;}catch(e){empty.textContent=(lang==='tr'?'Yüklenemedi: ':'Load failed: ')+(e.message||e);empty.style.display='';}};
+
+/* ---- PDF RAPOR ---- */
+let _pdfFontCache=null;
+async function fetchPdfFonts(){
+  if(_pdfFontCache) return _pdfFontCache;
+  const b64=async(u)=>{const buf=await fetch(u).then(r=>{if(!r.ok)throw new Error('font '+r.status);return r.arrayBuffer();});const bytes=new Uint8Array(buf);let bin='';const ch=0x8000;for(let i=0;i<bytes.length;i+=ch){bin+=String.fromCharCode.apply(null,bytes.subarray(i,i+ch));}return btoa(bin);};
+  const base='https://cdn.jsdelivr.net/npm/dejavu-fonts-ttf@2.37.3/ttf/';
+  const [reg,bold]=await Promise.all([b64(base+'DejaVuSans.ttf'),b64(base+'DejaVuSans-Bold.ttf')]);
+  _pdfFontCache={reg,bold};return _pdfFontCache;
+}
+window.exportPDF=async function(){
+  if(!lastResult)return;
+  const r=lastResult, btn=document.getElementById('pdf-btn'), old=btn?btn.textContent:'';
+  if(btn){btn.textContent=t('pdfMaking');btn.disabled=true;}
+  try{
+    if(!window.jspdf||!window.jspdf.jsPDF) throw new Error('jsPDF');
+    const {jsPDF}=window.jspdf; const doc=new jsPDF({unit:'mm',format:'a4'});
+    const f=await fetchPdfFonts();
+    doc.addFileToVFS('DejaVuSans.ttf',f.reg);doc.addFont('DejaVuSans.ttf','DejaVu','normal');
+    doc.addFileToVFS('DejaVuSans-Bold.ttf',f.bold);doc.addFont('DejaVuSans-Bold.ttf','DejaVu','bold');
+    const FN='DejaVu', M=14, W=210, cw=W-2*M; let y=0;
+    const sani=(s)=>(''+(s==null?'':s)).replace(/₺/g,'TL').replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}⬀-⯿️]/gu,'').replace(/\s+/g,' ').trim();
+    const F=(st,sz,c)=>{doc.setFont(FN,st);doc.setFontSize(sz);const col=c||[30,38,29];doc.setTextColor(col[0],col[1],col[2]);};
+    const T=(s,x,yy,o)=>doc.text(sani(s),x,yy,o);
+    const GREEN=[11,93,59], MINT=[233,247,239], GRAY=[95,111,102], LGRAY=[140,150,143];
+    const C1=[240,138,93], C2=[244,192,78], C3=[63,159,184];
+    const dateStr=new Date().toLocaleDateString(lang==='tr'?'tr-TR':'en-US');
+    /* HEADER */
+    doc.setFillColor(GREEN[0],GREEN[1],GREEN[2]);doc.roundedRect(M,12,cw,26,3,3,'F');
+    F('bold',17,[255,255,255]);T(t('resultTitle'),M+8,24);
+    F('normal',9.5,[214,232,223]);T(t('pdfReportSub'),M+8,31.5);
+    F('bold',12,[255,255,255]);T('commited',W-M-8,21,{align:'right'});
+    F('normal',8,[214,232,223]);T('commitedevents.app',W-M-8,26.5,{align:'right'});
+    F('bold',7.5,[190,224,205]);T(t('pdfFree'),W-M-8,32,{align:'right'});
+    y=46;
+    /* META */
+    const meta=[]; if(r.company)meta.push(r.company); meta.push(r.sector); if(r.year)meta.push(''+r.year);
+    if(r.type==='supplier'&&r.profile){const emp=parseFloat(r.profile.employees)||0;if(emp>0)meta.push(t('sizeLabel')+': '+sizeClass(emp));if(r.profile.market){const mf=((CONFIG.profile.fields.find(x=>x.id==='market')||{}).options)||[];const mo=mf.find(o=>o.value===r.profile.market);if(mo)meta.push(t('marketLabel')+': '+L(mo.label));}}
+    if(r.type==='buyer'&&r.supplierCount!=null)meta.push(r.supplierCount+' '+t('supplierWord'));
+    F('bold',9.5,GREEN);const metaLines=doc.splitTextToSize(sani(meta.join('   ·   ')),cw);doc.text(metaLines.slice(0,2),M,y);y+=(Math.min(metaLines.length,2)-1)*5;
+    y+=6;
+    /* TOTAL BOX */
+    doc.setFillColor(MINT[0],MINT[1],MINT[2]);doc.roundedRect(M,y,cw,24,3,3,'F');
+    F('bold',8,GREEN);T((t('totalLbl')||'').toUpperCase(),M+8,y+8);
+    F('bold',22,GREEN);const numStr=fmt(r.total);T(numStr,M+8,y+18.5);const nw=doc.getTextWidth(sani(numStr));
+    F('normal',10,GRAY);T('kg CO₂e / '+(lang==='tr'?'yıl':'yr'),M+8+nw+3,y+18.5);
+    if(r.total>=1000){F('bold',13,GREEN);T(fmt(r.total/1000)+' t CO₂e',W-M-8,y+15,{align:'right'});}
+    y+=32;
+    /* SCOPE BARS (supplier) */
+    if(r.type!=='buyer'){
+      F('bold',11.5,[30,38,29]);T(t('pdfBreakdown'),M,y);y+=6.5;
+      const rows=[[r.s1,C1,t('s1')],[r.s2mkt,C2,t('s2')],[r.s3,C3,t('s3')]];
+      const maxv=Math.max(r.s1,r.s2mkt,r.s3,1);
+      rows.forEach(([v,col,name])=>{
+        const pct=r.total>0?Math.round(v/r.total*100):0;
+        F('normal',9.5,[40,48,40]);T(name,M,y);
+        F('bold',9.5,[40,48,40]);T(fmt(v)+' kg  ('+pct+'%)',W-M,y,{align:'right'});
+        y+=2;
+        doc.setFillColor(238,244,240);doc.roundedRect(M,y,cw,4.2,2,2,'F');
+        const w=Math.max(1.2,(v/maxv)*cw);doc.setFillColor(col[0],col[1],col[2]);doc.roundedRect(M,y,w,4.2,2,2,'F');
+        y+=8.5;
+      });
+      F('normal',7.6,LGRAY);T(t('s2loc')+': '+fmt(r.s2loc)+' kg  ·  '+t('scope2noteTxt'),M,y);y+=8;
+      /* SCOPE 3 CATS */
+      const ck=Object.keys(r.cats||{}).sort();
+      if(ck.length){F('bold',10.5,[30,38,29]);T(t('pdfCats'),M,y);y+=5.5;const cc=CONFIG.scope3cats||{};ck.forEach(c=>{const nm=cc[c]?L(cc[c]):'';F('normal',8.7,[70,80,72]);T(c+' · '+nm,M+2,y);F('bold',8.7,[40,48,40]);T(fmt(r.cats[c])+' kg',W-M,y,{align:'right'});y+=5.2;});y+=3;}
+    } else {
+      const mets=[[fmt(r.e31||r.s3||0)+' kg',t('kpiS31')]];
+      if(r.e34)mets.push([fmt(r.e34)+' kg',t('kpiS34')]);
+      if(r.dqScore)mets.push([fmt1(r.dqScore)+'/5',t('kpiDq')]);
+      mets.push(['%'+(r.primaryPct||0),t('kpiPrimary')]);
+      if(r.uncPct)mets.push(['±%'+Math.round(r.uncPct),t('kpiUnc')]);
+      const nK=mets.length,gpK=3.5,bwK=(cw-(nK-1)*gpK)/nK,bhK=18;
+      mets.forEach((m,i)=>{const x=M+i*(bwK+gpK);doc.setFillColor(246,250,247);doc.setDrawColor(224,235,228);doc.roundedRect(x,y,bwK,bhK,2.5,2.5,'FD');F('bold',10.5,GREEN);T(m[0],x+bwK/2,y+7.5,{align:'center'});F('normal',6.2,GRAY);const sm=doc.splitTextToSize(sani(m[1]),bwK-3);doc.text(sm.slice(0,2),x+bwK/2,y+12,{align:'center'});});
+      y+=bhK+7;
+      if(r.totalSpend>0){
+        const cp=Math.min(100,r.coveragePct||0);
+        F('bold',10,[30,38,29]);T(t('covTitle'),M,y);y+=4.5;
+        doc.setFillColor(238,244,240);doc.roundedRect(M,y,cw,5,2.5,2.5,'F');
+        doc.setFillColor(19,160,101);doc.roundedRect(M,y,Math.max(1.2,cw*cp/100),5,2.5,2.5,'F');y+=8;
+        F('normal',7.4,GRAY);T(t('covCovered')+': '+fmtTL(r.coveredSpend||0)+' TL (%'+cp+')   ·   '+t('covUncovered')+': '+fmtTL(r.uncoveredSpend||0)+' TL'+(r.extraEmis?('   ·   +'+fmt(r.extraEmis)+' kg'):''),M,y);y+=7;
+      }
+      F('bold',11,[30,38,29]);T(t('tblTitle'),M,y);y+=5.5;
+      const cN=M,cM=M+66,cT=M+128,cS=M+152,cQ=M+176;
+      F('bold',7.4,GRAY);T(t('tblName'),cN,y);T(t('tblMethod'),cM,y);T(t('tblTotal'),cT+22,y,{align:'right'});T(t('tblShare'),cS+16,y,{align:'right'});T(t('tblQ'),cQ+6,y,{align:'right'});
+      y+=1.5;doc.setDrawColor(224,235,228);doc.line(M,y,W-M,y);y+=4.2;
+      const shown=(r.rows||[]).slice(0,12);
+      shown.forEach(x=>{
+        F('normal',8.2,[40,48,40]);T(doc.splitTextToSize(sani(x.name),62)[0],cN,y);
+        F('normal',7.4,GRAY);T(doc.splitTextToSize(sani(t('m_'+x.method)||x.method),58)[0],cM,y);
+        F('bold',8.2,[40,48,40]);T(fmt(x.emis),cT+22,y,{align:'right'});
+        F('normal',8,GRAY);T('%'+fmt1((x.share||0)*100),cS+16,y,{align:'right'});T((x.q||'')+'/5',cQ+6,y,{align:'right'});
+        y+=5.1;});
+      if((r.rows||[]).length>shown.length){F('normal',7.4,LGRAY);T('+ '+((r.rows.length)-shown.length)+' '+t('supplierWord'),cN,y);y+=5;}
+      if(r.extraEmis){F('normal',8,[40,48,40]);T(t('extrapRow'),cN,y);F('bold',8,[40,48,40]);T(fmt(r.extraEmis),cT+22,y,{align:'right'});F('normal',8,GRAY);T('5/5',cQ+6,y,{align:'right'});y+=5.4;}
+      y+=2;
+      if(r.priority&&r.priority.length){
+        F('bold',10,[30,38,29]);T(t('prioTitle'),M,y);y+=5;
+        r.priority.slice(0,3).forEach((p,i)=>{F('normal',8,[40,48,40]);T((i+1)+'. '+p.name,M+2,y);F('normal',7.4,GRAY);T(t('prioReason').replace('{s}','%'+fmt1((p.share||0)*100)).replace('{q}',p.q).replace('{m}',t('m_'+p.method)||p.method),W-M,y,{align:'right'});y+=5;});
+        y+=2;
+      }
+    }
+    /* INTENSITY */
+    if(r.type==='supplier'&&CONFIG.intensity){
+      const p=r.profile||{},mets=[];const emp=parseFloat(p.employees)||0,rev=parseFloat(p.revenue)||0,out=parseFloat(p.output)||0;
+      if(CONFIG.intensity.perEmployee&&emp>0)mets.push([fmt(r.total/emp)+' kg',t('perEmployee')]);
+      if(CONFIG.intensity.perRevenue&&rev>0){const base=CONFIG.intensity.revenueBase||1000000;mets.push([fmt(r.total/(rev/base))+' kg',t('perRevenue')+' '+L(CONFIG.intensity.revenueBaseLabel)]);}
+      if(CONFIG.intensity.perOutput&&out>0)mets.push([fmt1(r.total/out)+' kg',t('perOutput')]);
+      if(mets.length){F('bold',10.5,[30,38,29]);T(t('metricsTitle'),M,y);y+=5.5;const n=mets.length,gap=4,bw=(cw-(n-1)*gap)/n,bh=16;mets.forEach((m,i)=>{const x=M+i*(bw+gap);doc.setFillColor(246,250,247);doc.setDrawColor(224,235,228);doc.roundedRect(x,y,bw,bh,2.5,2.5,'FD');F('bold',12,GREEN);T(m[0],x+bw/2,y+7.5,{align:'center'});F('normal',7.3,GRAY);const sm=doc.splitTextToSize(sani(m[1]),bw-4);doc.text(sm.slice(0,2),x+bw/2,y+12,{align:'center'});});y+=bh+6;}
+    }
+    /* DATA QUALITY */
+    if(r.type==='supplier'&&dqOn()){const pp=r.measuredPct||0;F('bold',10.5,[30,38,29]);T(t('dqTitle'),M,y);y+=5;doc.setFillColor(213,231,220);doc.roundedRect(M,y,cw,5,2.5,2.5,'F');doc.setFillColor(19,160,101);doc.roundedRect(M,y,Math.max(1.2,cw*pp/100),5,2.5,2.5,'F');y+=9;F('normal',8,GRAY);const dqt=doc.splitTextToSize(sani(t('dqText').replace('{p}',pp)),cw);doc.text(dqt,M,y);y+=dqt.length*4+3;}
+    /* EQUIV */
+    const trees=r.total/((CONFIG.benchmarks&&CONFIG.benchmarks.tree_kg_per_year)||21);const km=r.total/((CONFIG.benchmarks&&CONFIG.benchmarks.car_km_equiv_factor)||0.170);
+    F('normal',8.6,GRAY);T('≈ '+fmt(trees)+' '+t('equivTree')+'    ·    '+fmt(km)+' '+t('equivCar'),M,y);
+    /* FOOTER */
+    const notice=doc.splitTextToSize(sani(L(CONFIG.meta.notice)),cw);
+    doc.setDrawColor(230,237,233);doc.line(M,270,W-M,270);
+    F('normal',7,LGRAY);doc.text(notice.slice(0,3),M,274);
+    F('bold',7.5,GRAY);T('commitedevents.app · Turizm Kapsam 3 Modülü v'+((CONFIG.meta&&CONFIG.meta.version)||'3')+' · '+t('pdfFreeTool'),M,291);
+    F('normal',7.5,LGRAY);T(t('pdfGenerated')+': '+dateStr,W-M,291,{align:'right'});
+    doc.save('karbon-raporu-'+((r.company||'firma')+'').replace(/\s+/g,'_')+'.pdf');
+  }catch(e){console.warn('PDF',e);alert(t('pdfFail'));}
+  finally{if(btn){btn.textContent=old;btn.disabled=false;}}
+};
+
+applyStatic();renderAuthBar();renderIntroActions();renderTourHint();chooseMode();
+</script>
+</body>
+</html>

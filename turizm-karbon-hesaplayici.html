@@ -250,10 +250,23 @@ details.meth summary{font-weight:700; padding:12px 0; cursor:pointer; color:var(
 .two{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:14px; align-items:start}
 @media (max-width:820px){ .two{grid-template-columns:minmax(0,1fr)} }
 @media (prefers-reduced-motion: reduce){ *{transition:none !important} }
+/* ---- Ortak hesaplayıcı menüsü (turizm-karbon-hesaplayici.html ve kapsam3-karbon-hesaplayici.html'de aynıdır) ---- */
+.cm-switch{display:flex;gap:4px;padding:4px;margin:0 0 18px;background:rgba(255,255,255,.08);border:1px solid rgba(169,227,195,.38);border-radius:999px;width:max-content;max-width:100%;position:relative;z-index:2}
+.cm-switch a{display:inline-flex;align-items:center;gap:7px;color:#CFE6DA;text-decoration:none;font-weight:700;font-size:14px;line-height:1.2;padding:9px 16px;border-radius:999px;white-space:nowrap;letter-spacing:0;text-transform:none}
+.cm-switch a:hover{background:rgba(255,255,255,.1);color:#fff}
+.cm-switch a:focus-visible{outline:2px solid #E8C547;outline-offset:2px}
+.cm-switch a[aria-current="page"]{background:#E8C547;color:#14261E}
+.cm-switch .cm-sm{display:none}
+@media (max-width:520px){.cm-switch{width:100%}.cm-switch a{flex:1 1 0;justify-content:center;padding:9px 10px}.cm-switch .cm-lg{display:none}.cm-switch .cm-sm{display:inline}}
+@media print{.cm-switch{display:none}}
 </style>
 
 <header class="hero">
   <div class="hero-in">
+    <nav class="cm-switch no-print" aria-label="Karbon hesaplayıcıları">
+      <a href="turizm-karbon-hesaplayici.html" aria-current="page"><span class="cm-lg">Turizm Karbon Hesaplayıcı</span><span class="cm-sm">Turizm</span></a>
+      <a href="kapsam3-karbon-hesaplayici.html"><span class="cm-lg">Kapsam 3 Karbon Hesaplayıcı</span><span class="cm-sm">Kapsam 3</span></a>
+    </nav>
     <p class="eyebrow"><span class="brand">cOmmited Events</span><span class="sep"> · </span>Ölçün, Kıyaslayın, Azaltın, Belgeleyin</p>
     <h1>Turizm Karbon Hesaplayıcısı</h1>
     <p class="sub">Oteliniz için HCMI v2.0 metodolojisiyle oda-gece ve toplantı başına resmî karbon metriklerini üretin; segment kıyasınızı görün, azaltım senaryonuzu kurun, net sıfır patikanızı çizin ve kurumsal müşterilerin sorduğu veriyi tek sayfada yanıtlayın.</p>
@@ -949,7 +962,7 @@ details.meth summary{font-weight:700; padding:12px 0; cursor:pointer; color:var(
 
   <details class="meth">
     <summary>Metodoloji, emisyon faktörleri ve kaynaklar</summary>
-    <p class="mini"><b>Otel tarafı</b> HCMI v2.0 (Hotel Carbon Measurement Initiative, Sustainable Hospitality Alliance) ve GHG Protocol Kurumsal Standardı ile hizalıdır. HCMI ayak izi Kapsam 1, Kapsam 2 ve varsa dış çamaşırhane (Kapsam 3) emisyonlarını kapsar; su, atık, yiyecek-içecek ve misafir ulaşımı HCMI metriklerine girmez ve ayrı gösterilir. Emisyonlar konuk odaları ile toplantı alanı arasında, bu iki alanın birbirine oranında paylaştırılır; ortak alanlar aynı oranda dağıtılır. Yöntem tüm alanlarda eşit yoğunluk varsayar — HCMI bunu, otel yöneticisinin alt sayaç ve dış destek olmadan kendi başına uygulayabilmesi için seçmiştir. Kapsam 2'de hem konum bazlı hem piyasa bazlı sonuç verilir; HCMI v2.0 metriklerde piyasa bazlı yaklaşımı kullanır.</p>
+    <p class="mini"><b>Otel tarafı</b> HCMI v2.0 (Hotel Carbon Measurement Initiative, Sustainable Hospitality Alliance) ve GHG Protocol Kurumsal Standardı ile hizalıdır. HCMI ayak izi Kapsam 1, Kapsam 2 ve varsa dış çamaşırhane (Kapsam 3) emisyonlarını kapsar; su, atık, yiyecek-içecek ve misafir ulaşımı HCMI metriklerine girmez ve ayrı gösterilir. Yiyecek-içecek, nevresim, kimyasal gibi satın alımların ve acentelerin satın aldığı konaklama/ulaşımın tedarik zinciri emisyonları için <a href="kapsam3-karbon-hesaplayici.html">Kapsam 3 Karbon Hesaplayıcı</a>'yı kullanın. Emisyonlar konuk odaları ile toplantı alanı arasında, bu iki alanın birbirine oranında paylaştırılır; ortak alanlar aynı oranda dağıtılır. Yöntem tüm alanlarda eşit yoğunluk varsayar — HCMI bunu, otel yöneticisinin alt sayaç ve dış destek olmadan kendi başına uygulayabilmesi için seçmiştir. Kapsam 2'de hem konum bazlı hem piyasa bazlı sonuç verilir; HCMI v2.0 metriklerde piyasa bazlı yaklaşımı kullanır.</p>
     <div class="meth-tablewrap tblwrap">
     <table class="t">
       <thead><tr><th>Kalem</th><th style="text-align:left">Faktör</th><th style="text-align:left">Kaynak</th></tr></thead>
