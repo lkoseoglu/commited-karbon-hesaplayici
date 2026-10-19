@@ -149,122 +149,47 @@ yüklenir; "Kayıtlarım"dan otel kaydı geri yüklenir; şifre localStorage'a y
 yatay kaydırma yok. Canlı Firebase ile kayıt/giriş, Firebase Authentication → Authorized domains
 listesinde `lkoseoglu.github.io` olduğu sürece çalışır (Kapsam 3 sayfası aynı alan adında çalışıyor).
 
-## Squarespace'e gömme
+## Squarespace'e gömme (2026-10-19 itibarıyla canlıdaki kod)
+
+Her iki hesaplayıcı sayfasında tek bir **Kod** bloğu var. Blok, ızgaranın neresinde durursa dursun
+küçük betik masaüstünde (≥768 px) kutuyu **sayfaya göre ortalar** ve en fazla 1240 px genişletir;
+mobilde blok zaten tam genişlik olduğu için dokunmaz. (Önceki `width:92vw` yöntemi blok ortadayken
+kutuyu sağa taşırıyordu.) Squarespace düzenleme modunda betik çalışmaz; kutu orada dar görünür, bu normal.
 
 ```html
-<iframe src="https://lkoseoglu.github.io/commited-karbon-hesaplayici/kapsam3-karbon-hesaplayici.html"
-        style="width:100%;height:1400px;border:0;display:block" title="Kapsam 3 Karbon Hesaplayıcı"></iframe>
-```
-
-Turizm hesaplayıcısının gömme kodu ve Squarespace tuzakları için proje dokümanı `otel-hcmi-modulu.md`'ye bakın.
-`karbon-admin.html`'i herkese açık sayfaya koymayın.
-
----
-
-## Mavişehir Rotary kişisel hesaplayıcı (`karbon-mavisehir-rotary.html`) — v2 notları
-
-Bu dosya, kurumsal hesaplayıcıdan bağımsız, **kişisel** karbon ayak izi modülüdür ve
-GitHub Pages üzerinden `commitedevents.app`'e iframe ile gömülür.
-
-### v2 ile gelenler
-- **Kişiye özel öneriler:** kullanıcının kendi verisiyle simüle edilip en çok kazandıran 3 adım listelenir.
-- **"Ne olurdu?" simülatörü:** araç/uçuş/ev enerjisi/tüketim kaydırıcıları + beslenme ve yeşil elektrik seçimi; ayak izi, skor ve ağaç karşılığı anlık güncellenir.
-- **Komite sıralaması:** skorboard'a üçüncü sekme. Komite artık serbest metin değil, `COMMITTEES` dizisinden gelen açılır liste.
-- **Gelişim takibi:** her kayıtta kullanıcının dokümanına `history[]` eklenir (son 24 ölçüm), Skorboard sekmesinde çubuk grafik olarak gösterilir.
-- **Paylaşım kartı:** 1080×1080 canvas ile markalı skor kartı; indir / WhatsApp / LinkedIn / native paylaşım.
-- **Ağaç bağışı:** ayak izini dengeleyecek ağaç sayısı + bağış talebi formu. Talep hem Firestore'a (`rotary_mavisehir_bagis`) yazılır hem de FormSubmit ile admin e-postasına gider; ikisi de başarısız olursa `mailto:` bağlantısı sunulur.
-- **Sağlamlaştırma:** Firebase config artık başka dosyadan regex ile çekilmiyor, doğrudan gömülü. Firebase SDK **dinamik** import edilir — CDN engellenirse hesaplayıcı yine çalışır, sadece giriş/skorboard kapanır. Boş/aşırı girdi uyarısı eklendi. Sayfa yüksekliğini `postMessage` ile üst pencereye bildirir.
-
-### Ayarların yeri
-`<script type="module">` bloğunun başındaki **AYARLAR** kutusu:
-`COL`, `COL_DONATE`, `ADMIN_EMAIL`, `MAIL_ENDPOINT`, `PAGE_URL`, `TREE_KG_YEAR`, `firebaseConfig`, `COMMITTEES`.
-
-### Bağış e-postası — ilk kurulum
-`MAIL_ENDPOINT` varsayılan olarak FormSubmit kullanır. İlk gönderimde FormSubmit,
-`ADMIN_EMAIL` adresine bir **aktivasyon** e-postası yollar; oradaki bağlantıya bir kez tıklanmadan
-sonraki talepler iletilmez. Aktivasyondan sonra FormSubmit size rastgele bir kod verir;
-e-posta adresini gizlemek için `MAIL_ENDPOINT`'i
-`https://formsubmit.co/ajax/<verilen-kod>` olarak güncelleyin.
-
-### Squarespace iframe — otomatik yükseklik
-Sayfa, içerik yüksekliği değiştikçe üst pencereye mesaj gönderir. Code Block'taki iframe'i
-şu şekilde sararsanız iframe içerikle birlikte büyüyüp küçülür (mobilde alt taraf kesilmez):
-
-```html
-<iframe id="karbonFrame"
-  src="https://lkoseoglu.github.io/commited-karbon-hesaplayici/karbon-mavisehir-rotary.html"
-  style="width:100%;height:1600px;border:0;display:block" title="Karbon Ayak İzi Hesaplayıcısı"></iframe>
+<div id="cm-embed-turizm" style="width:100%;height:88vh;min-height:700px">
+  <iframe src="https://lkoseoglu.github.io/commited-karbon-hesaplayici/turizm-karbon-hesaplayici.html"
+          title="Turizm Karbon Hesaplayıcı" style="width:100%;height:100%;border:0;display:block" loading="lazy"></iframe>
+</div>
 <script>
-window.addEventListener('message', function(e){
-  if(e.data && e.data.type === 'commited-carbon-height'){
-    var f = document.getElementById('karbonFrame');
-    if(f) f.style.height = (e.data.height + 24) + 'px';
+(function(){
+  var w=document.getElementById('cm-embed-turizm'); if(!w) return;
+  function fit(){
+    w.style.marginLeft='0px'; w.style.width='100%';
+    var vw=document.documentElement.clientWidth; if(vw<768) return;
+    var W=Math.min(vw-48,1240), l=w.getBoundingClientRect().left;
+    w.style.width=W+'px'; w.style.marginLeft=((vw-W)/2-l)+'px';
   }
-});
+  fit(); window.addEventListener('resize',fit); window.addEventListener('load',fit); setTimeout(fit,800);
+})();
 </script>
 ```
 
-### Firestore kuralları
-`firestore.rules` içine `rotary_mavisehir_bagis` koleksiyonu eklendi (üye kendi talebini yazar,
-yalnız admin okur). Kuralları Firebase konsolundan **yayınlamayı** unutmayın.
+Kapsam 3 sayfasında (`/karbon-hesaplayici`) aynı kod `cm-embed-kapsam3` kimliği ve
+`kapsam3-karbon-hesaplayici.html` adresiyle duruyor.
 
----
+**Squarespace düzenleme ipuçları:** kod bloğunu seçmek için bölümün sol üstündeki **Katmanlar**
+simgesinden "Kod"a çift tıklayın (iframe tıklamaları yutar). Kod panelini **Escape ile kapatmayın**
+(değişiklik sessizce iptal olur); bölümün boş bir yerine tıklayıp sonra "Kaydedin" deyin.
 
-## Alıcı modülü (Kapsam 3.1 / 3.4) — v3.1 notları
+### Üst menü (Squarespace)
 
-> 2026-10-19 itibarıyla bu modül `kapsam3-karbon-hesaplayici.html` dosyasındadır (config v4.0, turizm odaklı). Aşağıdaki motor açıklaması geçerlidir; faktör listeleri ve örnekler için yukarıdaki v4.0 bölümüne bakın.
+- Sıra: Anasayfa · Turizm Karbon Hesaplayıcı · Kapsam 3 Karbon Hesaplayıcı · Karbon 101 · Etkinlikler · Aydınlatma Metni.
+- "Yeni Sayfa" (`/yeni-sayfa-4`, yarım kalmış taslak) menüden **Bağlantılı Değil**'e taşındı; silinmedi.
+- `/karbon-hesaplayici` sayfasının başlığı ve menü adı "Kapsam 3 Karbon Hesaplayıcı" yapıldı; URL aynı kaldı.
+- Buton görünümü **Web Sitesi → Sayfalar → Özel Kod → Özel CSS** içinde,
+  `/* ===== Üst menü — buton görünümü (2026-10-19) ===== */` başlıklı blokta. Bulunulan sayfa sarı
+  (`#E8C547`), iki hesaplayıcı koyu yeşil (`#0B2E22`); seçiciler `href="/turizm-karbon-hesaplayici"` ve
+  `href="/karbon-hesaplayici"`. Sayfa adresi değişirse bu iki seçici güncellenmeli. Geri almak için bloğu silin.
 
-Eski `karbon-hesaplayici.html` içindeki **"Alıcıyım — tedarikçilerimin emisyonlarını topluyorum"** akışı,
-elle girilen kg CO₂e değerlerini toplamak yerine artık hibrit bir Kapsam 3.1 motoru çalıştırır.
-Config sürümü **3.1**'e çıkarıldı (eski 3.0 bulut config'i artık yok sayılır; admin panelinden
-bir kez "Buluta kaydet" demek yeterlidir).
-
-### Satır başına üç yöntem
-
-| Yöntem (`method`) | Hesap | Veri kalitesi |
-|---|---|---|
-| `supplier` | `tedarikçi toplam emisyonu (t) × 1000 × (sizin alımınız ÷ tedarikçinin toplamı)` — tahsis ciro/harcama **veya** fiziksel miktar üzerinden | 1 (üçüncü taraf doğrulamalı) / 2 (beyan) |
-| `activity` | `miktar (kg) × malzeme emisyon faktörü` (`CONFIG.purchaseMaterials`) | 3 |
-| `spend` | `harcama (₺) ÷ USD kuru × kategori faktörü (kgCO₂e/USD)` (`CONFIG.spendFactors`) | 5 |
-
-Her satıra ayrıca opsiyonel **tedarik nakliyesi (Kapsam 3.4)** eklenebilir:
-`ton × km × mod faktörü` (`CONFIG.freightModes`: karayolu / demiryolu / deniz / hava).
-
-### Toplamda hesaplananlar
-
-- **Kapsama analizi:** "yıllık toplam satın alma harcaması" girilirse, kapsanmayan harcama
-  portföyün ağırlıklı yoğunluğuyla (yoksa genel kategori faktörüyle) ekstrapole edilir ve
-  5/5 kalite ile toplama eklenir — rapor eksik kalmaz.
-- **Veri kalitesi skoru:** emisyonla ağırlıklı 1-5 ortalama (`CONFIG.dqScale`), birincil veri payı (%),
-  ve ağırlıklı **belirsizlik aralığı** (±%).
-- **Pareto:** emisyonun %80'ini oluşturan tedarikçi sayısı ve ilk 10 için yatay bar.
-- **Yoğunluk ve aykırı değer:** `kg CO₂e / 1.000 ₺`; medyanın `buyerScenario.outlierMultiple` katını
-  aşan satırlar işaretlenir.
-- **Öncelik listesi:** `emisyon payı × veri kalitesi puanı` sıralamasıyla "önce kimden birincil
-  veri istenmeli" ilk 5.
-- **Azaltım senaryosu:** üç kaydırıcı — (a) ilk N tedarikçi yeşil elektrik (`greenElecShare`),
-  (b) karayolu → deniz mod değişimi (ton·km faktör oranından), (c) geri dönüşümlü muadil
-  malzeme (`recycledPairs` faktör çiftinden). Tüm varsayımlar ekranda yazar.
-
-### Excel
-
-- **Şablon indir:** 4 sayfalı `.xlsx` (tedarikçi satırları + kategori kodları + malzeme kodları + yöntem kodları).
-- **Excel'den yükle / Yapıştır:** aynı sütun sırası; başlık satırı atlanır, bilinmeyen kod/kategori
-  güvenli varsayılana düşer.
-- Rapor Excel'i alıcı için tedarikçi bazında döküm + kapsama + öncelik listesi içerir; PDF'e
-  KPI kutuları, kapsama çubuğu, ilk 12 tedarikçi ve öncelik listesi eklendi.
-
-### Yeni config alanları
-
-`spendBase` (USD kuru + kaynak/uyarı metni), `spendFactors` (32 satın alma kategorisi, kgCO₂e/USD),
-`purchaseMaterials` (3.1 malzeme listesi), `freightModes`, `dqScale` (1-5 + belirsizlik %),
-`buyerScenario` (senaryo varsayımları, aykırı değer eşiği). Ayrıca `factors` içine çelik, paslanmaz,
-alüminyum, bakır, çimento, cam, kağıt, ahşap, deri, kauçuk, geri dönüşümlü muadilleri ve
-demiryolu/hava kargo faktörleri eklendi.
-
-Hepsi admin panelindeki yeni **"Harcama Faktörleri"** sekmesinden (ve mevcut "Emisyon Faktörleri"
-sekmesinden) düzenlenebilir.
-
-> Harcama bazlı faktörlerin varsayılanları EPA *Supply Chain GHG Emission Factors v1.3*
-> (2022 USD, alıcı fiyatı) referansıyla türetilmiştir. Tarama (screening) amaçlıdır; fiyat
-> ve kur farkları nedeniyle belirsizliği yüksektir — resmi raporlama öncesi doğrulanmalıdır.
+`karbon-admin.html`'i herkese açık sayfaya koymayın.
