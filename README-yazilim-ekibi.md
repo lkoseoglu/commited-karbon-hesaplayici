@@ -103,8 +103,8 @@ denetler: boş açılış, örnek sonuçlarının Node hesabıyla aynı olması,
 satırı ekle/sil/birim/elle faktör, HCMI seçenekleri, önlemler ve patika, acente, tarayıcı belleği ve eski
 anahtar aktarımı, üyelik (kayıt → kaydet → çıkış → giriş → son kayıt; eski kaydı "Kayıtlarım"dan açma),
 kopyala/PDF, axe (WCAG 2.1 AA) açık ve koyu modda, 390 px'te yatay kaydırma olmaması.
-GitHub Actions dosyası (`.github/workflows/ci.yml`) yerel kopyada hazırdır; GitHub'a eklenirse her push'ta
-ikisini de çalıştırır (eklemek ekip kararı — depo ayarlarını değiştirdiği için ayrıca onay istenecek).
+GitHub Actions (`.github/workflows/ci.yml`, 2026-10-21'den beri etkin) `main`'e her yüklemede ve her pull
+request'te ikisini de çalıştırır; sonuç GitHub'da **Actions** sekmesinde görünür (elle: Actions → testler → Run workflow).
 
 ### Canlıya alma (kullanıcı "canlıya al" dediğinde)
 
@@ -124,7 +124,7 @@ ikisini de çalıştırır (eklemek ekip kararı — depo ayarlarını değişti
   tablosuna satır ekleyin (`tests/unit/tr-reference.test.mjs` rakamları denetler).
 - Kapsam 3 sayfası: `food_*` faktörleri doğrulandı; EPA SEF (USD 2022) harcama faktörlerinin TL kuru ve
   enflasyon dönüşümü ayrıca gözden geçirilmeli. Kullanıcı adı ve kayıt başlıkları artık `esc()` ile yazılıyor
-  (yalnız kullanıcının kendi tarayıcısını etkileyebilecek bir açıktı) — bu düzeltme canlıya henüz çıkmadı.
+  (yalnız kullanıcının kendi tarayıcısını etkileyebilecek bir açıktı; 2026-10-21'de canlıya çıktı).
 
 ## 2026-10-19 değişikliği — tek ürün, iki menü, yalnız turizm
 
@@ -218,7 +218,7 @@ Kapsam 3 1.418.888 kg); tema ve görünüm değişiklikleri bu sayıları deği�
 | `assets/js/tr-reference.js`, `benchmarks.js`, `pathway.js`, `measures.js`, `num-input.js` | Türkiye faktörleri ve kaynakları · CHSB 2026 kıyası · NZMFH net sıfır · azaltım önlemleri · Türkçe sayı. Her birinin başında kaynak ve kurallar yazılı. |
 | `assets/js/turizm/*.js`, `assets/css/turizm-app.css` | v6 sayfasının uygulama katmanı (yukarıdaki "Mimari"). |
 | `tools/promote-v6.py` | v6 önizlemesini canlı adrese taşır (v5 arşivlenir, geri dönüş kolay). |
-| `.github/workflows/ci.yml` | GitHub Actions: her push'ta birim + uçtan uca testler (yerel kopyada hazır; GitHub'a henüz eklenmedi). |
+| `.github/workflows/ci.yml` | GitHub Actions: `main`'e her yüklemede ve her pull request'te birim + uçtan uca testler (2026-10-21'den beri etkin). |
 | `kapsam3-karbon-hesaplayici.html` | Kapsam 3 Karbon Hesaplayıcı (turizm tedarik zinciri). Firebase (giriş/kayıt), SheetJS (Excel), jsPDF (PDF) CDN'den yüklenir. |
 | `karbon-admin.html` | Kapsam 3 hesaplayıcısının yönetici paneli: emisyon ve harcama faktörlerini düzenler, Firestore'a (`config/current`) yazar. Herkese açık sayfaya konmaz. |
 | `config.default.json` | Kapsam 3 hesaplayıcısının tüm parametreleri (v4.0). Tek doğru kaynak. |
