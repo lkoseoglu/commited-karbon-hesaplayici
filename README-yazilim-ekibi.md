@@ -7,6 +7,9 @@ tarayıcıda yapan) karbon hesaplama modülleri. GitHub Pages üzerinden yayınl
 ## 2026-10-20 — Turizm v6: resmî HCMI motoru ve yeni ekranlar (ÖNİZLEME)
 
 > **Durum:** `turizm-karbon-hesaplayici-v6.html` ayrı bir önizleme sayfasıdır; menüde yoktur.
+> 2026-10-21'de GitHub'a yüklendi, yalnız bağlantıyla açılır:
+> https://lkoseoglu.github.io/commited-karbon-hesaplayici/turizm-karbon-hesaplayici-v6.html
+> (GitHub'daki kopyada da 227 birim + 16 uçtan uca test geçti.)
 > Sitedeki `turizm-karbon-hesaplayici.html` (v5) **değişmedi**. Canlıya alma adımları aşağıda.
 
 ### Ne değişti (kullanıcı gözünden)
