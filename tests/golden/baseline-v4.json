@@ -1,0 +1,20 @@
+{
+  "hotel": {
+    "total": 1037970,
+    "cpor": 33.67,
+    "grade": "B",
+    "s_total": "1.038",
+    "s_cpor": "33,7",
+    "s_meet": "0,142",
+    "s_grade": "B"
+  },
+  "agency": {
+    "total": 1128222
+  },
+  "turizmErrors": [],
+  "kapsam3": {
+    "total": "1.418.888",
+    "unit": "kg CO₂e / yıl"
+  },
+  "kapsam3Errors": []
+}
