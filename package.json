@@ -1,0 +1,17 @@
+{
+  "name": "commited-karbon-hesaplayici",
+  "version": "5.0.0",
+  "private": true,
+  "description": "Commited turizm karbon hesaplayicilari (Turizm + Kapsam 3). Sunucusuz, tarayicida calisir.",
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/unit/*.test.mjs",
+    "test:e2e": "node --test tests/e2e/*.test.mjs"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.10.0",
+    "@playwright/test": "^1.56.0",
+    "jspdf": "2.5.1",
+    "xlsx": "0.18.5"
+  }
+}

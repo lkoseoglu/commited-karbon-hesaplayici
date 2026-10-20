@@ -4,6 +4,125 @@ commitedevents.app (Squarespace) sitesine iframe ile gömülen, sunucu gerektirm
 tarayıcıda yapan) karbon hesaplama modülleri. GitHub Pages üzerinden yayınlanır:
 `https://lkoseoglu.github.io/commited-karbon-hesaplayici/<dosya>.html`
 
+## 2026-10-20 — Turizm v6: resmî HCMI motoru ve yeni ekranlar (ÖNİZLEME)
+
+> **Durum:** `turizm-karbon-hesaplayici-v6.html` ayrı bir önizleme sayfasıdır; menüde yoktur.
+> Sitedeki `turizm-karbon-hesaplayici.html` (v5) **değişmedi**. Canlıya alma adımları aşağıda.
+
+### Ne değişti (kullanıcı gözünden)
+
+- **Enerji defteri:** faturalar tek tabloda; HCMI'nın 32 enerji türünün tamamı eklenebilir, her türün
+  kendi birimleri var (m³, kWh, litre, kg, MWh, ton…). Her satırın karbonu yazarken görünür. Birim
+  değiştirilince miktar ve fiyat **aynı enerjiye** çevrilir (yanlışlıkla birim değiştirmek sonucu bozmaz).
+- **Türkçe sayı girişi:** `1.480.000` ve `12,5` doğru okunur (eski `type="number"` alanlar "1.480.000"i
+  1,48 sanıyordu). Okunamayan değer kırmızıyla işaretlenir ve hesaba **boş** girer; sessiz tahmin yok.
+- **Resmî hesap:** otel ayak izi resmî HCMI v2.0 Excel aracıyla birebir aynı motorla hesaplanır
+  (67 senaryoda 1e-12 doğrulukla karşılaştırıldı). Türkiye şebeke elektriği faktörü Enerji ve Tabii
+  Kaynaklar Bakanlığı'nın tüketim noktası faktörüdür; rapor yılına göre seçilir, kaynağı ekranda bağlantılıdır.
+- **HCMI seçenekleri:** soğutucu gazlar (41 gaz, kg) ya da "bilmiyorum → %1", araç yakıtı ya da "%1",
+  dış çamaşırhane (kg / dolu odadan tahmin / tedarikçi enerji payı), YEK-G / I-REC belgeleri (en çok 2),
+  özel alanlar (rezidans, kiracı), ülke/bölge (HCMI'nın 260 ülkesi, Türkçe adlarla).
+- **Veri kontrolü:** motorun ve sayfanın uyarıları tek listede; "Alana git" ilgili alanı açıp odaklar.
+- **Net sıfır:** NZMFH 2. baskı Tablo 3, Kategori 1 (bina enerjisi) — üç ölçütten en az biri; tablo görünümü.
+- **Çıktılar:** beyan, yönetici özeti, JSON (`commited.hotel.hcmi/2`), WhatsApp, **beyanı PDF olarak kaydet**
+  (yalnız beyan kartı basılır).
+- **Eski kayıtlar** (tarayıcıdaki `commited-hotel-v1` ve Firestore'daki eski `inputs`) açılırken
+  otomatik aktarılır; aktarım notları kullanıcıya gösterilir.
+
+### Sayılar neden değişti (aynı örnek otel: 1.038 → 1.060 tCO₂e, CPOR 33,7 → 34,4; not B aynı)
+
+| Kalem | v5 | v6 (HCMI v2.0) |
+|---|---|---|
+| Doğal gaz | 2,045 kgCO₂e/m³ (DEFRA) | 2,155 kgCO₂e/m³ |
+| Motorin (jeneratör) / (araç) | 2,56 / 2,56 kgCO₂e/L | 2,867 / 2,706 kgCO₂e/L |
+| Benzin (araç) | 2,08 | 2,430 kgCO₂e/L |
+| Dış çamaşırhane | 0,65 kgCO₂e/kg sabit | ton başına 180 kWh elektrik + 1.560 kWh gaz + 111 L fuel oil 2 (≈0,72 kg/kg) |
+| R-410A | GWP 2088 | 2100 (HCMI listesi) |
+| Toplantı metriği | ÷ satılan salon saati | ÷ (365 gün × 10 saat) — HCMI kuralı; "salon saati" alanı kaldırıldı |
+| Şebeke elektriği | 0,469 (sabit) | rapor yılına göre ETKB; 2024+ için yayımlanmış en güncel (2023: 0,469) |
+
+Acente hesabı **değişmedi** (örnek acente 1.128.222 kg, birebir).
+
+### Mimari
+
+```
+assets/js/hcmi-data.js      resmî HCMI Excel'inden üretilmiş veri (tools/build-hcmi-data.py) — elle düzenlenmez
+assets/js/hcmi-engine.js    HCMI v2.0 hesap motoru (saf fonksiyon)            → globalThis.HCMI
+assets/js/tr-reference.js   Türkiye şebeke faktörleri (ETKB 2020-2023), ülke adları, fatura ipuçları → TR_REFERENCE
+assets/js/benchmarks.js     CHSB 2026 Türkiye segment ortalamaları, A–E notu   → BENCH
+assets/js/pathway.js        NZMFH 2. baskı net sıfır kilometre taşları         → NZPATH
+assets/js/measures.js       13 azaltım önlemi, HCMI ile yeniden hesap, MACC     → MEASURES
+assets/js/num-input.js      Türkçe sayı okuma / biçimleme                       → NUM
+assets/js/turizm/model.js   sayfanın TEK durum nesnesi, eski kayıt aktarımı, HCMI girdisine çeviri
+assets/js/turizm/compute.js ekrandaki her sayı: compute(state) (saf)
+assets/js/turizm/agency.js  acente hesabı (v5 ile aynı)
+assets/js/turizm/texts.js   beyan, özet, JSON, WhatsApp metinleri
+assets/js/turizm/storage.js tarayıcı belleği (commited-turizm-v2; eski anahtarı okur)
+assets/js/turizm/ui.js · form.js · render.js · chart.js · app.js   arayüz (DOM)
+assets/js/turizm/cloud.js   Firebase üyelik ve kayıt (ES modülü; yüklenemezse sayfa üyeliksiz çalışır)
+assets/css/turizm-app.css   sayfa stilleri (yalnız theme-sea.css değişkenleri; sabit renk yok)
+```
+
+Akış: **form alanı** (`data-bind="hotel.area.rooms"`) → **durum** (`model.js`) → `compute(state)` →
+`render.all()`. Yazarken 140 ms bekleyip yeniden hesaplar. Hesap katmanı (model → compute → texts) DOM'a
+dokunmaz; Node testleri aynı dosyaları doğrudan çalıştırır (`tests/helpers/load-hcmi.mjs` → `APP_SCRIPTS`,
+sayfadaki `<script>` sırasıyla aynı olmalı).
+
+**Durum şeması** (`commited.turizm.state/2`, ayrıntı `model.js` → `emptyState()`): `hotel` (tesis, alanlar,
+doluluk, `energy[]` satırları `{id,typeId,unit,total,price,privateActual,efMode,manualEf,heating}`, `market[]`,
+`refrigerants`, `mobileFuels`, `privateSpace`, `laundry`, `extras`, `pv`, `prices`, `benchRef`, `measures[]`,
+`netZero`, `taxonomy`, `event`), `agency`, `options.saveLocal`. `normalize()` dışarıdan gelen her veriyi
+(bellek, bulut, JSON) güvenli hale getirir; bilinmeyen alanları atar.
+
+**Firestore kaydı** (`reports/{uid}/items/{id}`): alan adları v5 ile aynı (`type, sector, company, year,
+total [kg], cpor, grade, userEmail, createdAt`) — admin paneli değişmeden okur. Yeni: `appVersion: "6.0.0"`,
+`inputs` artık durum şeması (tarayıcı tercihi `options` buluta gitmez), `hcmi` JSON çıktısı `commited.hotel.hcmi/2`.
+Firestore kurallarında değişiklik gerekmez.
+
+**Eski kayıt aktarımı** (`model.fromLegacy`): v5 alan kimlikleri (`h_elec_grid`, `h_gas` …) enerji
+satırlarına; fuel-oil → "Fuel oil 2", bölgesel ısıtma → "Satın alınan sıcak su", YEK-G → belge satırı,
+soğutucu gaz GWP → HCMI gazı (2088→R-410A …), çamaşırhane kg → tonaj yöntemi; salon saati artık
+kullanılmaz. Kullanıcıya aktarım notu gösterilir. Örnek otel de bu yoldan doldurulur (her "örnekle doldur"
+aktarımı da sınar).
+
+### Testler
+
+```bash
+npm install                     # bir kez
+npm test                        # 227 birim testi: HCMI motoru (resmî Excel altın referansı), Türkiye faktörleri,
+                                #   kıyas, net sıfır, önlemler, Türkçe sayı, durum modeli, hesap katmanı, tema
+npm run test:e2e                # 16 uçtan uca test: v6 sayfası (12) + eski sayfa erişilebilirliği (4)
+node tests/e2e/probe-v6.mjs /tmp/ekran   # açık/koyu/telefon tam sayfa ekran görüntüleri
+```
+
+Uçtan uca testler gerçek Chromium'da çalışır, Firebase ve CDN'i saplar (internet gerekmez) ve şunları
+denetler: boş açılış, örnek sonuçlarının Node hesabıyla aynı olması, Türkçe sayı ve hatalı giriş, enerji
+satırı ekle/sil/birim/elle faktör, HCMI seçenekleri, önlemler ve patika, acente, tarayıcı belleği ve eski
+anahtar aktarımı, üyelik (kayıt → kaydet → çıkış → giriş → son kayıt; eski kaydı "Kayıtlarım"dan açma),
+kopyala/PDF, axe (WCAG 2.1 AA) açık ve koyu modda, 390 px'te yatay kaydırma olmaması.
+GitHub Actions dosyası (`.github/workflows/ci.yml`) yerel kopyada hazırdır; GitHub'a eklenirse her push'ta
+ikisini de çalıştırır (eklemek ekip kararı — depo ayarlarını değiştirdiği için ayrıca onay istenecek).
+
+### Canlıya alma (kullanıcı "canlıya al" dediğinde)
+
+1. `python3 tools/promote-v6.py` — v5'i `turizm-karbon-hesaplayici-v5.html` olarak arşivler, v6'yı canlı
+   adrese yazar (kendi bağlantısı ve önizleme şeridi düzeltilir), `-v6.html`'i yönlendirmeye çevirir.
+2. `npm test && npm run test:e2e` (testler iki durumu da tanır).
+3. GitHub'a sırasıyla yükleyin: `assets/` (zaten yüklüyse atlayın) → `turizm-karbon-hesaplayici-v5.html`
+   → `turizm-karbon-hesaplayici.html` → `turizm-karbon-hesaplayici-v6.html`.
+4. Squarespace'te değişiklik **gerekmez** (iframe adresi aynı). Geri dönüş: `-v5.html` içeriğini canlı adrese kopyalayın.
+
+### Bilinen sınırlar / sıradaki işler
+
+- Resmî Excel aracında 7 enerji satırı sınırı var; v6 24 satıra izin verir (hesap yöntemi aynı).
+- Önlem katsayıları ve yatırım tutarları gösterge değerdir (`measures.js` → `COEF`); sektör verisiyle
+  güncellenebilir. Isıtma önlemleri LPG'yi varsayılan olarak etkilemez (satırda "ısıtmada kullanılıyor").
+- 2024 ve sonrası için ETKB tüketim noktası faktörü yayımlanınca yalnız `tr-reference.js` → `GRID_YEARS`
+  tablosuna satır ekleyin (`tests/unit/tr-reference.test.mjs` rakamları denetler).
+- Kapsam 3 sayfası: `food_*` faktörleri doğrulandı; EPA SEF (USD 2022) harcama faktörlerinin TL kuru ve
+  enflasyon dönüşümü ayrıca gözden geçirilmeli. Kullanıcı adı ve kayıt başlıkları artık `esc()` ile yazılıyor
+  (yalnız kullanıcının kendi tarayıcısını etkileyebilecek bir açıktı) — bu düzeltme canlıya henüz çıkmadı.
+
 ## 2026-10-19 değişikliği — tek ürün, iki menü, yalnız turizm
 
 Sitede iki ayrı hesaplayıcı vardı: **Turizm Karbon Hesaplayıcı** (HCMI v2.0, otel + acente) ve
@@ -73,11 +192,11 @@ Kod, **Web Sitesi → Sayfalar → Özel Kod → Özel CSS** içinde, mevcut kod
 - Not: Squarespace Özel CSS derleyicisi LESS'tir; `~"…"` gibi LESS kaçışları normaldir. Kaydetmek için
   düzenleyicide **Kaydedin** düğmesine basın; Escape ile kapatmak değişikliği iptal eder.
 
-### Testler
+### Testler (tema turu; güncel komutlar için en üstteki v6 bölümüne bakın)
 
 ```bash
 npm install                 # bir kez (Playwright, axe-core, SheetJS, jsPDF)
-npm test                    # birim testleri (tema tutarlılığı)
+npm test                    # birim testleri (tema tutarlılığı + HCMI + v6 hesap katmanı)
 node --test tests/e2e/a11y.test.mjs                       # erişilebilirlik (Chrome gerekir)
 node tests/e2e/capture-baseline.mjs tests/golden/x.json   # örnek verilerle sayıları kaydeder
 node tests/e2e/shots.mjs /tmp/ekran                       # açık/koyu/mobil ekran görüntüleri
@@ -90,14 +209,25 @@ Kapsam 3 1.418.888 kg); tema ve görünüm değişiklikleri bu sayıları deği�
 
 | Dosya | Görev |
 |---|---|
-| `turizm-karbon-hesaplayici.html` | Turizm Karbon Hesaplayıcı (otel HCMI + acente). Bağımlılık yok, tek dosya. |
+| `turizm-karbon-hesaplayici.html` | Turizm Karbon Hesaplayıcı v5 — **canlıdaki** sürüm (otel HCMI + acente). Tek dosya. |
+| `turizm-karbon-hesaplayici-v6.html` | Turizm v6 **önizleme** (menüde yok). Yalnız işaretleme; davranış `assets/js/turizm/`, görünüm `assets/css/turizm-app.css`. Canlıya alma: `tools/promote-v6.py`. |
+| `assets/js/hcmi-data.js`, `hcmi-engine.js` | Resmî HCMI v2.0 Excel'inin verisi ve hesap motoru. Veri `tools/build-hcmi-data.py` ile üretilir; motor `tests/golden/hcmi-oracle.json` (LibreOffice ile hesaplatılmış resmî Excel çıktıları, `tools/hcmi-oracle.py` + `tools/hcmi_scenarios.py`) ile doğrulanır. |
+| `assets/js/tr-reference.js`, `benchmarks.js`, `pathway.js`, `measures.js`, `num-input.js` | Türkiye faktörleri ve kaynakları · CHSB 2026 kıyası · NZMFH net sıfır · azaltım önlemleri · Türkçe sayı. Her birinin başında kaynak ve kurallar yazılı. |
+| `assets/js/turizm/*.js`, `assets/css/turizm-app.css` | v6 sayfasının uygulama katmanı (yukarıdaki "Mimari"). |
+| `tools/promote-v6.py` | v6 önizlemesini canlı adrese taşır (v5 arşivlenir, geri dönüş kolay). |
+| `.github/workflows/ci.yml` | GitHub Actions: her push'ta birim + uçtan uca testler (yerel kopyada hazır; GitHub'a henüz eklenmedi). |
 | `kapsam3-karbon-hesaplayici.html` | Kapsam 3 Karbon Hesaplayıcı (turizm tedarik zinciri). Firebase (giriş/kayıt), SheetJS (Excel), jsPDF (PDF) CDN'den yüklenir. |
 | `karbon-admin.html` | Kapsam 3 hesaplayıcısının yönetici paneli: emisyon ve harcama faktörlerini düzenler, Firestore'a (`config/current`) yazar. Herkese açık sayfaya konmaz. |
 | `config.default.json` | Kapsam 3 hesaplayıcısının tüm parametreleri (v4.0). Tek doğru kaynak. |
 | `tools/inject-config.py` | `config.default.json`'u kapsam3 ve admin dosyalarındaki gömülü `DEFAULT_CONFIG`'e yazar. |
 | `karbon-hesaplayici.html` | Eski adres → `kapsam3-karbon-hesaplayici.html` yönlendirmesi. |
-| `karbon-metodoloji.html/.pdf` | Eski KOBİ modülünün metodoloji sayfası (tekstil içerir; güncellenmesi gerekiyor, bkz. açık işler). |
+| `karbon-metodoloji.html/.pdf` | Eski KOBİ modülünün metodoloji sayfası (tekstil içerir; hesaplayıcılardan bağlantı **yok**). Turizm metodolojisi artık v6 sayfasının "Metodoloji" bölümünde, verilerden otomatik üretiliyor. Bu dosyalar kaldırılabilir ya da Kapsam 3'e göre yeniden yazılabilir. |
 | `karbon-mavisehir-rotary.html`, `karbon-rotary-admin.html` | Bağımsız kişisel hesaplayıcı (Rotary); bu değişiklikten etkilenmedi. |
+| `assets/css/theme-sea.css` | İki hesaplayıcının ortak "Deniz" teması: tüm renkler, koyu mod, üst alan, dalgalar, ortak menü. Sayfalarda sabit renk kodu yok. |
+| `tools/sea-waves-snippet.py` | İki sayfadaki özdeş dalga (`.sea-waves`) işaretlemesini üretir. |
+| `docs/squarespace-deniz-temasi.css` | Squarespace Özel CSS'ine eklenen "Deniz" zemin bloğu (yalnız yeni blok). |
+| `docs/squarespace-ozel-css-tamami.css` | Sitenin **tüm** Özel CSS'inin 2026-10-20 tarihli birebir yedeği. |
+| `tests/`, `package.json` | Birim testleri (tema tutarlılığı), uçtan uca ve erişilebilirlik testleri (Playwright + axe), sayı referansları (`tests/golden`). Ayrıntı: "Testler" bölümü. |
 
 ## Kapsam 3 hesaplayıcısı — config v4.0
 
@@ -112,8 +242,9 @@ Kapsam 3 1.418.888 kg); tema ve görünüm değişiklikleri bu sayıları deği�
   - **Yolcu ulaşımı** `flight_*`, `coach_pkm`, `transfer_vkm` — DEFRA 2025 (uçuşlarda RF dahil),
     Turizm hesaplayıcısıyla aynı.
   - **Gıda** `food_*` — kgCO₂e/kg, Poore & Nemecek (2018) / Our World in Data küresel ortalama.
-    ⚠️ Bu değerler bu oturumda kaynak veri setine erişilemediği için birebir doğrulanamadı;
-    OWID `ghg-per-kg-poore` CSV'siyle karşılaştırılıp gerekirse `config.default.json`'da düzeltilmeli.
+    ✅ 2026-10-20'de OWID CSV'leriyle **birebir doğrulandı** (19 kalem; `ghg-per-kg-poore`, zeytinyağı
+    `food-emissions-supply-chain` aşamalarının toplamı 5,42). `tests/unit/kapsam3-config.test.mjs` değerleri
+    ve sayfalara gömülü kopyanın `config.default.json` ile aynı olduğunu denetler.
   - Dış çamaşırhane 0,65 kgCO₂e/kg (Turizm hesaplayıcısıyla eşitlendi; önceki 0,9), nevresim (pamuk),
     kimyasallar, ambalaj (kağıt/karton/plastik ve geri dönüşümlüleri), cam, ahşap/mobilya, catering öğünü.
 - `spendFactors` (harcama bazlı, kgCO₂e/USD): önceki sürümdeki EPA SEF v1.3 değerleri **aynen** taşındı;
@@ -154,10 +285,10 @@ genişlikte yatay kaydırma yok.
 
 ### Açık işler
 
-1. Squarespace: menüdeki "Firma Karbon Hesaplayıcı -ÜCRETSİZ" → "Kapsam 3 Karbon Hesaplayıcı";
-   o sayfanın iframe adresini `kapsam3-karbon-hesaplayici.html` yapın, sayfadaki açıklama metnini
-   Kapsam 3'e göre yenileyin. Sonra `karbon-hesaplayici.html` yönlendirmesi silinebilir.
-2. `food_*` faktörlerini kaynağıyla doğrulayın (yukarıda).
+1. ✅ Squarespace menü adı "Kapsam 3 Karbon Hesaplayıcı" yapıldı ve /karbon-hesaplayici sayfasının
+   iframe'i `kapsam3-karbon-hesaplayici.html`'e çevrildi (2026-10-19/20). Kalan: `karbon-hesaplayici.html`
+   yönlendirme dosyası artık silinebilir (kimse eski adresi kullanmıyorsa).
+2. ✅ `food_*` faktörleri kaynağıyla doğrulandı (2026-10-20, yukarıda).
 3. `karbon-metodoloji.html/.pdf` hâlâ tekstil anlatıyor; turizm + Kapsam 3'e göre yeniden yazılmalı.
 4. Kapsam 3'te yalnız 3.1 ve 3.4 var. Turizm için 3.5 (atık), 3.6 (iş seyahati), 3.7 (personel
    ulaşımı) ve 3.11/misafir ulaşımı eklenmek istenirse `computeBuyer()` sonucuna yeni `cats`
