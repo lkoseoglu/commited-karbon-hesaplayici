@@ -1,0 +1,25 @@
+# Her push ve pull request'te birim + uçtan uca testleri çalıştırır.
+# Testler internete çıkmaz: Firebase ve CDN istekleri tests/e2e/helpers.mjs içinde saplanır.
+name: testler
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Birim testleri (HCMI motoru, resmi Excel altin referansi, Turizm hesap katmani, tema)
+        run: npm test
+      - name: Uctan uca testler (Chromium, erisilebilirlik)
+        run: npm run test:e2e
