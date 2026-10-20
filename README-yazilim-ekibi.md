@@ -24,13 +24,67 @@ Kararlar:
 - Eski firma hesaplayıcısının **alıcı modülü** (hibrit Kapsam 3.1 motoru, veri kalitesi 1-5,
   kapsama/ekstrapolasyon, Pareto, öncelik listesi, Excel/PDF, Firebase giriş + bulut kayıt)
   turizmde karşılığı olmayan tek parça olduğu için **Kapsam 3 Karbon Hesaplayıcı** olarak korundu.
-- İki sayfanın hero alanının üstünde **aynı menü** var (`.cm-switch`). CSS ve HTML iki dosyada
-  birebir aynıdır; değiştirirseniz ikisini birlikte değiştirin. Bağlantılar göreli olduğu için iframe
-  içinde sayfa değiştirir.
+- İki sayfanın hero alanının üstünde **aynı menü** var (`.cm-switch`). Menünün CSS'i artık ortak tema
+  dosyasındadır (`assets/css/theme-sea.css`); HTML'i iki dosyada aynıdır, değiştirirseniz ikisini birlikte
+  değiştirin. Bağlantılar göreli olduğu için iframe içinde sayfa değiştirir.
 - Kapsam 3 sayfası Turizm sayfasıyla aynı renk paletine ve fonta (DM Sans) geçirildi.
 - `karbon-hesaplayici.html` artık yalnızca **yönlendirme**: commitedevents.app/karbon-hesaplayici
   sayfasındaki iframe bu adresi çağırıyor. Squarespace iframe'i `kapsam3-karbon-hesaplayici.html`'e
   çevrildikten sonra silinebilir. Eski tam kod git geçmişinde.
+
+## 2026-10-20 değişikliği — "Deniz" teması (yeşil → mavi)
+
+Ziyaretçi ana siteden (commitedevents.app) ayrıldığını hissetsin diye iki hesaplayıcının yeşil
+görünümü **deniz mavisine** çevrildi: derin okyanus degradeli üst alan, altında hareket eden üç katmanlı
+dalga, açık "deniz sisi" sayfa zemini, Commited sarısı (`--accent`) yalnız aktif menü ve vurgularda.
+
+- **Tek kaynak:** `assets/css/theme-sea.css`. Renkler, koyu mod, üst alan (`.hero`), dalgalar
+  (`.sea-waves`) ve ortak menü (`.cm-switch`) yalnız burada. Sayfalarda **sabit renk kodu yoktur**;
+  hepsi `var(--...)` ile gelir. Tema değiştirmek için bu dosyadaki `:root` değişkenlerini düzenleyin.
+- **Koyu mod iki yerde tanımlıdır ve ikisi aynı olmalıdır:** `@media (prefers-color-scheme: dark)` ve
+  `:root[data-theme="dark"]`. `tests/unit/theme.test.mjs` eşitliği, sayfalarda sabit renk
+  kalmadığını ve kullanılan her değişkenin tanımlı olduğunu denetler.
+- **Dalga işaretlemesi** iki HTML'de aynıdır; `python3 tools/sea-waves-snippet.py` ile üretilir.
+  `prefers-reduced-motion` açıksa dalgalar hareket etmez.
+- **Yayın sırası:** `assets/css/theme-sea.css` dosyasını HTML'lerden **önce** yükleyin; yoksa canlı
+  sayfa kısa süre biçimsiz görünür.
+- Kapsam 3 PDF raporunun paleti de maviye çevrildi (`BRAND`, `FOAM`, `GRAY`, `LGRAY`, `C1-C3`).
+- Kapsam 3'te etiketsiz form alanları için `a11yLabels()` eklendi (ekran okuyucu uyumu); `axe-core`
+  testleri WCAG 2.1 A/AA'da iki sayfa × açık/koyu × boş/dolu/sonuç ekranlarını denetler.
+
+### Squarespace sayfa zemini (2026-10-20, canlı)
+
+iframe'in dışındaki yeşil Squarespace zemini de maviye çevrildi; **yalnız** iki hesaplayıcı sayfasında.
+Kod, **Web Sitesi → Sayfalar → Özel Kod → Özel CSS** içinde, mevcut kodun en sonunda
+`HESAPLAYICI SAYFALARI - "DENIZ" TEMASI (2026-10-20)` başlıklı blok. Ana sayfa ve diğer sayfalar yeşil kalır.
+
+- Sayfalara özel olmasını `body#collection-<kimlik>` seçicileri sağlar:
+  Turizm = `collection-6a7c6126fae79c31708febfa`, Kapsam 3 = `collection-6a670c5a88ee2d075a23ced5`.
+  Yeni hesaplayıcı sayfası eklenirse kimliğini tarayıcı konsolunda `document.body.id` ile öğrenip her
+  `body#collection-…` seçicisinin yanına ekleyin.
+- Bloğun kaynağı `docs/squarespace-deniz-temasi.css` (yalnız yeni blok), sitenin **tüm** Özel CSS'inin
+  o günkü yedeği `docs/squarespace-ozel-css-tamami.css`. Squarespace'te değişiklik yapıldıkça yedek
+  güncellenmelidir; Squarespace CSS sürüm geçmişi tutmaz.
+- Neleri değiştirir: sayfa zemini (açık denizden derin laciverte degrade), şeffaf üst menü ve bölümler,
+  lacivert menü düğmeleri (aktif sayfa altın sarısı `#E8C547`), beyaz "hap" içinde logo, lacivert açılır
+  menüler, beyaz düğmelerde lacivert yazı, yuvarlak köşeli ve gölgeli hesaplayıcı penceresi, mobil menü.
+- Renkler iframe içindeki temayla aynı (`assets/css/theme-sea.css`): `#05304D`, `#064A73`, `#0A5F8F`, `#8FD0EE`.
+- Geri almak için: Özel CSS'teki bloğun tamamını silin.
+- Not: Squarespace Özel CSS derleyicisi LESS'tir; `~"…"` gibi LESS kaçışları normaldir. Kaydetmek için
+  düzenleyicide **Kaydedin** düğmesine basın; Escape ile kapatmak değişikliği iptal eder.
+
+### Testler
+
+```bash
+npm install                 # bir kez (Playwright, axe-core, SheetJS, jsPDF)
+npm test                    # birim testleri (tema tutarlılığı)
+node --test tests/e2e/a11y.test.mjs                       # erişilebilirlik (Chrome gerekir)
+node tests/e2e/capture-baseline.mjs tests/golden/x.json   # örnek verilerle sayıları kaydeder
+node tests/e2e/shots.mjs /tmp/ekran                       # açık/koyu/mobil ekran görüntüleri
+```
+E2E testleri CDN ve Firebase'i yerel saplamalarla (`tests/e2e/stubs`) değiştirir; internet gerekmez.
+`tests/golden/baseline-v4.json` tema değişiminden önceki sayıları tutar (otel 1.038 t, acente 1.128 t,
+Kapsam 3 1.418.888 kg); tema ve görünüm değişiklikleri bu sayıları değiştirmemelidir.
 
 ## Dosyalar
 
@@ -189,7 +243,8 @@ simgesinden "Kod"a çift tıklayın (iframe tıklamaları yutar). Kod panelini *
 - `/karbon-hesaplayici` sayfasının başlığı ve menü adı "Kapsam 3 Karbon Hesaplayıcı" yapıldı; URL aynı kaldı.
 - Buton görünümü **Web Sitesi → Sayfalar → Özel Kod → Özel CSS** içinde,
   `/* ===== Üst menü — buton görünümü (2026-10-19) ===== */` başlıklı blokta. Bulunulan sayfa sarı
-  (`#E8C547`), iki hesaplayıcı koyu yeşil (`#0B2E22`); seçiciler `href="/turizm-karbon-hesaplayici"` ve
+  (`#E8C547`), iki hesaplayıcı koyu yeşil (`#0B2E22`; hesaplayıcı sayfalarında deniz temasının bloğu bunu
+  `#05304D`'ye çevirir, ana sayfada yeşil kalır); seçiciler `href="/turizm-karbon-hesaplayici"` ve
   `href="/karbon-hesaplayici"`. Sayfa adresi değişirse bu iki seçici güncellenmeli. Geri almak için bloğu silin.
 
 `karbon-admin.html`'i herkese açık sayfaya koymayın.
