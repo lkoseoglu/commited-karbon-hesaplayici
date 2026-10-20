@@ -1,0 +1,85 @@
+/* =========================================================================
+   HESAPLAYICI SAYFALARI - "DENIZ" TEMASI (2026-10-20)
+   Yalnizca Turizm Karbon Hesaplayici ve Kapsam 3 Karbon Hesaplayici
+   sayfalarina uygulanir (body#collection-... ile sinirlidir). Ana sayfa
+   ve diger sayfalar yesil kalir; boylece ana siteden hesaplayiciya
+   gecildigi hemen anlasilir. Renkler iframe icindeki temayla aynidir
+   (GitHub: assets/css/theme-sea.css).
+   Yeni bir hesaplayici sayfasi eklenirse o sayfanin body id'sini
+   (tarayici konsolunda: document.body.id) bu bloktaki her "body#collection-..."
+   satirinin yanina ekleyin (Bul/Degistir ile kolayca yapilir).
+   Sayfalar: Turizm = collection-6a7c6126fae79c31708febfa
+             Kapsam 3 = collection-6a670c5a88ee2d075a23ced5
+   Geri almak icin: bu blogun tamamini silmek yeterlidir.
+   ========================================================================= */
+
+/* 1) Sayfa zemini: yuzeyde acik, derinlikte koyu mavi + ustte isik hale */
+body#collection-6a7c6126fae79c31708febfa,
+body#collection-6a670c5a88ee2d075a23ced5{background:radial-gradient(1100px 420px at 50% 0,rgba(143,208,238,.34),rgba(143,208,238,0) 72%) no-repeat,linear-gradient(180deg,#0a5f8f 0,#064a73 800px,#05304d 1800px,#03203a 100%) no-repeat;background-color:#05304d}
+
+/* 2) Ust menu ve bolumlerin yesil zeminini kaldir (govdeki deniz gorunsun) */
+body#collection-6a7c6126fae79c31708febfa header#header,
+body#collection-6a670c5a88ee2d075a23ced5 header#header{background:transparent}
+body#collection-6a7c6126fae79c31708febfa .page-section .section-border,
+body#collection-6a7c6126fae79c31708febfa .page-section .section-background,
+body#collection-6a670c5a88ee2d075a23ced5 .page-section .section-border,
+body#collection-6a670c5a88ee2d075a23ced5 .page-section .section-background{background:transparent}
+
+/* 3) Menu dugmeleri: hesaplayici dugmeleri lacivert, aktif sayfa altin sarisi */
+body#collection-6a7c6126fae79c31708febfa .header-display-desktop .header-nav-item>a[href="/turizm-karbon-hesaplayici"],
+body#collection-6a7c6126fae79c31708febfa .header-display-desktop .header-nav-item>a[href="/karbon-hesaplayici"],
+body#collection-6a670c5a88ee2d075a23ced5 .header-display-desktop .header-nav-item>a[href="/turizm-karbon-hesaplayici"],
+body#collection-6a670c5a88ee2d075a23ced5 .header-display-desktop .header-nav-item>a[href="/karbon-hesaplayici"]{background:#05304d !important;border-color:#8fd0ee !important}
+body#collection-6a7c6126fae79c31708febfa .header-display-desktop .header-nav-item--active>a,
+body#collection-6a7c6126fae79c31708febfa .header-display-desktop .header-nav-item--active>a[href="/turizm-karbon-hesaplayici"],
+body#collection-6a7c6126fae79c31708febfa .header-display-desktop .header-nav-item--active>a[href="/karbon-hesaplayici"],
+body#collection-6a7c6126fae79c31708febfa .header-menu-nav-item--active>a,
+body#collection-6a670c5a88ee2d075a23ced5 .header-display-desktop .header-nav-item--active>a,
+body#collection-6a670c5a88ee2d075a23ced5 .header-display-desktop .header-nav-item--active>a[href="/turizm-karbon-hesaplayici"],
+body#collection-6a670c5a88ee2d075a23ced5 .header-display-desktop .header-nav-item--active>a[href="/karbon-hesaplayici"],
+body#collection-6a670c5a88ee2d075a23ced5 .header-menu-nav-item--active>a{background:#e8c547 !important;border-color:#e8c547 !important;color:#0e2233 !important}
+
+/* 4) Beyaz dugmelerdeki yesil yazilari derin deniz mavisi yap */
+body#collection-6a7c6126fae79c31708febfa .header-actions .btn,
+body#collection-6a7c6126fae79c31708febfa .sqs-block-button-element,
+body#collection-6a7c6126fae79c31708febfa .form-submit-button,
+body#collection-6a7c6126fae79c31708febfa .form-submit-button span,
+body#collection-6a7c6126fae79c31708febfa .sqs-block-code a[href="/turizm-karbon-hesaplayici"],
+body#collection-6a670c5a88ee2d075a23ced5 .header-actions .btn,
+body#collection-6a670c5a88ee2d075a23ced5 .sqs-block-button-element,
+body#collection-6a670c5a88ee2d075a23ced5 .form-submit-button,
+body#collection-6a670c5a88ee2d075a23ced5 .form-submit-button span,
+body#collection-6a670c5a88ee2d075a23ced5 .sqs-block-code a[href="/turizm-karbon-hesaplayici"]{color:#05304d !important}
+body#collection-6a7c6126fae79c31708febfa [data-section-theme="bright"] .sqs-use--icon,
+body#collection-6a670c5a88ee2d075a23ced5 [data-section-theme="bright"] .sqs-use--icon{fill:#05304d}
+body#collection-6a7c6126fae79c31708febfa .manage-cookies-bar,
+body#collection-6a670c5a88ee2d075a23ced5 .manage-cookies-bar{background:#0b6fa0}
+
+/* 5) Mobil menu (acilir panel): lacivert zemin, altin CTA dugmesi */
+body#collection-6a7c6126fae79c31708febfa .header-menu-bg,
+body#collection-6a670c5a88ee2d075a23ced5 .header-menu-bg{background:#05304d}
+body#collection-6a7c6126fae79c31708febfa .header-menu .theme-btn--primary,
+body#collection-6a670c5a88ee2d075a23ced5 .header-menu .theme-btn--primary{background:#e8c547 !important;border-color:#e8c547 !important;color:#0e2233 !important}
+
+/* 6) Logo: koyu yazili logo mavi zeminde okunsun diye beyaz "hap" icine alinir
+      (yerlesimi bozmaz: beyaz hale golgesiyle cizilir) */
+body#collection-6a7c6126fae79c31708febfa img[src*="0b82d750-fdd4-44d6-8996-ba541f6a1277"],
+body#collection-6a7c6126fae79c31708febfa img[src*="b9892a6d-2e47-4307-b387-91d95a958964"],
+body#collection-6a670c5a88ee2d075a23ced5 img[src*="0b82d750-fdd4-44d6-8996-ba541f6a1277"],
+body#collection-6a670c5a88ee2d075a23ced5 img[src*="b9892a6d-2e47-4307-b387-91d95a958964"]{background:#fff;border-radius:22px;box-shadow:0 0 0 9px #fff,0 6px 18px 9px rgba(1,14,28,.22)}
+
+/* 6b) Ust menunun alt kenarindaki golge seridini kaldir (deniz kesintisiz aksin) */
+body#collection-6a7c6126fae79c31708febfa .header-dropshadow,
+body#collection-6a670c5a88ee2d075a23ced5 .header-dropshadow{box-shadow:none !important}
+
+/* 6c) Acilir menuler (Etkinlikler ve dil secici): yesil yerine lacivert */
+body#collection-6a7c6126fae79c31708febfa .header-nav-folder-content,
+body#collection-6a7c6126fae79c31708febfa .language-picker-content,
+body#collection-6a670c5a88ee2d075a23ced5 .header-nav-folder-content,
+body#collection-6a670c5a88ee2d075a23ced5 .language-picker-content{background:#05304d;border:1px solid rgba(143,208,238,.28);border-radius:14px;box-shadow:0 14px 34px rgba(1,14,28,.45)}
+
+/* 7) Hesaplayici penceresi: yuvarlak kose + golge ile denizin ustunde yuzsun */
+body#collection-6a7c6126fae79c31708febfa #cm-embed-turizm,
+body#collection-6a7c6126fae79c31708febfa #cm-embed-kapsam3,
+body#collection-6a670c5a88ee2d075a23ced5 #cm-embed-turizm,
+body#collection-6a670c5a88ee2d075a23ced5 #cm-embed-kapsam3{border-radius:20px;overflow:hidden;box-shadow:0 24px 60px rgba(1,14,28,.45),0 0 0 1px rgba(143,208,238,.2)}
