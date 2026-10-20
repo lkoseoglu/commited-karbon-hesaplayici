@@ -3,53 +3,31 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<style>:root{color-scheme:light}body{margin:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]{display:none!important}</style>
-</head>
-<body>
 <title>Turizm Karbon Hesaplayıcısı</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300..800&display=swap">
+<link rel="stylesheet" href="assets/css/theme-sea.css">
+<style>body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
 <style>
 /* Layout: tek sütun akış; otel tarafı 5 adımlı dikey akış (Ölç → Kıyasla → Azalt → Net Sıfır → Raporla),
    üstte yapışkan adım şeridi + canlı özet. Geniş ekranda form alanları çok sütunlu ızgara. */
-:root{
-  --bg:#F2F7F3; --surface:#FFFFFF; --surface2:#E9F2EB; --ink:#14261E; --muted:#5B6E63;
-  --brand:#1E6B4A; --brand-deep:#0B2E22; --brand-soft:#CFE6DA; --accent:#E8C547; --accent-ink:#6B5A1E;
-  --line:#D8E4DC; --good:#2FA05C; --warn:#C98A1B; --bad:#C44536; --chip:#EAF5EE;
-  /* grafik rolleri */
-  --series:#0E7A45; --series-soft:#BFDFCD; --ref:#8A9D92; --grid:#E2EDE6; --plot:#FFFFFF;
-}
-@media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){
-    --bg:#0D1A14; --surface:#13251C; --surface2:#1A3226; --ink:#E8F1EA; --muted:#9DB3A6;
-    --brand:#5BBD8B; --brand-deep:#A9E3C3; --brand-soft:#2C5943; --accent:#E8C547; --accent-ink:#F0DE9C;
-    --line:#2A4435; --good:#4FC47E; --warn:#E0A83C; --bad:#E06B5B; --chip:#1E3A2B;
-    --series:#4FB383; --series-soft:#27503C; --ref:#7B9188; --grid:#223B2D; --plot:#13251C;
-    color-scheme:dark;
-  }
-}
-:root[data-theme="dark"]{
-  --bg:#0D1A14; --surface:#13251C; --surface2:#1A3226; --ink:#E8F1EA; --muted:#9DB3A6;
-  --brand:#5BBD8B; --brand-deep:#A9E3C3; --brand-soft:#2C5943; --accent:#E8C547; --accent-ink:#F0DE9C;
-  --line:#2A4435; --good:#4FC47E; --warn:#E0A83C; --bad:#E06B5B; --chip:#1E3A2B;
-  --series:#4FB383; --series-soft:#27503C; --ref:#7B9188; --grid:#223B2D; --plot:#13251C;
-  color-scheme:dark;
-}
+/* Renkler ve koyu mod: assets/css/theme-sea.css (iki sayfada ortak "Deniz" teması).
+   Bu dosyada sabit renk kodu kullanmayın; tema değişkenlerini kullanın (tests/unit/theme.test.mjs denetler). */
 *{box-sizing:border-box}
 body{background:var(--bg); color:var(--ink); font-family:'DM Sans',system-ui,-apple-system,'Segoe UI',Arial,sans-serif; margin:0; padding-block:0 56px; padding-inline:16px; line-height:1.5; font-size:16px}
 .wrap{max-width:1140px; margin:0 auto}
 
 /* ---------- Hero ---------- */
-.hero{background:linear-gradient(135deg,#0B2E22 0%,#14503A 60%,#1E6B4A 100%); color:#F2F7F3; border-radius:0 0 24px 24px; padding:40px 28px 34px; margin:0 -16px 24px}
+.hero{padding:40px 28px 92px; margin:0 -16px 6px}
 .hero-in{max-width:1140px; margin:0 auto; display:flex; flex-direction:column; gap:14px}
-.eyebrow{font-size:13px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:#8FCDAA; margin:0}
+.eyebrow{font-size:13px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--hero-label); margin:0}
 /* Marka adı büyük harfe çevrilmez: tr dilinde "cOmmited" → "COMMİTED" olurdu */
-.eyebrow .brand{text-transform:none; letter-spacing:.02em; font-size:15px; font-weight:800; color:#CFE6DA}
+.eyebrow .brand{text-transform:none; letter-spacing:.02em; font-size:15px; font-weight:800; color:var(--hero-soft)}
 .eyebrow .sep{opacity:.55; white-space:pre}
 .hero h1{font-size:clamp(28px,4.5vw,44px); line-height:1.12; margin:0; font-weight:700; text-wrap:balance}
-.hero p.sub{margin:0; max-width:62ch; color:#CFE6DA; font-size:clamp(15px,1.6vw,18px); font-weight:300}
+.hero p.sub{margin:0; max-width:62ch; color:var(--hero-soft); font-size:clamp(15px,1.6vw,18px); font-weight:300}
 .badges{display:flex; flex-wrap:wrap; gap:8px; margin-top:4px}
-.badge{font-size:13px; font-weight:600; border:1px solid rgba(169,227,195,.45); background:rgba(255,255,255,.08); color:#E8F1EA; border-radius:999px; padding:6px 14px}
-.badge.gold{background:var(--accent); color:#14261E; border-color:var(--accent)}
+.badge{font-size:13px; font-weight:600; border:1px solid var(--hero-glass-line); background:var(--hero-glass); color:var(--hero-ink); border-radius:999px; padding:6px 14px}
+.badge.gold{background:var(--accent); color:var(--on-accent); border-color:var(--accent)}
 
 /* ---------- Tabs ---------- */
 .tabs{display:flex; gap:8px; margin:0 0 16px; flex-wrap:wrap}
@@ -59,11 +37,10 @@ body{background:var(--bg); color:var(--ink); font-family:'DM Sans',system-ui,-ap
 
 /* ---------- Yapışkan özet + adım şeridi ---------- */
 .stick{position:sticky; top:env(safe-area-inset-top,0px); z-index:20; background:var(--bg); padding-block:8px; margin-bottom:8px}
-.sumbar{display:flex; flex-wrap:wrap; gap:8px 18px; align-items:center; background:var(--brand-deep); color:#F2F7F3; border-radius:14px; padding:10px 16px}
-:root[data-theme="dark"] .sumbar, :root:not([data-theme="light"]) .sumbar{background:#0B2E22; border:1px solid var(--line)}
+.sumbar{display:flex; flex-wrap:wrap; gap:8px 18px; align-items:center; background:var(--deep); color:var(--on-deep); border:1px solid var(--deep-line); border-radius:14px; padding:10px 16px}
 .sumbar .sb{display:flex; flex-direction:column; line-height:1.2; min-width:0}
 .sumbar .sb b{font-size:19px; font-weight:800; font-variant-numeric:tabular-nums}
-.sumbar .sb span{font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:#8FCDAA; font-weight:600}
+.sumbar .sb span{font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--on-deep-label); font-weight:600}
 .sumbar .sb i{font-style:normal}
 .sumbar .sb .sm{display:none}
 .sumbar .sb.gr{margin-left:auto}
@@ -76,8 +53,7 @@ body{background:var(--bg); color:var(--ink); font-family:'DM Sans',system-ui,-ap
 /* ---------- Bölümler ---------- */
 .sect{scroll-margin-top:118px; margin:0 0 30px}
 .sect-head{display:flex; gap:12px; align-items:flex-start; margin:0 0 14px}
-.sect-head .num{flex:0 0 auto; width:30px; height:30px; border-radius:9px; background:var(--brand); color:#fff; display:grid; place-items:center; font-weight:800; font-size:15px}
-:root[data-theme="dark"] .sect-head .num, :root:not([data-theme="light"]) .sect-head .num{color:#0B2E22}
+.sect-head .num{flex:0 0 auto; width:30px; height:30px; border-radius:9px; background:var(--brand); color:var(--on-brand); display:grid; place-items:center; font-weight:800; font-size:15px}
 .sect-head h2{margin:0; font-size:21px; font-weight:700; line-height:1.2}
 .sect-head p{margin:3px 0 0; font-size:14px; color:var(--muted); max-width:70ch}
 
@@ -101,15 +77,14 @@ legend{font-weight:700; font-size:15px; color:var(--brand); padding:0 8px; lette
 .cards{display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:14px; align-items:stretch}
 .card{background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:16px 18px}
 .card h3{margin:0 0 10px; font-size:14.5px; font-weight:700}
-.card.total{background:var(--brand-deep); border-color:transparent; color:#F2F7F3}
-:root[data-theme="dark"] .card.total, :root:not([data-theme="light"]) .card.total{background:#0B2E22; border-color:var(--line)}
-.card.total h3{color:#8FCDAA; font-size:12.5px; letter-spacing:.1em; text-transform:uppercase}
+.card.total{background:var(--deep); border-color:var(--deep-line); color:var(--on-deep)}
+.card.total h3{color:var(--on-deep-label); font-size:12.5px; letter-spacing:.1em; text-transform:uppercase}
 .kpi{font-size:34px; font-weight:800; line-height:1; margin:0}
 .kpi small{font-size:14px; font-weight:600; color:var(--muted)}
-.card.total .kpi small{color:#A9E3C3}
+.card.total .kpi small{color:var(--on-deep-soft)}
 .kpi.sm{font-size:26px}
 .sub{font-size:12.5px; color:var(--muted); margin:8px 0 0}
-.card.total .sub{color:#A9E3C3}
+.card.total .sub{color:var(--on-deep-soft)}
 .hl{border-left:3px solid var(--brand)}
 
 /* ---------- Bar listeleri ---------- */
@@ -149,7 +124,7 @@ table.t tfoot td{border-top:2px solid var(--line); border-bottom:0; font-weight:
   #a_split table.t{min-width:318px; font-size:12.5px}
 
   /* --- Mobil: kahraman alanı daha az yer kaplasın --- */
-  .hero{padding:22px 20px 20px; margin-bottom:16px}
+  .hero{padding:22px 20px 56px; margin-bottom:0}
   .hero-in{gap:10px}
   .eyebrow{font-size:12px; letter-spacing:.1em}
   .eyebrow .brand{font-size:14px}
@@ -191,8 +166,7 @@ table.t tfoot td{border-top:2px solid var(--line); border-bottom:0; font-weight:
 .legend i.area{height:10px; border:0; background:var(--series-soft); border-radius:2px}
 .plotbox{position:relative}
 .plotbox svg{display:block; width:100%; height:auto; max-width:100%}
-.tip{position:absolute; pointer-events:none; opacity:0; transition:opacity .12s; background:var(--brand-deep); color:#F2F7F3; border-radius:9px; padding:7px 10px; font-size:12.5px; line-height:1.45; white-space:nowrap; z-index:5; box-shadow:0 4px 14px rgba(0,0,0,.18)}
-:root[data-theme="dark"] .tip, :root:not([data-theme="light"]) .tip{background:#0B2E22; border:1px solid var(--line)}
+.tip{position:absolute; pointer-events:none; opacity:0; transition:opacity .12s; background:var(--deep); color:var(--on-deep); border:1px solid var(--deep-line); border-radius:9px; padding:7px 10px; font-size:12.5px; line-height:1.45; white-space:nowrap; z-index:5; box-shadow:0 4px 14px rgba(0,0,0,.18)}
 .tip.on{opacity:1}
 .tip b{font-variant-numeric:tabular-nums}
 
@@ -209,8 +183,7 @@ table.t tfoot td{border-top:2px solid var(--line); border-bottom:0; font-weight:
 .cta h3{margin:0 0 6px; font-size:16px}
 .cta p{margin:0 0 10px; font-size:14px; color:var(--muted)}
 .btn{display:inline-block; font:inherit; font-weight:700; font-size:14.5px; border-radius:999px; padding:10px 20px; cursor:pointer; border:1.5px solid transparent; text-decoration:none; text-align:center}
-.btn.primary{background:var(--brand); color:#fff}
-:root[data-theme="dark"] .btn.primary, :root:not([data-theme="light"]) .btn.primary{color:#0B2E22}
+.btn.primary{background:var(--brand); color:var(--on-brand)}
 .btn.ghost{background:transparent; border-color:var(--brand); color:var(--brand)}
 .btn:focus-visible{outline:2px solid var(--ink); outline-offset:2px}
 .btn-row{display:flex; flex-wrap:wrap; gap:8px}
@@ -243,34 +216,23 @@ details.fold summary{font-weight:700; padding:10px 0; cursor:pointer; color:var(
 details.meth{background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:4px 18px; margin-top:22px}
 details.meth summary{font-weight:700; padding:12px 0; cursor:pointer; color:var(--brand)}
 .foot{font-size:12.5px; color:var(--muted); margin-top:16px; max-width:85ch}
-.toast{position:fixed; left:50%; bottom:18px; transform:translateX(-50%); background:var(--brand-deep); color:#F2F7F3; border-radius:999px; padding:10px 20px; font-size:14px; font-weight:600; opacity:0; transition:opacity .25s; pointer-events:none; z-index:60}
-:root[data-theme="dark"] .toast, :root:not([data-theme="light"]) .toast{background:#0B2E22; border:1px solid var(--line)}
+.toast{position:fixed; left:50%; bottom:18px; transform:translateX(-50%); background:var(--deep); color:var(--on-deep); border:1px solid var(--deep-line); border-radius:999px; padding:10px 20px; font-size:14px; font-weight:600; opacity:0; transition:opacity .25s; pointer-events:none; z-index:60}
 .toast.show{opacity:1}
 .panel[hidden]{display:none}
 .two{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:14px; align-items:start}
 @media (max-width:820px){ .two{grid-template-columns:minmax(0,1fr)} }
 @media (prefers-reduced-motion: reduce){ *{transition:none !important} }
-/* ---- Ortak hesaplayıcı menüsü (turizm-karbon-hesaplayici.html ve kapsam3-karbon-hesaplayici.html'de aynıdır) ---- */
-.cm-switch{display:flex;gap:4px;padding:4px;margin:0 0 18px;background:rgba(255,255,255,.08);border:1px solid rgba(169,227,195,.38);border-radius:999px;width:max-content;max-width:100%;position:relative;z-index:2}
-.cm-switch a{display:inline-flex;align-items:center;gap:7px;color:#CFE6DA;text-decoration:none;font-weight:700;font-size:14px;line-height:1.2;padding:9px 16px;border-radius:999px;white-space:nowrap;letter-spacing:0;text-transform:none}
-.cm-switch a:hover{background:rgba(255,255,255,.1);color:#fff}
-.cm-switch a:focus-visible{outline:2px solid #E8C547;outline-offset:2px}
-.cm-switch a[aria-current="page"]{background:#E8C547;color:#14261E}
-.cm-switch .cm-sm{display:none}
-@media (max-width:520px){.cm-switch{width:100%}.cm-switch a{flex:1 1 0;justify-content:center;padding:9px 10px}.cm-switch .cm-lg{display:none}.cm-switch .cm-sm{display:inline}}
-@media print{.cm-switch{display:none}}
-
 /* ---------- Üyelik / kayıt ---------- */
 .acct{display:flex; flex-wrap:wrap; gap:8px 10px; align-items:center; margin-top:6px}
 .acct .btn{padding:9px 18px; font-size:14px}
-.acct-cta{background:var(--accent); color:#14261E; border-color:var(--accent)}
-.acct-ghost{background:transparent; color:#F2F7F3; border-color:rgba(169,227,195,.6)}
-.acct-note{font-size:13.5px; color:#CFE6DA; flex:1 1 260px}
-.acct-who{font-size:14px; color:#F2F7F3; font-weight:600}
-.acct-who small{display:block; font-weight:400; color:#8FCDAA; font-size:12.5px}
+.acct-cta{background:var(--accent); color:var(--on-accent); border-color:var(--accent)}
+.acct-ghost{background:transparent; color:var(--hero-ink); border-color:var(--hero-glass-line)}
+.acct-note{font-size:13.5px; color:var(--hero-soft); flex:1 1 260px}
+.acct-who{font-size:14px; color:var(--hero-ink); font-weight:600}
+.acct-who small{display:block; font-weight:400; color:var(--hero-label); font-size:12.5px}
 .linkbtn{background:none; border:0; padding:0; font:inherit; color:var(--brand); font-weight:700; text-decoration:underline; cursor:pointer}
 .cloud-msg{min-height:1em; margin:8px 0 0}
-.mback{position:fixed; inset:0; z-index:100; background:rgba(11,46,34,.55); display:flex; align-items:flex-start; justify-content:center; padding:24px 12px; overflow-y:auto}
+.mback{position:fixed; inset:0; z-index:100; background:var(--scrim); display:flex; align-items:flex-start; justify-content:center; padding:24px 12px; overflow-y:auto}
 .mback[hidden]{display:none}
 .mbox{position:relative; background:var(--surface); color:var(--ink); border-radius:18px; padding:22px 20px 18px; width:100%; max-width:440px; box-shadow:0 18px 50px rgba(0,0,0,.25)}
 .mbox h3{margin:0 0 12px; font-size:20px}
@@ -295,6 +257,8 @@ details.meth summary{font-weight:700; padding:12px 0; cursor:pointer; color:var(
 .rec b{white-space:nowrap}
 @media (max-width:520px){ .mgrid{grid-template-columns:1fr} }
 </style>
+</head>
+<body>
 
 <header class="hero">
   <div class="hero-in">
@@ -317,6 +281,11 @@ details.meth summary{font-weight:700; padding:12px 0; cursor:pointer; color:var(
       <button class="btn acct-ghost" type="button" data-auth="login">Giriş yapın</button>
       <span class="acct-note">Tesisinizi kaydedin; verileriniz her cihazda hazır olsun, her yıl yeni ölçümünüzü ekleyin.</span>
     </div>
+  </div>
+  <div class="sea-waves" aria-hidden="true">
+    <svg class="w1" viewBox="0 0 2400 64" preserveAspectRatio="none"><path d="M0,30 Q300,18 600,30 T1200,30 T1800,30 T2400,30 V64 H0 Z"/></svg>
+    <svg class="w2" viewBox="0 0 2400 64" preserveAspectRatio="none"><path d="M0,40 Q150,31 300,40 T600,40 T900,40 T1200,40 T1500,40 T1800,40 T2100,40 T2400,40 V64 H0 Z"/></svg>
+    <svg class="w3" viewBox="0 0 2400 64" preserveAspectRatio="none"><path d="M0,50 Q100,44 200,50 T400,50 T600,50 T800,50 T1000,50 T1200,50 T1400,50 T1600,50 T1800,50 T2000,50 T2200,50 T2400,50 V64 H0 Z"/></svg>
   </div>
 </header>
 
