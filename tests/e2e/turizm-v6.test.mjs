@@ -1,0 +1,336 @@
+// Turizm v6 önizleme sayfası: uçtan uca davranış (gerçek Chromium, Firebase saplamalı).
+//   npm run test:e2e    (ya da: node --test tests/e2e/turizm-v6.test.mjs)
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { AxeBuilder } from '@axe-core/playwright';
+import fs from 'node:fs';
+import path from 'node:path';
+import { serve, launch, newPage, ROOT } from './helpers.mjs';
+import { loadApp } from '../helpers/load-hcmi.mjs';
+
+// Önizleme dururken -v6 dosyası, canlıya taşındıktan sonra (tools/promote-v6.py) asıl adres sınanır.
+const PAGE = fs.readFileSync(path.join(ROOT, 'turizm-karbon-hesaplayici-v6.html'), 'utf8').includes('data-preview-flag')
+  ? 'turizm-karbon-hesaplayici-v6.html' : 'turizm-karbon-hesaplayici.html';
+const { srv, base } = await serve();
+const browser = await launch();
+test.after(async () => { await browser.close(); srv.close(); });
+
+const node = loadApp();                                   // aynı hesap Node'da: ekranla karşılaştırmak için
+const ex = node.TURIZM.compute(node.TURIZM.model.exampleState());
+
+async function open(opts = {}) {
+  const p = await newPage(browser, { width: 1280, height: 900, ...opts });
+  await p.goto(base + PAGE, { waitUntil: 'load' });
+  await p.waitForFunction(() => !!window.__tour);
+  return p;
+}
+const settle = (p) => p.waitForTimeout(260);           // yazma gecikmesi (140 ms) + çizim
+const text = (p, sel) => p.$eval(sel, (e) => e.textContent.trim());
+async function noHScroll(p) {
+  const w = await p.evaluate(() => [document.documentElement.scrollWidth, document.documentElement.clientWidth]);
+  assert.ok(w[0] <= w[1], `yatay kaydırma var: ${w[0]} > ${w[1]}`);
+}
+async function axe(p, label) {
+  const r = await new AxeBuilder({ page: p }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
+  const out = r.violations.map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 3).map((n) => n.target.join(' ') + ' -> ' + ((n.any[0] && n.any[0].message) || '')).join(' | ')}`);
+  assert.deepEqual(out, [], label + ' ihlalleri:\n' + out.join('\n'));
+}
+
+test('boş açılış: hata yok, sonuçlar boş, örnek düğmesi var, telefonda taşma yok', async () => {
+  for (const vp of [{ width: 1280, height: 900 }, { width: 390, height: 844 }]) {
+    const p = await open(vp);
+    assert.equal(await text(p, '#s_total'), '—');
+    assert.equal(await text(p, '#s_grade'), '—');
+    assert.equal(await p.evaluate(() => window.__tour.isEmpty()), true);
+    assert.equal(await p.locator('#ledger_rows .lrow').count(), 7);
+    assert.ok(await p.locator('#h_notice [data-example="otel"]').count());
+    assert.equal(await p.locator('#msgs li').count(), 0, 'boş formda uyarı yağmuru yok');
+    await noHScroll(p);
+    assert.deepEqual(p.errors, []);
+    await p.context().close();
+  }
+});
+
+test('örnekle doldur: ekrandaki sonuç Node hesabıyla aynı', async () => {
+  const p = await open();
+  await p.click('#h_notice [data-example="otel"]'); await settle(p);
+  assert.equal(await text(p, '#s_total'), '1.060');
+  assert.equal(await text(p, '#s_cpor'), '34,4');
+  assert.equal(await text(p, '#s_meet'), '0,0476');
+  assert.equal(await text(p, '#s_grade'), 'B');
+  const sm = await p.evaluate(() => window.__tour.summary());
+  assert.ok(Math.abs(sm.total - ex.totals.hcmiT * 1000) < 1e-6, `${sm.total} ≠ ${ex.totals.hcmiT * 1000}`);
+  assert.equal(sm.cpor, Math.round(ex.metrics.cpor * 100) / 100); assert.equal(sm.grade, 'B'); assert.equal(sm.year, 2025);
+  assert.equal(sm.hcmi.schema, 'commited.hotel.hcmi/2');
+  assert.equal(await p.inputValue('#ea-e1'), '1.480.000');
+  assert.equal(await text(p, '#eo-e1'), '694 t');
+  assert.match(await text(p, '#grid_info'), /0,469 kgCO₂e\/kWh/);
+  assert.match(await text(p, '#d_name'), /Örnek Tatil Köyü · Muğla/);
+  assert.equal(await text(p, '#r_complete'), '100');
+  assert.ok(await p.locator('#macc tbody tr').count() >= 10);
+  assert.equal(await p.locator('#pathsvg polyline').count(), 2, 'hedef ve plan çizgisi');
+  assert.match(await text(p, '#h_notice'), /Örnek veriler yüklendi/);
+  // dolu formda örnek yeniden istenirse onay sorulur (tarayıcı penceresi açılmaz)
+  await p.click('#h_notice [data-clear="otel"]'); await settle(p);
+  assert.equal(await text(p, '#s_total'), '—');
+  await p.fill('#h_name', 'Benim Otelim'); await settle(p);
+  await p.click('#h_notice [data-example="otel"]');
+  assert.match(await text(p, '#h_notice'), /örnek veriler yüklenecek/);
+  await p.click('#h_notice [data-cancel="otel"]');
+  assert.equal(await p.inputValue('#h_name'), 'Benim Otelim', 'vazgeçince veri korunur');
+  await p.click('#h_notice [data-example="otel"]'); await p.click('#h_notice [data-confirm="otel"]'); await settle(p);
+  assert.equal(await p.inputValue('#h_name'), 'Örnek Tatil Köyü');
+  assert.deepEqual(p.errors, []);
+  await p.context().close();
+});
+
+test('Türkçe sayı girişi: binlik nokta, ondalık virgül, hatalı değer işaretlenir', async () => {
+  const p = await open();
+  await p.fill('#ea-e1', '1.480.000'); await settle(p);
+  assert.equal(await p.evaluate(() => window.__tour.state().hotel.energy[0].total), 1480000);
+  assert.equal(await text(p, '#eo-e1'), '694 t');
+  await p.fill('#h_area_rooms', '5200,5'); await p.press('#h_area_rooms', 'Tab'); await settle(p);
+  assert.equal(await p.inputValue('#h_area_rooms'), '5.200,5', 'alandan çıkınca biçimlenir');
+  assert.equal(await p.evaluate(() => window.__tour.state().hotel.area.rooms), 5200.5);
+  await p.fill('#h_roomnights', '12 oda'); await settle(p);
+  assert.equal(await p.getAttribute('#h_roomnights', 'aria-invalid'), 'true');
+  assert.match(await text(p, '#h_roomnights-err'), /Sayı yazın/);
+  assert.equal(await p.evaluate(() => window.__tour.state().hotel.occupiedRooms), null, 'okunamayan değer hesaba boş girer');
+  assert.ok((await p.locator('#msgs li.errors').allTextContents()).some((t) => /"Satılan oda-gece" alanındaki "12 oda" okunamadı/.test(t)), 'veri kontrolü asıl nedeni söyler');
+  await p.click('#msgs [data-goto-id="h_roomnights"]');
+  assert.equal(await p.evaluate(() => document.activeElement.id), 'h_roomnights');
+  await p.fill('#h_roomnights', '-5'); await settle(p);
+  assert.match(await text(p, '#h_roomnights-err'), /Negatif olamaz/);
+  await p.fill('#h_roomnights', '26.280'); await settle(p);
+  assert.equal(await p.getAttribute('#h_roomnights', 'aria-invalid'), null);
+  assert.equal(await p.locator('#h_roomnights-err').count(), 0);
+  await p.fill('#h_year', '25'); await settle(p);
+  assert.match(await text(p, '#h_year-err'), /4 haneli/);
+  await p.fill('#h_year', '2022'); await settle(p);
+  assert.match(await text(p, '#grid_info'), /0,478/, '2022 faktörü');
+  await p.selectOption('#h_conn', 'transmission'); await settle(p);
+  assert.match(await text(p, '#grid_info'), /0,445/, '2022 iletim');
+  assert.deepEqual(p.errors, []);
+  await p.context().close();
+});
+
+test('enerji defteri: hızlı ekle, sil, birim değiştir, elle faktör', async () => {
+  const p = await open();
+  await p.click('#h_notice [data-example="otel"]'); await settle(p);
+  const total0 = await p.evaluate(() => window.__tour.summary().total);
+  // fuel-oil ekle
+  await p.click('#quick_add [data-quick="fuel_oil_2"]'); await settle(p);
+  assert.equal(await p.locator('#ledger_rows .lrow').count(), 8);
+  const newId = await p.evaluate(() => window.__tour.state().hotel.energy.at(-1).id);
+  assert.equal(await p.evaluate(() => document.activeElement.id), 'ea-' + newId, 'yeni satırın miktarına odaklanır');
+  await p.keyboard.type('1000'); await settle(p);
+  const total1 = await p.evaluate(() => window.__tour.summary().total);
+  assert.ok(total1 > total0 + 2500, `${total1} - ${total0}`);
+  assert.equal(await p.locator('#quick_add [data-quick="fuel_oil_2"]').count(), 0, 'eklenen tür hızlı ekle listesinden çıkar');
+  // sil
+  await p.click('#ed-del-' + newId); await settle(p);
+  assert.equal(await p.locator('#ledger_rows .lrow').count(), 7);
+  assert.ok(Math.abs((await p.evaluate(() => window.__tour.summary().total)) - total0) < 1e-6);
+  // doğal gaz birimini kWh yap: toplam değişmez, miktar kWh'e çevrilir
+  await p.selectOption('#eu-e2', 'kWh'); await settle(p);
+  assert.ok(Math.abs((await p.evaluate(() => window.__tour.summary().total)) - total0) < 1e-3);
+  const gas = await p.evaluate(() => window.__tour.state().hotel.energy[1]);
+  assert.equal(gas.unit, 'kWh'); assert.ok(Math.abs(gas.total - 92000 * 10.639499728323601) < 0.01, String(gas.total));
+  assert.match(await p.inputValue('#ea-e2'), /^978\.83[34],\d\d?$/);
+  assert.match(await p.$eval('#row-e2 .c-price .unit', (e) => e.textContent), /TL\/kWh/);
+  // aynı tür ikinci kez seçilemez
+  assert.equal(await p.$eval('#et-e3 option[value="grid"]', (o) => o.disabled), true);
+  // soğutulmuş su: Türkiye için faktör yok → hata, elle faktörle çözülür
+  await p.selectOption('#add_type', 'chilled_water'); await settle(p);
+  const cw = await p.evaluate(() => window.__tour.state().hotel.energy.at(-1).id);
+  await p.keyboard.type('50000'); await settle(p);
+  assert.equal(await text(p, '#eo-' + cw), 'faktör gerekli');
+  assert.equal(await text(p, '#s_total'), '—', 'hatalı satır varken toplam gösterilmez');
+  assert.ok(await p.locator('#msgs li.errors').count() >= 1);
+  assert.equal(await p.isVisible('#ed-' + cw), true, 'ayrıntılar kendiliğinden açılır');
+  await p.check(`#ed-${cw} input[value="manual"]`); await settle(p);
+  await p.fill('#ef-' + cw, '0,1'); await settle(p);
+  assert.equal(await text(p, '#eo-' + cw), '5 t');
+  assert.notEqual(await text(p, '#s_total'), '—');
+  assert.deepEqual(p.errors, []);
+  await p.context().close();
+});
+
+test('seçenekler: soğutucu gaz tahmini, araç yok, dış çamaşırhane, YEK-G, özel alan', async () => {
+  const p = await open();
+  await p.click('#h_notice [data-example="otel"]'); await settle(p);
+  const t0 = await p.evaluate(() => window.__tour.result().totals.hcmiT);
+  await p.check('input[name="refmode"][value="default1pct"]'); await settle(p);
+  assert.equal(await p.isVisible('#ref_box'), false);
+  const r1 = await p.evaluate(() => window.__tour.result());
+  assert.ok(r1.totals.upliftT > 0); assert.ok(await p.isVisible('#d_uplift_row'));
+  await p.check('input[name="refmode"][value="manual"]'); await settle(p);
+  assert.ok(Math.abs((await p.evaluate(() => window.__tour.result().totals.hcmiT)) - t0) < 1e-9);
+  // çamaşırhane: bilmiyorum → dolu odadan tahmin
+  await p.check('input[name="lmethod"][value="estimate"]'); await settle(p);
+  assert.equal(await p.isVisible('#laundry_tonnage'), false);
+  assert.ok((await p.locator('#msgs li.info').allTextContents()).some((t) => /tahmin edildi/.test(t)));
+  // çamaşırhaneyi kapat
+  await p.uncheck('#l_out'); await settle(p);
+  assert.equal(await p.isVisible('#laundry_box'), false);
+  assert.equal(await p.evaluate(() => window.__tour.result().totals.laundryT), 0);
+  // YEK-G belgesi
+  await p.click('#add_market'); await p.fill('#mk-k-0', '500.000'); await settle(p);
+  const r2 = await p.evaluate(() => window.__tour.result());
+  assert.ok(r2.scopes.s2Market < r2.scopes.s2Location);
+  assert.equal(await p.isVisible('#add_market'), true); await p.click('#add_market');
+  assert.equal(await p.isVisible('#add_market'), false, 'en fazla iki belge');
+  // özel alan oranı
+  await p.click('#fold-private summary'); await p.check('#p_has'); await p.check('input[name="pmethod"][value="share"]');
+  await p.fill('#p_pct', '10'); await settle(p);
+  const r3 = await p.evaluate(() => window.__tour.result());
+  assert.ok(r3.totals.hcmiT < r2.totals.hcmiT);
+  assert.deepEqual(p.errors, []);
+  await p.context().close();
+});
+
+test('önlemler ve net sıfır: işaretleyince azaltım, sıralama ve patika güncellenir', async () => {
+  const p = await open();
+  await p.click('#h_notice [data-example="otel"]'); await settle(p);
+  const saved0 = await text(p, '#m_saving');
+  assert.equal(saved0, '243');
+  await p.check('#m_keycard'); await settle(p);
+  assert.notEqual(await text(p, '#m_saving'), saved0);
+  assert.match(await p.$eval('#macc tbody', (e) => e.textContent), /Oda enerji otomasyonu \(seçili\)/);
+  await p.uncheck('#m_led'); await p.uncheck('#m_pv'); await p.uncheck('#m_water'); await p.uncheck('#m_keycard'); await settle(p);
+  assert.equal(await text(p, '#m_saving'), '0');
+  assert.match(await text(p, '#nz_gap_sub'), /dengeleme gerekir/);
+  await p.fill('#nz_done', '2028'); await settle(p);
+  assert.equal(await p.evaluate(() => window.__tour.result().path.done), 2028);
+  assert.deepEqual(p.errors, []);
+  await p.context().close();
+});
+
+test('acente sekmesi: eski sayfayla aynı toplam, segment katsayısı, dağıtım tablosu, klavye', async () => {
+  const p = await open();
+  await p.click('#tab-acente');
+  assert.equal(await p.isVisible('#panel-acente'), true); assert.equal(await p.isVisible('#panel-otel'), false);
+  await p.click('#a_notice [data-example="acente"]'); await settle(p);
+  assert.equal(await p.evaluate(() => window.__tour.summary().total), 1128222);
+  assert.equal(await text(p, '#ar_total'), '1.128');
+  await p.selectOption('#a_seg', 's5'); await settle(p);
+  assert.equal(await p.inputValue('#a_cpor'), '48,9');
+  await p.fill('#a_cpor', '40'); await settle(p);
+  assert.equal(await p.inputValue('#a_seg'), 'custom');
+  await p.check('#opt_asplit'); await settle(p);
+  assert.equal(await p.isDisabled('#a_gece'), true);
+  assert.equal(await text(p, '#as_n'), '7.200');
+  assert.equal(await text(p, '#as_w'), '39,5', '(2.400×48,9 + 3.600×37,9 + 1.200×25,4) / 7.200');
+  // sekmeler klavyeyle
+  await p.focus('#tab-acente'); await p.keyboard.press('ArrowLeft');
+  assert.equal(await p.evaluate(() => document.activeElement.id), 'tab-otel');
+  assert.equal(await p.isVisible('#panel-otel'), true);
+  assert.deepEqual(p.errors, []);
+  await p.context().close();
+});
+
+test('tarayıcı belleği: kutu işaretliyse yeniden açılışta veriler gelir; eski sürüm kaydı aktarılır', async () => {
+  const ctx = (await open()).context();
+  const p = ctx.pages()[0];
+  await p.click('#h_notice [data-example="otel"]'); await settle(p);
+  await p.check('#opt_save'); await settle(p);
+  await p.reload({ waitUntil: 'load' }); await p.waitForFunction(() => !!window.__tour); await settle(p);
+  assert.equal(await text(p, '#s_total'), '1.060');
+  assert.match(await text(p, '#h_notice'), /sakladığınız veriler yüklendi/);
+  await p.uncheck('#opt_save'); await settle(p);
+  await p.reload({ waitUntil: 'load' }); await p.waitForFunction(() => !!window.__tour); await settle(p);
+  assert.equal(await text(p, '#s_total'), '—');
+  // eski sayfanın anahtarı (commited-hotel-v1) okunur ve yeni yönteme aktarılır
+  await p.evaluate((m) => localStorage.setItem('commited-hotel-v1', JSON.stringify({ ...m, opt_save: true, h_fueloil: '500' })), node.TURIZM.model.LEGACY_EXAMPLE);
+  await p.reload({ waitUntil: 'load' }); await p.waitForFunction(() => !!window.__tour); await settle(p);
+  assert.match(await text(p, '#h_notice'), /Önceki sürümden yeni yönteme aktarıldı/);
+  assert.match(await text(p, '#h_notice'), /Fuel oil 2/);
+  assert.equal(await p.inputValue('#h_name'), 'Örnek Tatil Köyü');
+  assert.equal(await p.locator('#ledger_rows .lrow').count(), 8);
+  assert.equal(await p.isChecked('#opt_save'), true);
+  assert.deepEqual(p.errors, []);
+  await ctx.close();
+});
+
+test('üyelik: kayıt ol, kaydet (yeni şema), çıkış, giriş → son kayıt yüklenir; eski kayıt açılır', async () => {
+  const p = await open();
+  await p.click('#h_notice [data-example="otel"]'); await settle(p);
+  await p.click('#outputs [data-cloud-save]');
+  assert.equal(await p.isVisible('#authModal'), true);
+  await p.fill('#r_name', 'Örnek Tatil Köyü'); await p.fill('#r_email', 'otel@example.com'); await p.fill('#r_pass', 'gizli123');
+  await p.check('#r_kvkk'); await p.click('#authSubmit');
+  await p.waitForFunction(() => Object.keys(window.__fbTest.db).some((k) => k.startsWith('reports/')));
+  const rec = await p.evaluate(() => { const k = Object.keys(window.__fbTest.db).find((x) => x.startsWith('reports/')); return window.__fbTest.db[k]; });
+  assert.equal(rec.type, 'hotel'); assert.equal(rec.company, 'Örnek Tatil Köyü'); assert.equal(rec.year, 2025);
+  assert.equal(rec.total, Math.round(ex.totals.hcmiT * 1000)); assert.equal(rec.grade, 'B');
+  assert.equal(rec.inputs.schema, 'commited.turizm.state/2'); assert.equal(rec.inputs.options, undefined, 'yerel tercih buluta gitmez');
+  assert.equal(rec.hcmi.schema, 'commited.hotel.hcmi/2'); assert.equal(rec.appVersion, '6.0.0');
+  assert.equal(rec.sector, 'Turizm — Otel (HCMI v2.0)');
+  assert.ok(!JSON.stringify(rec).includes('gizli123'), 'şifre kayda girmez');
+  // çıkış, formu temizle, giriş → son kayıt otomatik yüklenir
+  await p.click('#acct [data-act="logout"]'); await settle(p);
+  await p.click('#btn-reset'); await p.click('#btn-reset'); await settle(p);
+  assert.equal(await p.evaluate(() => window.__tour.isEmpty()), true);
+  await p.click('#acct [data-auth="login"]');
+  await p.fill('#r_email', 'otel@example.com'); await p.fill('#r_pass', 'gizli123'); await p.click('#authSubmit');
+  await p.waitForFunction(() => !window.__tour.isEmpty()); await settle(p);
+  assert.equal(await text(p, '#s_total'), '1.060');
+  assert.match(await text(p, '#h_notice'), /Kayıtlı verileriniz yüklendi/);
+  // eski sürümle yapılmış bir kayıt "Kayıtlarım"dan açılır ve aktarılır
+  await p.evaluate((m) => {
+    const uid = window.__fbTest.current.uid;
+    window.__fbTest.db['reports/' + uid + '/items/eski1'] = { type: 'hotel', company: 'Eski Kayıt Oteli', year: 2024, total: 1037970, cpor: 33.67,
+      inputs: { ...m, h_name: 'Eski Kayıt Oteli', h_year: '2024' }, createdAt: { seconds: 1 } };
+  }, node.TURIZM.model.LEGACY_EXAMPLE);
+  await p.click('#acct [data-act="records"]');
+  await p.waitForSelector('#recItems .rec');
+  const items = await p.locator('#recItems .rec').allTextContents();
+  assert.ok(items.some((t) => /Eski Kayıt Oteli/.test(t) && /önceki sürüm/.test(t)), items.join(' | '));
+  await p.locator('#recItems .rec', { hasText: 'Eski Kayıt Oteli' }).click(); await settle(p);
+  assert.equal(await p.inputValue('#h_name'), 'Eski Kayıt Oteli');
+  assert.match(await text(p, '#h_notice'), /önceki sürümle yapılmıştı/);
+  assert.match(await text(p, '#grid_info'), /0,469/, '2024 için en güncel yayımlanmış faktör (2023)');
+  assert.deepEqual(p.errors, []);
+  await p.context().close();
+});
+
+test('çıktılar: beyan / özet / JSON panoya, PDF için yalnız beyan basılır', async () => {
+  const p = await open();
+  await p.context().grantPermissions(['clipboard-read', 'clipboard-write'], { origin: base.replace(/\/$/, '') });
+  await p.click('#btn-decl');
+  assert.match(await text(p, '#toast'), /Önce verilerinizi girin/);
+  await p.click('#h_notice [data-example="otel"]'); await settle(p);
+  await p.click('#btn-decl'); await p.waitForTimeout(150);
+  const decl = await p.evaluate(() => navigator.clipboard.readText());
+  assert.equal(decl, node.TURIZM.texts.declaration(node.TURIZM.model.exampleState(), ex));
+  await p.click('#btn-json'); await p.waitForTimeout(150);
+  const js = JSON.parse(await p.evaluate(() => navigator.clipboard.readText()));
+  assert.equal(js.schema, 'commited.hotel.hcmi/2'); assert.equal(js.hcmi.footprintT, Math.round(ex.totals.hcmiT * 100) / 100);
+  assert.match(await p.getAttribute('#btn-wa', 'href'), /^https:\/\/wa\.me\/\?text=Otel%20Karbon%20%C3%96zeti/);
+  await p.evaluate(() => { window.__printed = []; window.print = () => window.__printed.push(document.body.className); });
+  await p.click('#btn-print');
+  assert.deepEqual(await p.evaluate(() => window.__printed), ['print-decl']);
+  await p.emulateMedia({ media: 'print' });
+  await p.evaluate(() => document.body.classList.add('print-decl'));
+  assert.equal(await p.isVisible('#decl'), true); assert.equal(await p.isVisible('#adim1'), false); assert.equal(await p.isVisible('.hero'), false);
+  assert.deepEqual(p.errors, []);
+  await p.context().close();
+});
+
+for (const scheme of ['light', 'dark']) {
+  test(`erişilebilirlik (${scheme}): boş, dolu, hatalı, acente`, async () => {
+    const p = await open({ colorScheme: scheme });
+    await axe(p, 'boş');
+    await p.click('#h_notice [data-example="otel"]'); await settle(p);
+    await p.click('[data-row-more="e1"]');
+    await axe(p, 'dolu');
+    await p.fill('#h_roomnights', 'abc'); await p.selectOption('#add_type', 'chilled_water'); await p.keyboard.type('5'); await settle(p);
+    await axe(p, 'hatalı');
+    await p.click('#tab-acente'); await p.click('#a_notice [data-example="acente"]'); await settle(p);
+    await axe(p, 'acente');
+    await p.setViewportSize({ width: 390, height: 844 }); await settle(p);
+    await noHScroll(p);
+    assert.deepEqual(p.errors, []);
+    await p.context().close();
+  });
+}
