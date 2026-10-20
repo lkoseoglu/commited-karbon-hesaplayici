@@ -1,0 +1,170 @@
+/* =====================================================================
+   Commited karbon hesaplayicilari — ORTAK TEMA: "Deniz"
+   ---------------------------------------------------------------------
+   Iki sayfa da (turizm-karbon-hesaplayici.html, kapsam3-karbon-hesaplayici.html)
+   bu dosyayi yukler. Renkler, ust alan (hero), dalgalar ve ust menu (.cm-switch)
+   YALNIZ burada tanimlidir; sayfalarda sabit renk kodu yoktur, hepsi bu
+   degiskenlerden gelir. Tema degistirmek icin bu dosyayi duzenlemek yeterli.
+
+   KOYU MOD iki yerde tanimlidir ve ikisi AYNI olmalidir:
+     1) @media (prefers-color-scheme: dark)  -> isletim sistemi koyu moddaysa
+     2) :root[data-theme="dark"]              -> elle zorlamak icin
+   tests/unit/theme.test.mjs ikisinin ayni oldugunu denetler.
+   ===================================================================== */
+
+:root{
+  color-scheme:light;
+
+  /* --- yuzeyler ve metin --- */
+  --bg:#EBF5FA;            /* sayfa zemini: deniz sisi */
+  --surface:#FFFFFF;       /* kart */
+  --surface2:#E2EFF6;      /* ikincil yuzey, tablo basligi */
+  --chip:#E8F2F8;          /* secili / vurgulu satir */
+  --ink:#0E2233;           /* ana metin */
+  --muted:#4A6578;         /* ikincil metin */
+  --line:#CFE0EA;          /* ince cizgiler */
+
+  /* --- marka --- */
+  --brand:#0B6FA0;         /* okyanus mavisi: dugme, vurgu, baglanti */
+  --brand-deep:#05304D;    /* koyu vurgu metni */
+  --brand-soft:#BFDDEC;
+  --accent:#E8C547;        /* Commited sarisi: aktif menu, vurgu rozeti */
+  --accent-ink:#5E4C0E;
+  --on-brand:#FFFFFF;      /* --brand uzerindeki yazi */
+  --on-accent:#0E2233;     /* --accent uzerindeki yazi */
+
+  /* --- koyu paneller (ozet seridi, toplam karti, ipucu, bildirim) --- */
+  --deep:#05304D;
+  --deep-line:#05304D;
+  --on-deep:#F2F9FC;       /* panel ustundeki yazi */
+  --on-deep-soft:#BFE2F4;  /* panel ustundeki ikincil yazi */
+  --on-deep-label:#8FD0EE; /* panel ustundeki kucuk etiket */
+
+  /* --- ust alan (hero) --- */
+  --hero-a:#03203A; --hero-b:#064A73; --hero-c:#08699A;
+  --hero-ink:#F2F9FC; --hero-soft:#DDEFF8; --hero-label:#8FD0EE;
+  --wave-1:rgba(255,255,255,.10); --wave-2:rgba(255,255,255,.18); --wave-3:var(--bg);
+  --hero-glass:rgba(255,255,255,.10); --hero-glass-line:rgba(255,255,255,.30);
+
+  /* --- dugmeler --- */
+  --btn-a:#0D7AAE; --btn-b:#075E8C;
+  --shadow:0 1px 2px rgba(5,48,77,.06),0 8px 24px rgba(5,48,77,.07);
+  --shadow-h:0 2px 4px rgba(5,48,77,.08),0 14px 32px rgba(5,48,77,.12);
+  --focus:rgba(11,111,160,.22);
+  --scrim:rgba(3,32,58,.55);   /* modal arkasi */
+  --on-btn:#FFFFFF;          /* gradyan dugme uzerindeki yazi */
+
+  /* --- anlamsal renkler (yesil=iyi, sari=orta, kirmizi=kotu; tema degisse de ayni anlam) --- */
+  --good:#1F8A52; --warn:#B87410; --bad:#C0392B;
+  --g-a:#15733C; --g-b:#3A7420; --g-c:#7A5C0A; --g-d:#A24F0E; --g-e:#A8261E;
+  --g-a-bg:#DCF1E4; --g-b-bg:#E8F2D9; --g-c-bg:#FBF1D2; --g-d-bg:#FBE6D3; --g-e-bg:#FADCDA;
+  /* veri kalitesi 1-5 (Kapsam 3) */
+  --q1:#0B5D3B; --q2:#39631B; --q3:#7A5A08; --q4:#8A4A12; --q5:#8F2525;
+  --q1-bg:#DCF5E7; --q2-bg:#E7F3DC; --q3-bg:#FDF4D8; --q4-bg:#FDE9D8; --q5-bg:#FBE0E0;
+  --danger-ink:#B0381C; --danger-bg:#FBEAE6; --danger-bg-h:#F6D9D2;
+  --warn-ink:#6E5A22; --warn-bg:#FFF9EC; --warn-line:#EBDDB4;
+  --info-ink:#2F566C; --info-bg:#EAF4FB; --info-line:#C5DEEE;
+
+  /* --- grafik rolleri --- */
+  --series:#0B7FB5; --series-soft:#BCDDEE; --ref:#7D95A6; --grid:#DCE9F0; --plot:#FFFFFF;
+  --sand:#D6C38A;          /* "kapsanmayan" kisim */
+  --s1:#E27B4D; --s2:#E8B83A; --s3:#2F93B5;   /* Kapsam 1 / 2 / 3 */
+  --track:#E4EFF5;         /* cubuk/halka arka izi */
+
+  /* --- olcu --- */
+  --radius:18px; --radius-sm:12px;
+}
+
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#06131E; --surface:#0C2133; --surface2:#11304A; --chip:#10293F;
+    --ink:#E6F2F8; --muted:#9CB7C8; --line:#1F3F58;
+    --brand:#5BBDEB; --brand-deep:#A9DCF3; --brand-soft:#1D4F6E;
+    --accent:#E8C547; --accent-ink:#F0DE9C; --on-brand:#06131E; --on-accent:#0E2233;
+    --deep:#0A3150; --deep-line:#1F3F58; --on-deep:#EAF5FB; --on-deep-soft:#B5D8EA; --on-deep-label:#8FD0EE;
+    --hero-a:#02101C; --hero-b:#043A5C; --hero-c:#06577F;
+    --hero-ink:#F2F9FC; --hero-soft:#CFE8F5; --hero-label:#8FD0EE;
+    --wave-1:rgba(255,255,255,.07); --wave-2:rgba(255,255,255,.12); --wave-3:var(--bg);
+    --hero-glass:rgba(255,255,255,.08); --hero-glass-line:rgba(255,255,255,.26);
+    --btn-a:#2D95C8; --btn-b:#1A78A8;
+    --shadow:0 1px 2px rgba(0,0,0,.35),0 8px 24px rgba(0,0,0,.28);
+    --shadow-h:0 2px 4px rgba(0,0,0,.4),0 14px 32px rgba(0,0,0,.4);
+    --focus:rgba(91,189,235,.30);
+    --scrim:rgba(0,8,14,.72); --on-btn:#06131E;
+    --good:#4CC585; --warn:#E0A83C; --bad:#EE7B6C;
+    --g-a:#7FDDA3; --g-b:#B6DC7E; --g-c:#EBCB62; --g-d:#F0A66B; --g-e:#F28C80;
+    --g-a-bg:#10382A; --g-b-bg:#25361A; --g-c-bg:#3A3112; --g-d-bg:#3F2A17; --g-e-bg:#401E1C;
+    --q1:#7FDDA3; --q2:#B6DC7E; --q3:#EBCB62; --q4:#F0A66B; --q5:#F28C80;
+    --q1-bg:#10382A; --q2-bg:#25361A; --q3-bg:#3A3112; --q4-bg:#3F2A17; --q5-bg:#401E1C;
+    --danger-ink:#F4A08A; --danger-bg:#3F211B; --danger-bg-h:#552A22;
+    --warn-ink:#E8D49A; --warn-bg:#2E2711; --warn-line:#51451F;
+    --info-ink:#B5D8EA; --info-bg:#0F2A3F; --info-line:#1F4663;
+    --series:#4DB0E0; --series-soft:#1D4F6E; --ref:#7F9BAE; --grid:#1B3548; --plot:#0C2133;
+    --sand:#9C8B55; --s1:#F0946B; --s2:#EDC25A; --s3:#52B3D4; --track:#16344B;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#06131E; --surface:#0C2133; --surface2:#11304A; --chip:#10293F;
+  --ink:#E6F2F8; --muted:#9CB7C8; --line:#1F3F58;
+  --brand:#5BBDEB; --brand-deep:#A9DCF3; --brand-soft:#1D4F6E;
+  --accent:#E8C547; --accent-ink:#F0DE9C; --on-brand:#06131E; --on-accent:#0E2233;
+  --deep:#0A3150; --deep-line:#1F3F58; --on-deep:#EAF5FB; --on-deep-soft:#B5D8EA; --on-deep-label:#8FD0EE;
+  --hero-a:#02101C; --hero-b:#043A5C; --hero-c:#06577F;
+  --hero-ink:#F2F9FC; --hero-soft:#CFE8F5; --hero-label:#8FD0EE;
+  --wave-1:rgba(255,255,255,.07); --wave-2:rgba(255,255,255,.12); --wave-3:var(--bg);
+  --hero-glass:rgba(255,255,255,.08); --hero-glass-line:rgba(255,255,255,.26);
+  --btn-a:#2D95C8; --btn-b:#1A78A8;
+  --shadow:0 1px 2px rgba(0,0,0,.35),0 8px 24px rgba(0,0,0,.28);
+  --shadow-h:0 2px 4px rgba(0,0,0,.4),0 14px 32px rgba(0,0,0,.4);
+  --focus:rgba(91,189,235,.30);
+  --scrim:rgba(0,8,14,.72); --on-btn:#06131E;
+  --good:#4CC585; --warn:#E0A83C; --bad:#EE7B6C;
+  --g-a:#7FDDA3; --g-b:#B6DC7E; --g-c:#EBCB62; --g-d:#F0A66B; --g-e:#F28C80;
+  --g-a-bg:#10382A; --g-b-bg:#25361A; --g-c-bg:#3A3112; --g-d-bg:#3F2A17; --g-e-bg:#401E1C;
+  --q1:#7FDDA3; --q2:#B6DC7E; --q3:#EBCB62; --q4:#F0A66B; --q5:#F28C80;
+  --q1-bg:#10382A; --q2-bg:#25361A; --q3-bg:#3A3112; --q4-bg:#3F2A17; --q5-bg:#401E1C;
+  --danger-ink:#F4A08A; --danger-bg:#3F211B; --danger-bg-h:#552A22;
+  --warn-ink:#E8D49A; --warn-bg:#2E2711; --warn-line:#51451F;
+  --info-ink:#B5D8EA; --info-bg:#0F2A3F; --info-line:#1F4663;
+  --series:#4DB0E0; --series-soft:#1D4F6E; --ref:#7F9BAE; --grid:#1B3548; --plot:#0C2133;
+  --sand:#9C8B55; --s1:#F0946B; --s2:#EDC25A; --s3:#52B3D4; --track:#16344B;
+}
+
+/* ===================================================================
+   UST ALAN (hero) + DALGALAR
+   Iki sayfada da <header class="hero"> ... <div class="sea-waves" aria-hidden="true">
+   =================================================================== */
+.hero{
+  position:relative; isolation:isolate; overflow:hidden; color:var(--hero-ink);
+  background:
+    radial-gradient(120% 90% at 88% -10%, rgba(255,255,255,.20), rgba(255,255,255,0) 46%),
+    linear-gradient(135deg,var(--hero-a) 0%,var(--hero-b) 58%,var(--hero-c) 100%);
+}
+.hero > .hero-in, .hero > .topline{position:relative; z-index:2}
+
+.sea-waves{position:absolute; left:0; right:0; bottom:-1px; height:64px; z-index:1; pointer-events:none; overflow:hidden}
+.sea-waves svg{position:absolute; left:0; bottom:0; width:200%; height:100%; display:block; will-change:transform}
+.sea-waves .w1{fill:var(--wave-1); animation:sea-drift 38s linear infinite}
+.sea-waves .w2{fill:var(--wave-2); animation:sea-drift 26s linear infinite reverse}
+.sea-waves .w3{fill:var(--wave-3); animation:sea-drift 18s linear infinite}
+@keyframes sea-drift{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+@media (max-width:560px){.sea-waves{height:40px}}
+@media (prefers-reduced-motion: reduce){.sea-waves svg{animation:none !important}}
+
+/* ===================================================================
+   ORTAK UST MENU (.cm-switch) — iki sayfada AYNI
+   =================================================================== */
+.cm-switch{display:flex;gap:4px;padding:4px;margin:0 0 18px;background:var(--hero-glass);border:1px solid var(--hero-glass-line);border-radius:999px;width:max-content;max-width:100%;position:relative;z-index:3}
+.cm-switch a{display:inline-flex;align-items:center;gap:7px;color:var(--hero-soft);text-decoration:none;font-weight:700;font-size:14px;line-height:1.2;padding:9px 16px;border-radius:999px;white-space:nowrap;letter-spacing:0;text-transform:none}
+.cm-switch a:hover{background:rgba(255,255,255,.14);color:#fff}
+.cm-switch a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.cm-switch a[aria-current="page"]{background:var(--accent);color:var(--on-accent)}
+.cm-switch .cm-sm{display:none}
+@media (max-width:520px){.cm-switch{width:100%}.cm-switch a{flex:1 1 0;justify-content:center;padding:9px 10px}.cm-switch .cm-lg{display:none}.cm-switch .cm-sm{display:inline}}
+
+@media print{
+  .cm-switch,.sea-waves{display:none}
+  .hero{background:none;color:#000}
+}
