@@ -4,13 +4,12 @@ commitedevents.app (Squarespace) sitesine iframe ile gömülen, sunucu gerektirm
 tarayıcıda yapan) karbon hesaplama modülleri. GitHub Pages üzerinden yayınlanır:
 `https://lkoseoglu.github.io/commited-karbon-hesaplayici/<dosya>.html`
 
-## 2026-10-20 — Turizm v6: resmî HCMI motoru ve yeni ekranlar (ÖNİZLEME)
+## 2026-10-20 — Turizm v6: resmî HCMI motoru ve yeni ekranlar (2026-10-21'den beri CANLI)
 
-> **Durum:** `turizm-karbon-hesaplayici-v6.html` ayrı bir önizleme sayfasıdır; menüde yoktur.
-> 2026-10-21'de GitHub'a yüklendi, yalnız bağlantıyla açılır:
-> https://lkoseoglu.github.io/commited-karbon-hesaplayici/turizm-karbon-hesaplayici-v6.html
-> (GitHub'daki kopyada da 227 birim + 16 uçtan uca test geçti.)
-> Sitedeki `turizm-karbon-hesaplayici.html` (v5) **değişmedi**. Canlıya alma adımları aşağıda.
+> **Durum:** v6 2026-10-21'de canlıya alındı. `turizm-karbon-hesaplayici.html` artık v6'dır; commitedevents.app
+> iframe'i bunu açar (Squarespace'te değişiklik yapılmadı). Eski sürüm (v5) `turizm-karbon-hesaplayici-v5.html`
+> olarak arşivde; eski önizleme adresi `turizm-karbon-hesaplayici-v6.html` canlı sayfaya yönlendirir.
+> Canlıya alımdan sonra 223 birim + 16 uçtan uca test geçti. Geri dönüş: aşağıdaki "Canlıya alma ve geri dönüş".
 
 ### Ne değişti (kullanıcı gözünden)
 
@@ -92,9 +91,9 @@ aktarımı da sınar).
 
 ```bash
 npm install                     # bir kez
-npm test                        # 227 birim testi: HCMI motoru (resmî Excel altın referansı), Türkiye faktörleri,
+npm test                        # 223 birim testi: HCMI motoru (resmî Excel altın referansı), Türkiye faktörleri,
                                 #   kıyas, net sıfır, önlemler, Türkçe sayı, durum modeli, hesap katmanı, tema
-npm run test:e2e                # 16 uçtan uca test: v6 sayfası (12) + eski sayfa erişilebilirliği (4)
+npm run test:e2e                # 16 uçtan uca test: Turizm sayfası (12) + Turizm ve Kapsam 3 erişilebilirliği (4)
 node tests/e2e/probe-v6.mjs /tmp/ekran   # açık/koyu/telefon tam sayfa ekran görüntüleri
 ```
 
@@ -106,14 +105,21 @@ kopyala/PDF, axe (WCAG 2.1 AA) açık ve koyu modda, 390 px'te yatay kaydırma o
 GitHub Actions (`.github/workflows/ci.yml`, 2026-10-21'den beri etkin) `main`'e her yüklemede ve her pull
 request'te ikisini de çalıştırır; sonuç GitHub'da **Actions** sekmesinde görünür (elle: Actions → testler → Run workflow).
 
-### Canlıya alma (kullanıcı "canlıya al" dediğinde)
+### Canlıya alma ve geri dönüş
+
+2026-10-21'de yapıldı (GitHub'da "Turizm v6 canliya alindi; v5 arsivde" yüklemesi). İzlenen adımlar:
 
 1. `python3 tools/promote-v6.py` — v5'i `turizm-karbon-hesaplayici-v5.html` olarak arşivler, v6'yı canlı
    adrese yazar (kendi bağlantısı ve önizleme şeridi düzeltilir), `-v6.html`'i yönlendirmeye çevirir.
+   Script artık tekrar çalıştırılırsa "önizleme sayfası değil" deyip hiçbir şey yapmaz.
 2. `npm test && npm run test:e2e` (testler iki durumu da tanır).
-3. GitHub'a sırasıyla yükleyin: `assets/` (zaten yüklüyse atlayın) → `turizm-karbon-hesaplayici-v5.html`
-   → `turizm-karbon-hesaplayici.html` → `turizm-karbon-hesaplayici-v6.html`.
-4. Squarespace'te değişiklik **gerekmez** (iframe adresi aynı). Geri dönüş: `-v5.html` içeriğini canlı adrese kopyalayın.
+3. Üç HTML dosyası tek yüklemede GitHub'a gönderildi (`assets/` zaten yüklüydü).
+4. Squarespace'te değişiklik **gerekmedi** (iframe adresi aynı).
+
+**Geri dönüş** (v5'e dönmek gerekirse): `turizm-karbon-hesaplayici-v5.html`'in içeriğini
+`turizm-karbon-hesaplayici.html`'e kopyalayıp GitHub'a yükleyin; `assets/` dosyaları yerinde kalabilir.
+Kullanıcıların v6'da kaydettiği bulut kayıtları v5'te açılmaz (yeni `inputs` şeması); toplam, CPOR ve not
+alanları aynı olduğu için yönetici panelinde görünmeye devam eder.
 
 ### Bilinen sınırlar / sıradaki işler
 
@@ -212,12 +218,13 @@ Kapsam 3 1.418.888 kg); tema ve görünüm değişiklikleri bu sayıları deği�
 
 | Dosya | Görev |
 |---|---|
-| `turizm-karbon-hesaplayici.html` | Turizm Karbon Hesaplayıcı v5 — **canlıdaki** sürüm (otel HCMI + acente). Tek dosya. |
-| `turizm-karbon-hesaplayici-v6.html` | Turizm v6 **önizleme** (menüde yok). Yalnız işaretleme; davranış `assets/js/turizm/`, görünüm `assets/css/turizm-app.css`. Canlıya alma: `tools/promote-v6.py`. |
+| `turizm-karbon-hesaplayici.html` | Turizm Karbon Hesaplayıcı **v6 — canlıdaki** sürüm (2026-10-21'den beri; otel HCMI + acente). Yalnız işaretleme; davranış `assets/js/turizm/`, görünüm `assets/css/turizm-app.css`. |
+| `turizm-karbon-hesaplayici-v5.html` | Önceki canlı sürüm (v5, tek dosya) — geri dönüş için arşiv; menüde yok. |
+| `turizm-karbon-hesaplayici-v6.html` | Eski önizleme adresi; paylaşılmış bağlantılar çalışsın diye canlı sayfaya yönlendirir. |
 | `assets/js/hcmi-data.js`, `hcmi-engine.js` | Resmî HCMI v2.0 Excel'inin verisi ve hesap motoru. Veri `tools/build-hcmi-data.py` ile üretilir; motor `tests/golden/hcmi-oracle.json` (LibreOffice ile hesaplatılmış resmî Excel çıktıları, `tools/hcmi-oracle.py` + `tools/hcmi_scenarios.py`) ile doğrulanır. |
 | `assets/js/tr-reference.js`, `benchmarks.js`, `pathway.js`, `measures.js`, `num-input.js` | Türkiye faktörleri ve kaynakları · CHSB 2026 kıyası · NZMFH net sıfır · azaltım önlemleri · Türkçe sayı. Her birinin başında kaynak ve kurallar yazılı. |
 | `assets/js/turizm/*.js`, `assets/css/turizm-app.css` | v6 sayfasının uygulama katmanı (yukarıdaki "Mimari"). |
-| `tools/promote-v6.py` | v6 önizlemesini canlı adrese taşır (v5 arşivlenir, geri dönüş kolay). |
+| `tools/promote-v6.py` | v6 önizlemesini canlı adrese taşıdı (2026-10-21; v5 arşivlendi). Tekrar çalıştırılırsa hiçbir şey yapmaz. |
 | `.github/workflows/ci.yml` | GitHub Actions: `main`'e her yüklemede ve her pull request'te birim + uçtan uca testler (2026-10-21'den beri etkin). |
 | `kapsam3-karbon-hesaplayici.html` | Kapsam 3 Karbon Hesaplayıcı (turizm tedarik zinciri). Firebase (giriş/kayıt), SheetJS (Excel), jsPDF (PDF) CDN'den yüklenir. |
 | `karbon-admin.html` | Kapsam 3 hesaplayıcısının yönetici paneli: emisyon ve harcama faktörlerini düzenler, Firestore'a (`config/current`) yazar. Herkese açık sayfaya konmaz. |
