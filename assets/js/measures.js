@@ -72,7 +72,7 @@
       note: 'Isıtma yakıtının %45\'i elektriğe döner (COP 3,2). Türkiye şebeke faktörüyle net kazanç sınırlıdır; GES veya YEK-G ile birlikte belirgin büyür.' },
     { id: 'st',      group: 'yenilenebilir', tr: 'Güneş kollektörü (termal)',
       note: 'Termal sistemle sıcak su ön ısıtma; ısıtma yakıtı %25 düşer.' },
-    { id: 'green',   group: 'yenilenebilir', tr: 'YEK-G / I-REC yeşil elektrik',
+    { id: 'green',   group: 'yenilenebilir', tr: 'YEK-G / I-REC yenilenebilir elektrik belgesi',
       note: 'Fiziksel tüketim değişmez, yalnızca piyasa bazlı Kapsam 2 sıfırlanır. Verimlilik önlemlerinin yerine değil, onlardan sonra uygulanır. Sertifika primi işletme maliyetidir.' },
     { id: 'ev',      group: 'ulaşım',        tr: 'Elektrikli servis araçları',
       note: 'Araç yakıtının %70\'i elektriğe döner; yatırım, yılda 3.000 litre yakıtın yerini alan araç başına hesaplanır.' },
