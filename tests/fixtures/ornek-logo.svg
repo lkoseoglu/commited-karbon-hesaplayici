@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="240" viewBox="0 0 600 240">
+<defs><clipPath id="b"><circle cx="120" cy="120" r="92"/></clipPath></defs>
+<g clip-path="url(#b)">
+  <rect x="20" y="20" width="200" height="200" fill="#E6F3FA"/>
+  <circle cx="120" cy="116" r="48" fill="#F0A93B"/>
+  <path d="M20 140 C 50 122, 80 122, 110 140 S 170 158, 200 140 S 230 128, 240 132 V 240 H 20 Z" fill="#0E7AA8"/>
+  <path d="M20 172 C 50 154, 80 154, 110 172 S 170 190, 200 172 S 230 160, 240 164 V 240 H 20 Z" fill="#0A4F7A"/>
+</g>
+<circle cx="120" cy="120" r="92" fill="none" stroke="#0A3D5C" stroke-width="6"/>
+<text x="238" y="124" font-family="DM Sans" font-weight="700" font-size="74" letter-spacing="-1.5" fill="#0A3D5C">Örnek</text>
+<text x="242" y="170" font-family="DM Sans" font-weight="500" font-size="36" letter-spacing="0.5" fill="#0E7AA8">Tatil Köyü</text>
+</svg>
