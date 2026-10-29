@@ -5,6 +5,9 @@
      • Yazarken 140 ms bekleyip yeniden hesaplar; seçim/işaret değişince hemen.
      • "Bu tarayıcıda saklansın" işaretliyse her hesaptan sonra kaydeder (storage.js).
      • Sekmeler (Otel / Acente), örnekle doldur, formu temizle, kopyala / yazdır.
+     • "PDF raporu oluştur" / "Tek sayfalık özet": report.js'in ürettiği belgeyi yeni sekmede açar.
+       Kapak logosu: seçilen görsel tarayıcıda en çok 600 × 240 piksele küçültülür (PNG/JPEG data URL,
+       state.hotel.logo); sunucuya yalnız kullanıcı "Hesabıma kaydet" derse kayıtla birlikte gider.
      • window.__tour: üyelik modülünün (cloud.js) kullandığı arayüz — eski sayfayla
        aynı adlar: collect, apply, isEmpty, summary, mode, setMode, toast.
    Dışa: globalThis.TURIZM.app
@@ -26,6 +29,7 @@
       R = NS.compute(state);
       A = NS.agency.compute(state.agency);
       RN.all(state, R, A);
+      reportState();
     } catch (e) {
       if (root.console) { root.console.error(e); }
       U.notice('h_notice', [{ b: 'Hesaplamada beklenmeyen bir hata oluştu.' }, ' Sayfayı yenileyin; sorun sürerse info@commited.app adresine yazın.'], 'warn');
@@ -166,6 +170,108 @@
     else if (b.id === 'btn-mail') { U.copy('info@commited.app', 'E-posta adresi kopyalandı'); }
     else if (b.id === 'btn-acopy') { U.copy(A && A.started ? X.agencySummary(state, A) : '', 'Özet kopyalandı'); }
     else if (b.id === 'btn-print') { printDeclaration(); }
+    else if (b.id === 'btn-report') { openReport('report'); }
+    else if (b.id === 'btn-summary') { openReport('summary'); }
+    else if (b.id === 'logo_pick') { var fi = U.el('logo_file'); if (fi) { fi.click(); } }
+    else if (b.id === 'logo_remove') { state.hotel.logo = null; U.setText('report_msg', 'Logo kaldırıldı.'); reportState.keep = true; schedule(0); }
+  }
+
+  // ------------------------------------------------------------------ PDF sürdürülebilirlik raporu
+  function reportState() {
+    var b = U.el('btn-report'); if (!b || !NS.report) { return; }
+    var can = NS.report.canBuild(state, R);
+    ['btn-report', 'btn-summary'].forEach(function (id) { var x = U.el(id); if (x) { x.setAttribute('aria-disabled', String(!can.ok)); } });
+    logoPreview();
+    if (reportState.keep) { reportState.keep = false; return; }       // logo iletisi bir kez görünsün
+    if (!can.ok) { U.setText('report_msg', can.reason); }
+    else if (reportState.shown !== 'opened') { U.setText('report_msg', ''); }
+    else if (reportState.snap !== JSON.stringify(state.hotel)) {
+      // Rapor açıldıktan sonra veri değiştiyse açık sekmedeki rapor eskidi
+      U.setText('report_msg', 'Verileri değiştirdiniz. Güncel rapor için düğmeye yeniden basın.');
+    }
+  }
+  function isSample() {
+    var ex = M.LEGACY_EXAMPLE && M.LEGACY_EXAMPLE.h_name;
+    return !!ex && (state.hotel.name || '').trim() === ex;
+  }
+  function logoPreview() {
+    var wrap = U.el('logo_prev'), img = U.el('logo_img'), rm = U.el('logo_remove'), pick = U.el('logo_pick');
+    if (!wrap || !img) { return; }
+    var logo = state.hotel.logo || '';
+    if ((img.getAttribute('src') || '') !== logo) { if (logo) { img.setAttribute('src', logo); } else { img.removeAttribute('src'); } }
+    wrap.hidden = !logo; if (rm) { rm.hidden = !logo; }
+    if (pick) { pick.textContent = logo ? 'Logoyu değiştir' : 'Kapak için logo ekle'; }
+  }
+  var LOGO_TYPES = ['image/png', 'image/jpeg', 'image/svg+xml', 'image/webp'];
+  /** Logoyu en çok 600 × 240 piksele sığdırır; PNG (saydamlık korunur) ya da JPEG data URL döndürür.
+   *  vec: SVG (vektör) baskıda net çıksın diye kutuya kadar büyütülür; aspect: boyutsuz SVG'nin en/boy oranı. */
+  function rasterLogo(img, jpeg, vec, aspect) {
+    var w = img.naturalWidth, h = img.naturalHeight, sizes = [[600, 240], [450, 180], [300, 120]];
+    if (!(w > 0 && h > 0)) { w = 600; h = aspect > 0 ? 600 / aspect : 240; }   // bazı tarayıcılar boyutsuz SVG'de 0 verir
+    for (var i = 0; i < sizes.length; i++) {
+      var k = Math.min(sizes[i][0] / w, sizes[i][1] / h); if (!vec) { k = Math.min(1, k); }
+      var cw = Math.max(1, Math.round(w * k)), ch = Math.max(1, Math.round(h * k));
+      var cv = doc.createElement('canvas'); cv.width = cw; cv.height = ch;
+      var g = cv.getContext('2d');
+      if (jpeg) { g.fillStyle = '#FFFFFF'; g.fillRect(0, 0, cw, ch); }
+      g.imageSmoothingQuality = 'high';
+      g.drawImage(img, 0, 0, cw, ch);
+      var d = jpeg ? cv.toDataURL('image/jpeg', 0.9) : cv.toDataURL('image/png');
+      if (M.logoOf(d)) { return d; }
+    }
+    return null;
+  }
+  function onLogoFile(ev) {
+    var inp = ev.target, f = inp.files && inp.files[0];
+    if (!f) { return; }
+    inp.value = '';                                                        // aynı dosya yeniden seçilebilsin
+    var fail = function (msg) { U.setText('report_msg', msg); U.toast('Logo eklenemedi'); };
+    if (LOGO_TYPES.indexOf(f.type) < 0) { fail('Logo PNG, JPG, SVG ya da WebP dosyası olmalı.'); return; }
+    if (f.size > 5 * 1024 * 1024) { fail('Logo dosyası 5 MB\'tan küçük olmalı.'); return; }
+    var svg = f.type === 'image/svg+xml';
+    var load = function (aspect) {
+      var url = root.URL.createObjectURL(f), img = new root.Image();
+      img.onload = function () {
+        var data = null;
+        try { data = rasterLogo(img, f.type === 'image/jpeg', svg, aspect); } catch (e) { data = null; }
+        root.URL.revokeObjectURL(url);
+        if (!data) { fail('Logo okunamadı. Başka bir dosya deneyin.'); return; }
+        state.hotel.logo = data;
+        U.setText('report_msg', 'Logo eklendi: raporun kapağında, sayfa başlıklarında ve özette görünecek.');
+        reportState.keep = true; schedule(0);
+      };
+      img.onerror = function () { root.URL.revokeObjectURL(url); fail('Logo okunamadı. Başka bir dosya deneyin.'); };
+      img.src = url;
+    };
+    // SVG: en/boy oranı viewBox'tan okunur (tarayıcı boyut vermezse bozulmasın)
+    if (svg && f.text) {
+      f.text().then(function (t) {
+        var m = /viewBox\s*=\s*["']\s*-?[\d.]+[\s,]+-?[\d.]+[\s,]+([\d.]+)[\s,]+([\d.]+)/i.exec(t);
+        load(m && +m[1] > 0 && +m[2] > 0 ? +m[1] / +m[2] : 0);
+      }, function () { load(0); });
+    } else { load(0); }
+  }
+  function bindLogo() {
+    var fi = U.el('logo_file'); if (fi) { fi.addEventListener('change', onLogoFile); }
+  }
+
+  function openReport(variant) {
+    var can = NS.report ? NS.report.canBuild(state, R) : { ok: false, reason: 'Rapor modülü yüklenemedi; sayfayı yenileyin.' };
+    if (!can.ok) { U.setText('report_msg', can.reason); U.toast('Rapor için veriler eksik'); return; }
+    var html, summary = variant === 'summary';
+    try { html = NS.report.build(state, R, { toolbar: true, sample: isSample(), variant: summary ? 'summary' : 'report' }); }
+    catch (e) {
+      if (root.console) { root.console.error(e); }
+      U.setText('report_msg', 'Rapor oluşturulamadı: ' + (e && e.message ? e.message : e)); return;
+    }
+    var w = root.open('', '_blank');
+    if (!w) {
+      U.setText('report_msg', 'Tarayıcınız yeni sekmeyi engelledi. Bu site için açılır pencerelere izin verip yeniden deneyin.');
+      U.toast('Yeni sekme engellendi'); return;
+    }
+    w.document.open(); w.document.write(html); w.document.close();
+    reportState.shown = 'opened'; reportState.snap = JSON.stringify(state.hotel);
+    U.setText('report_msg', (summary ? 'Özet' : 'Rapor') + ' yeni sekmede açıldı. Oradaki "PDF olarak kaydet" düğmesiyle indirebilirsiniz.');
   }
 
   function printDeclaration() {
@@ -254,7 +360,7 @@
     state = saved ? saved.state : M.emptyState();
     F.init({ state: function () { return state; }, changed: changed });
     RN.methodology();
-    bindTabs(); bindSteps();
+    bindTabs(); bindSteps(); bindLogo();
     (U.el('app') || doc.body).addEventListener('click', onAppClick);
     var resizeTimer = null;
     root.addEventListener('resize', function () { clearTimeout(resizeTimer); resizeTimer = setTimeout(function () { if (R) { NS.chart.draw(R.path, { svg: 'pathsvg', box: 'pathbox', tip: 'pathtip', empty: 'path_empty' }); } }, 150); });

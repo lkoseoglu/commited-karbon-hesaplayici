@@ -240,6 +240,17 @@
     T('r_int_water', R.started ? fm.n(I.waterL, 0) : '—'); T('r_water_rel', rel(b.water, seg && seg.water, 0, 'L'));
     T('r_int_waste', R.started ? fm.n(I.wasteKg, 1) : '—'); T('r_waste_rel', rel(b.waste, seg && seg.waste, 1, 'kg'));
     T('r_full', on ? fm.t(R.totals.fullT) : '—');
+
+    // kişi başı (misafir gecelemesi) ve rapor göstergeleri
+    var E = R.esg, pg = E.perGuest, gnOk = isNum(E.guestNights);
+    T('r_pg_kwh', R.started ? fm.n(pg.kwh, 1) : '—');
+    T('r_pg_kwh_sub', !gnOk ? 'Misafir gecelemesini girin' : (isNum(pg.co2Kg) ? 'Karbon: ' + fm.n(pg.co2Kg, 1) + ' kgCO₂e/misafir-gece' : 'Enerji verisi girin'));
+    T('r_pg_water', R.started ? fm.n(isNum(pg.waterM3) ? pg.waterM3 * 1000 : null, 0) : '—');
+    T('r_pg_water_sub', !gnOk ? 'Misafir gecelemesini girin' : (isNum(pg.waterM3) ? 'Yıllık ' + fm.n(s.hotel.extras.waterM3, 0) + ' m³' : 'Su tüketimini girin'));
+    T('r_pg_chem', R.started ? fm.n(pg.chemKg, 2) : '—');
+    T('r_pg_chem_sub', !gnOk ? 'Misafir gecelemesini girin' : (isNum(pg.chemKg) ? 'Yıllık ' + fm.n(E.chemicalsKg, 0) + ' kg' : 'Kimyasal tüketimini girin'));
+    T('r_local', R.started && isNum(E.localPct) ? fm.pct100(E.localPct) : '—');
+    T('r_local_sub', isNum(E.localPct) ? fm.tl(E.purchaseLocalTl) + ' / ' + fm.tl(E.purchaseTotalTl) + ' TL' : 'Toplam ve yerel satın almayı girin');
   }
 
   // ------------------------------------------------------------------ adım 3
@@ -357,7 +368,7 @@
   function agency(s, A) {
     var fm = U.fmt, a = s.agency, on = A.started;
     T('ar_total', on ? fm.n(A.totalT, A.totalT < 100 ? 1 : 0) : '—');
-    T('ar_trees', on ? '≈ ' + fm.n(A.trees, 0) + ' ağacın yıllık emilimi' : 'Verilerinizi girin');
+    T('ar_trees', on ? 'Ölçek fikri: ≈ ' + fm.n(A.trees, 0) + ' ağacın bir yılda tuttuğu karbon' : 'Verilerinizi girin');
     T('ar_pp', on ? fm.n(A.perGuestKg, 1) : '—');
     T('ar_tour', on && isNum(A.perTourT) ? 'Tur başına ortalama ' + fm.n(A.perTourT, 2) + ' tCO₂e' : 'Tur sayısı girilince tur başına ortalama görünür');
     U.bars(U.el('ar_bars'), A.parts.map(function (p) { return { label: p.label, value: p.kg / 1000 }; }).sort(function (x, y) { return y.value - x.value; }),

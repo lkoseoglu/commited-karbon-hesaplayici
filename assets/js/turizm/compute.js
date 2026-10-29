@@ -34,7 +34,7 @@
     occupied: 'Satılan (dolu) oda-gece sayısı girilmedi; oda-gece başına karbon hesaplanamıyor.',
     refNone: 'Soğutucu gaz: "dolum miktarını biliyorum" seçili ama miktar girilmedi; kaçak 0 sayıldı. Bilmiyorsanız "HCMI tahmini (+%1)" seçeneğini işaretleyin.',
     mobileDouble: 'Araç yakıtı hem enerji tablosuna girilmiş hem de "HCMI tahmini (+%1)" seçilmiş; çift sayım olur. Tabloya girdiyseniz "tabloya girdim" seçeneğini işaretleyin.',
-    recNoGrid: 'Yeşil elektrik belgesi girildi ama şebeke elektriği satırı boş; mahsup edilemedi.',
+    recNoGrid: 'Yenilenebilir elektrik belgesi (YEK-G / I-REC) girildi ama şebeke elektriği satırı boş; mahsup edilemedi.',
     laundryEmpty: 'Dış çamaşırhane: "çamaşırhanenin bizim için harcadığı enerjiyi biliyorum" seçili ama enerji girilmedi.',
     noMeeting: 'Toplantı alanı girilmedi: toplantı metriği hesaplanmaz, ayak izinin tamamı konuk odalarına yazılır.'
   };
@@ -115,6 +115,39 @@
     return { score: score, missing: missing };
   }
 
+  // ------------------------------------------------------------------ sürdürülebilirlik göstergeleri
+  /**
+   * Rapor için karbon dışı göstergeler ve misafir (kişi) başı yoğunluklar. Karbon hesabına girmez.
+   * Misafir başı = misafir gecelemesi başına (otellerin sürdürülebilirlik raporlarındaki "kişi başı").
+   */
+  function esgOf(s, ownKwh, hcmiT) {
+    var h = s.hotel, e = h.esg || {}, x = h.extras, gn = pos(h.guestNights) ? h.guestNights : null;
+    var wasteT = (pos(x.wasteLandfillT) || pos(x.wasteRecycledT)) ? n0(x.wasteLandfillT) + n0(x.wasteRecycledT) : null;
+    var per = function (v) { return isNum(v) && v > 0 && gn ? v / gn : null; };
+    var localOk = pos(e.purchaseTotalTl) && isNum(e.purchaseLocalTl) && e.purchaseLocalTl <= e.purchaseTotalTl * 1.000001;
+    var trainOk = pos(e.staff) && isNum(e.staffTrained) && e.staffTrained <= e.staff * 1.000001;
+    var o = {
+      guestNights: gn,
+      guestsPerRoom: gn && pos(h.occupiedRooms) ? gn / h.occupiedRooms : null,
+      wasteT: wasteT,
+      recycleRate: wasteT ? n0(x.wasteRecycledT) / wasteT : null,
+      chemicalsKg: pos(e.chemicalsKg) ? e.chemicalsKg : null,
+      perGuest: {
+        kwh: per(ownKwh), waterM3: per(x.waterM3), wasteKg: wasteT ? per(wasteT * 1000) : null,
+        chemKg: per(e.chemicalsKg), co2Kg: isNum(hcmiT) ? per(hcmiT * 1000) : null
+      },
+      chemPerRoomKg: pos(e.chemicalsKg) && pos(h.occupiedRooms) ? e.chemicalsKg / h.occupiedRooms : null,
+      localPct: localOk ? e.purchaseLocalTl / e.purchaseTotalTl * 100 : null,
+      purchaseTotalTl: pos(e.purchaseTotalTl) ? e.purchaseTotalTl : null,
+      purchaseLocalTl: localOk ? e.purchaseLocalTl : null,
+      staff: pos(e.staff) ? e.staff : null,
+      trainedPct: trainOk ? e.staffTrained / e.staff * 100 : null,
+      staffTrained: trainOk ? e.staffTrained : null
+    };
+    o.any = [o.chemicalsKg, o.localPct, o.trainedPct, o.staff, o.recycleRate, o.perGuest.waterM3, o.perGuest.kwh].some(isNum);
+    return o;
+  }
+
   // ------------------------------------------------------------------ taksonomi
   function taxonomy(s) {
     var M = NS.model, score = 0, recs = [];
@@ -151,6 +184,17 @@
     }
     if (h.privateSpace.has && h.privateSpace.method === 'actual' && !h.energy.some(function (r) { return pos(r.privateActual); })) {
       add('info', 'privateNone', 'Özel alan seçildi ama hiçbir satırda özel alan tüketimi girilmedi. Satırın "Ayrıntılar" bölümünden girin ya da "yalnız alan oranını biliyorum" seçin.', 'hotel.privateSpace.method');
+    }
+    var es = h.esg || {};
+    if (pos(es.purchaseTotalTl) && isNum(es.purchaseLocalTl) && es.purchaseLocalTl > es.purchaseTotalTl * 1.000001) {
+      add('warnings', 'localExceeds', 'Yerel tedarikçilerden satın alma, toplam satın almadan büyük girildi; yerel satın alma oranı hesaplanmadı.', 'hotel.esg.purchaseLocalTl');
+    } else if (!pos(es.purchaseTotalTl) && pos(es.purchaseLocalTl)) {
+      add('info', 'localNoTotal', 'Yerel satın alma oranı için toplam satın alma tutarını da girin.', 'hotel.esg.purchaseTotalTl');
+    }
+    if (pos(es.staff) && isNum(es.staffTrained) && es.staffTrained > es.staff * 1.000001) {
+      add('warnings', 'trainedExceeds', 'Eğitim alan çalışan sayısı, toplam çalışan sayısından büyük girildi; eğitim oranı hesaplanmadı.', 'hotel.esg.staffTrained');
+    } else if (!pos(es.staff) && pos(es.staffTrained)) {
+      add('info', 'trainedNoStaff', 'Eğitim oranı için ortalama çalışan sayısını da girin.', 'hotel.esg.staff');
     }
     if (!isNum(h.year)) {
       add('info', 'noYear', 'Rapor yılı girilmedi: elektrik faktörü için yayımlanmış en güncel yıl, net sıfır patikası için 2025 kullanıldı.', 'hotel.year');
@@ -352,11 +396,12 @@
       totals: totals, metrics: metrics, intensity: intensity, bench: bench,
       sources: src, scopes: scopes, renewable: renewable, rows: rowResults,
       scenario: scenario, ranking: ranking, path: path, offsets: offsets, event: event,
+      esg: esgOf(s, ownKwh, hcmiT),
       completeness: completeness(s), taxonomy: taxonomy(s),
       messages: messages(s, res, built.rowIndex, grid, started)
     };
   }
 
   NS.compute = compute;
-  NS.computeHelpers = { totalUsable: totalUsable, calcRelaxed: calcRelaxed, mapPath: mapPath, completeness: completeness, taxonomy: taxonomy };
+  NS.computeHelpers = { totalUsable: totalUsable, calcRelaxed: calcRelaxed, mapPath: mapPath, completeness: completeness, taxonomy: taxonomy, esgOf: esgOf };
 })(typeof globalThis !== 'undefined' ? globalThis : self);

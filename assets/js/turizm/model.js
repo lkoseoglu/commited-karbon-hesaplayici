@@ -13,7 +13,7 @@
      calcOptions(state)    motor seçenekleri (Türkiye şebeke faktörü)
      gridInfo(state)       kullanılan şebeke faktörü ve kaynağı (ekranda gösterilir)
      measuresBase(...)     azaltım simülatörünün (measures.js) tabanı
-     applyExample(state,w) "örnekle doldur" (eski sayfanın Muğla örneği)
+     applyExample(state,w) "örnekle doldur" (eski sayfanın Muğla örneği + rapor göstergeleri)
      satır işlemleri       addEnergyRow, removeRow, setRowType, setRowUnit (birim değişince
                            miktar ve fiyat aynı enerjiye karşılık gelecek şekilde çevrilir)
 
@@ -27,7 +27,7 @@
   var NS = root.TURIZM = root.TURIZM || {};
   var SCHEMA = 'commited.turizm.state/2';
   var SCHEMA_PREFIX = 'commited.turizm.state/';
-  var APP_VERSION = '6.0.0';
+  var APP_VERSION = '6.1.0';
 
   // ------------------------------------------------------------------ sabitler
   var SEGMENTS = ['resort5', 'lux', 's5', 's4', 's3', 'limited'];          // benchmarks.js kimlikleri
@@ -53,6 +53,20 @@
   var DEFAULT_PRICES = { waterTlPerM3: 48, laundryTlPerKg: 22, verTlPerT: 400 };
   var DEFAULT_PV_COST = 16000;                                               // TL/kWp (measures.js ile aynı)
   var AGENCY_DEFAULT_CPOR = { lux: 59.6, s5: 48.9, s4: 37.9, s3: 25.4, limited: 20.2 };  // benchmarks.js yoksa
+
+  // Sürdürülebilirlik raporu göstergeleri (karbon hesabına GİRMEZ; yalnız rapor ve kişi başı göstergeler)
+  //   chemicalsKg      yıllık temizlik / havuz / çamaşır kimyasalı, kg
+  //   purchaseTotalTl  yıllık toplam satın alma (mal + hizmet), TL
+  //   purchaseLocalTl  bunun yerel tedarikçilerden yapılan kısmı, TL ("yerel" tanımını otel yapar; raporda yazılır)
+  //   staff            yıl içindeki ortalama çalışan sayısı
+  //   staffTrained     çevre / sürdürülebilirlik eğitimi alan çalışan sayısı
+  var ESG_FIELDS = ['chemicalsKg', 'purchaseTotalTl', 'purchaseLocalTl', 'staff', 'staffTrained'];
+  var EXAMPLE_ESG = { chemicalsKg: 15600, purchaseTotalTl: 96000000, purchaseLocalTl: 62400000, staff: 145, staffTrained: 110 };
+
+  // Rapor kapağındaki otel logosu: tarayıcıda küçültülmüş PNG/JPEG (data URL). Başka biçim ve büyük dosya kabul edilmez.
+  var LOGO_RE = /^data:image\/(png|jpeg);base64,[A-Za-z0-9+\/]+={0,2}$/;
+  var LOGO_MAX_CHARS = 400000;
+  function logoOf(x) { return typeof x === 'string' && x.length <= LOGO_MAX_CHARS && LOGO_RE.test(x) ? x : null; }
 
   // Türkiye Yeşil Taksonomisi hazırlık kontrolü (eski sayfayla aynı ağırlıklar ve öneriler)
   var TAXONOMY = [
@@ -164,9 +178,13 @@
              seg: 's4', gece: null, cpor: c.s4, ofis: null, split: false, splitRows: rows };
   }
 
+  function emptyEsg() {
+    var o = {}; ESG_FIELDS.forEach(function (k) { o[k] = null; }); return o;
+  }
+
   function emptyHotel() {
     return {
-      name: '', city: '', segment: 'resort5', year: null, rooms: null, verify: 'none',
+      name: '', city: '', segment: 'resort5', year: null, rooms: null, verify: 'none', logo: null,
       country: 'Turkey', region: 'Turkey', connection: 'distribution',
       area: { conditioned: null, rooms: null, meeting: null },
       occupiedRooms: null, guestNights: null,
@@ -177,6 +195,7 @@
       privateSpace: { has: false, method: 'actual', sharePct: null },
       laundry: { outsourced: false, method: 'tonnage', tonnageKg: null, items: [] },
       extras: { waterM3: null, wasteLandfillT: null, wasteRecycledT: null },
+      esg: emptyEsg(),
       pv: { kwp: null, costTlPerKwp: DEFAULT_PV_COST },
       prices: { waterTlPerM3: DEFAULT_PRICES.waterTlPerM3, laundryTlPerKg: DEFAULT_PRICES.laundryTlPerKg, verTlPerT: DEFAULT_PRICES.verTlPerT },
       benchRef: null,
@@ -250,6 +269,7 @@
     o.year = year(h.year);
     o.rooms = num(h.rooms);
     o.verify = oneOf(h.verify, Object.keys(VERIFY), 'none');
+    o.logo = logoOf(h.logo);
     o.country = I.regions[h.country] ? h.country : 'Turkey';
     var regs = I.regions[o.country];
     o.region = regs.indexOf(h.region) >= 0 ? h.region : regs[0];
@@ -282,6 +302,8 @@
     };
     var ex = h.extras || {};
     o.extras = { waterM3: num(ex.waterM3), wasteLandfillT: num(ex.wasteLandfillT), wasteRecycledT: num(ex.wasteRecycledT) };
+    var es = h.esg || {};
+    ESG_FIELDS.forEach(function (k) { var v = num(es[k]); o.esg[k] = v !== null && v >= 0 ? v : null; });
     var pv = h.pv || {};
     o.pv = { kwp: num(pv.kwp), costTlPerKwp: has(pv, 'costTlPerKwp') ? num(pv.costTlPerKwp) : DEFAULT_PV_COST };
     var pr = h.prices || {};
@@ -500,6 +522,7 @@
     if (h.refrigerants.items.some(function (it) { return isNum(it.kg) && it.kg !== 0; })) { return false; }
     if (h.laundry.outsourced) { return false; }
     if (anyNum([h.extras.waterM3, h.extras.wasteLandfillT, h.extras.wasteRecycledT, h.pv.kwp])) { return false; }
+    if (anyNum(ESG_FIELDS.map(function (k) { return h.esg[k]; }))) { return false; }
     if (anyNum([h.event.m2, h.event.hours, h.event.guests, h.event.nights])) { return false; }
     if (h.measures.length || Object.keys(h.taxonomy).length) { return false; }
     return true;
@@ -526,7 +549,11 @@
     a_transfer: '60000', a_gece: '7200', a_ofis: '18000', a_seg: 's4', a_cpor: '37.9',
     a_n_lux: '0', a_n_s5: '2400', a_n_s4: '3600', a_n_s3: '1200', a_n_limited: '0'
   };
-  function exampleState() { return fromLegacy(LEGACY_EXAMPLE).state; }
+  function exampleState() {
+    var s = fromLegacy(LEGACY_EXAMPLE).state;
+    s.hotel.esg = clone(EXAMPLE_ESG);                                   // eski sayfada bu alanlar yoktu
+    return s;
+  }
 
   /** Yalnız bir sekmeyi örnekle doldur: which = 'otel' | 'acente'. Durumu değiştirir ve döndürür. */
   function applyExample(s, which) {
@@ -686,8 +713,8 @@
     SEGMENTS: SEGMENTS, VERIFY: VERIFY, TAXONOMY: TAXONOMY, CONNECTIONS: CONNECTIONS,
     AGENCY_SEG_IDS: AGENCY_SEG_IDS, AGENCY_FIELDS: AGENCY_FIELDS,
     DEFAULT_ROWS: DEFAULT_ROWS, DEFAULT_PRICES: DEFAULT_PRICES, DEFAULT_PV_COST: DEFAULT_PV_COST,
-    LEGACY_EXAMPLE: LEGACY_EXAMPLE,
-    emptyState: emptyState, emptyHotel: emptyHotel, emptyAgency: emptyAgency,
+    LEGACY_EXAMPLE: LEGACY_EXAMPLE, ESG_FIELDS: ESG_FIELDS, EXAMPLE_ESG: EXAMPLE_ESG, LOGO_MAX_CHARS: LOGO_MAX_CHARS,
+    emptyState: emptyState, emptyHotel: emptyHotel, emptyAgency: emptyAgency, emptyEsg: emptyEsg, logoOf: logoOf,
     normalize: normalize, fromLegacy: fromLegacy, looksLegacy: looksLegacy, load: load,
     buildInput: buildInput, calcOptions: calcOptions, gridInfo: gridInfo, measuresBase: measuresBase,
     isEmpty: isEmpty, hotelIsEmpty: hotelIsEmpty, agencyIsEmpty: agencyIsEmpty,

@@ -63,6 +63,7 @@
     out.push('Doğrulama durumu: ' + NS.model.VERIFY[h.verify]);
     out.push(LINE);
     out.push('Not: Değerler dengeleme (karbon kredisi) öncesi brüt emisyonu gösterir; HCMI kuralı gereği krediler brüt emisyondan düşülmez.');
+    out.push('Bu değerler "karbon nötr", "iklim nötr" ya da "çevre dostu" gibi genel iddialara dayanak olarak kullanılamaz (AB 2024/825).');
     out.push(SIGN);
     return out.join('\n');
   }
@@ -86,7 +87,7 @@
       out.push('2030 hedefi (NZMFH): bina enerjisi emisyonu ' + t(p.m2030.targetTco2e) + ' tCO2e · açık ' + t(p.m2030.gapTco2e) + ' tCO2e');
     }
     var o = R.offsets;
-    out.push('Tam dengeleme: ' + t(o.remainingT) + ' tCO2e/yıl = ' + tl(o.costTl) + ' TL/yıl'
+    out.push('Kalan emisyonu dengeleme maliyeti (karbon kredisi; brüt emisyondan düşülmez): ' + t(o.remainingT) + ' tCO2e/yıl = ' + tl(o.costTl) + ' TL/yıl'
       + (isNum(o.perRoomNightTl) ? ' (' + f(o.perRoomNightTl, 2) + ' TL/oda-gece)' : ''));
     out.push('Taksonomi hazırlık skoru: ' + R.taxonomy.score + '/100');
     out.push(SIGN);
@@ -142,6 +143,14 @@
                      milestones: p.evaluation.map(function (e) { return { year: e.year, targetT: r2(e.targetTco2e, 2), reductionPct: r2(e.reductionPct, 1), planT: r2(e.planTco2e, 2), gapT: r2(e.gapTco2e, 2), met: e.met }; }) } : null,
       offsets: { remainingT: r2(R.offsets.remainingT, 2), verCount: R.offsets.verCount, costTry: isNum(R.offsets.costTl) ? Math.round(R.offsets.costTl) : null,
                  perRoomNightTry: r2(R.offsets.perRoomNightTl, 2), verPriceTryPerT: h.prices.verTlPerT },
+      sustainability: R.esg ? {
+        note: 'Karbon hesabına girmez; sürdürülebilirlik raporu göstergeleri. Kişi başı = misafir gecelemesi başına.',
+        chemicalsKg: h.esg.chemicalsKg, purchaseTotalTry: h.esg.purchaseTotalTl, purchaseLocalTry: h.esg.purchaseLocalTl,
+        localPurchasePct: r2(R.esg.localPct, 2), staff: h.esg.staff, staffTrained: h.esg.staffTrained, staffTrainedPct: r2(R.esg.trainedPct, 1),
+        wasteRecycledPct: isNum(R.esg.recycleRate) ? r2(R.esg.recycleRate * 100, 1) : null,
+        perGuestNight: { kwh: r2(R.esg.perGuest.kwh, 2), waterM3: r2(R.esg.perGuest.waterM3, 3), wasteKg: r2(R.esg.perGuest.wasteKg, 3),
+                         chemicalsKg: r2(R.esg.perGuest.chemKg, 3), kgCo2e: r2(R.esg.perGuest.co2Kg, 2) }
+      } : null,
       taxonomyScore: R.taxonomy.score,
       note: 'Tarama hesabı. Doğrulanmış envanter için bağımsız doğrulama gerekir.'
     };
