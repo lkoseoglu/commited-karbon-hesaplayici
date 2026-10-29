@@ -39,6 +39,7 @@
   --on-deep:#F2F9FC;       /* panel ustundeki yazi */
   --on-deep-soft:#BFE2F4;  /* panel ustundeki ikincil yazi */
   --on-deep-label:#8FD0EE; /* panel ustundeki kucuk etiket */
+  --logo-plate:#FFFFFF;    /* otel logosu onizleme zemini: logolar beyaz zemine gore tasarlanir, koyu modda da beyaz kalir */
 
   /* --- ust alan (hero) --- */
   --hero-a:#03203A; --hero-b:#064A73; --hero-c:#08699A;

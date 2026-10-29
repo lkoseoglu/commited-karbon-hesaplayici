@@ -361,6 +361,29 @@ table#macc tbody th{min-width:190px}
 .addr{font-size:13.5px; color:var(--muted); margin:10px 0}
 .addr b{user-select:all; color:var(--ink)}
 .cloud-msg{min-height:1em; margin:8px 0 0}
+
+/* ---------- PDF sürdürülebilirlik raporu kartı (Adım 5) ---------- */
+.report-card{display:flex; gap:18px; align-items:center; justify-content:space-between; background:var(--deep); color:var(--on-deep); border:1px solid var(--deep-line); border-radius:16px; padding:18px 20px; margin:0 0 14px}
+.report-card h3{margin:0 0 4px; font-size:17px; color:var(--on-deep)}
+.report-card p{margin:0; font-size:14px; color:var(--on-deep-soft); max-width:66ch}
+.report-card .rc-msg{margin-top:8px; font-size:13px; color:var(--on-deep-label); min-height:1em}
+.report-card .rc-msg:empty{margin-top:0; min-height:0}
+.report-card .btn{flex:0 0 auto}
+.report-card .rc-main{min-width:0}
+.rc-btns{display:flex; flex-direction:column; gap:10px; flex:0 0 auto}
+.btn.ondeep{background:transparent; color:var(--on-deep); border-color:var(--on-deep-soft)}
+.btn.ondeep:focus-visible,.btn.ondeep-link:focus-visible{outline-color:var(--on-deep)}
+.btn.ondeep-link{background:transparent; color:var(--on-deep-soft); border-color:transparent; text-decoration:underline; padding-left:6px; padding-right:6px}
+.rc-logo{display:flex; flex-wrap:wrap; align-items:center; gap:8px 10px; margin-top:12px}
+.rc-logo .btn.sm{align-self:center}
+.rc-logo-prev{display:inline-flex; align-items:center; justify-content:center; background:var(--logo-plate); border-radius:8px; height:40px; padding:4px 10px}
+.rc-logo-prev[hidden]{display:none}
+.rc-logo-prev img{display:block; max-height:32px; max-width:140px}
+.rc-hint{font-size:12.5px; color:var(--on-deep-label)}
+.btn.accent{background:var(--accent); color:var(--on-accent)}
+.btn.accent:focus-visible{outline-color:var(--on-deep)}
+.btn[aria-disabled="true"]{opacity:.6; cursor:not-allowed}
+@media (max-width:640px){ .report-card{flex-direction:column; align-items:stretch} }
 .cta .chk{margin-top:10px}
 .reset-row{margin-top:12px}
 .linkbtn{background:none; border:0; padding:0; font:inherit; color:var(--brand); font-weight:700; text-decoration:underline; cursor:pointer; text-align:left}
@@ -442,6 +465,13 @@ table.meth-t td:nth-child(2),table.meth-t td:nth-child(3){text-align:left; font-
   table.split th,table.split td{padding:7px 5px}
   .sub-params{margin-left:0}
 }
+
+/* ---------- AB 2024/825: misafire anlatım kutusu ve Metodoloji'deki iddialar listesi ---------- */
+#claims_note{margin-top:14px}
+.notice .claims{margin:8px 0 0; padding-left:18px}
+.notice .claims li{margin:4px 0}
+.meth-in ul{margin:6px 0 10px; padding-left:20px}
+.meth-in li{margin:3px 0}
 
 /* ---------- Yazdırma: "Beyanı PDF olarak kaydet" yalnız beyan kartını basar ---------- */
 @media print{
