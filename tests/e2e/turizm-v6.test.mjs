@@ -264,7 +264,7 @@ test('üyelik: kayıt ol, kaydet (yeni şema), çıkış, giriş → son kayıt 
   assert.equal(rec.type, 'hotel'); assert.equal(rec.company, 'Örnek Tatil Köyü'); assert.equal(rec.year, 2025);
   assert.equal(rec.total, Math.round(ex.totals.hcmiT * 1000)); assert.equal(rec.grade, 'B');
   assert.equal(rec.inputs.schema, 'commited.turizm.state/2'); assert.equal(rec.inputs.options, undefined, 'yerel tercih buluta gitmez');
-  assert.equal(rec.hcmi.schema, 'commited.hotel.hcmi/2'); assert.equal(rec.appVersion, '6.0.0');
+  assert.equal(rec.hcmi.schema, 'commited.hotel.hcmi/2'); assert.equal(rec.appVersion, '6.1.0');
   assert.equal(rec.sector, 'Turizm — Otel (HCMI v2.0)');
   assert.ok(!JSON.stringify(rec).includes('gizli123'), 'şifre kayda girmez');
   // çıkış, formu temizle, giriş → son kayıt otomatik yüklenir
@@ -313,6 +313,113 @@ test('çıktılar: beyan / özet / JSON panoya, PDF için yalnız beyan basılı
   await p.emulateMedia({ media: 'print' });
   await p.evaluate(() => document.body.classList.add('print-decl'));
   assert.equal(await p.isVisible('#decl'), true); assert.equal(await p.isVisible('#adim1'), false); assert.equal(await p.isVisible('.hero'), false);
+  assert.deepEqual(p.errors, []);
+  await p.context().close();
+});
+
+test('PDF raporu: eksik veride açılmaz; örnekte yeni sekmede 11 sayfa, yazdırma düğmesi, PDF 11 sayfa', async () => {
+  const p = await open();
+  const ctx = p.context();
+  assert.equal(await p.getAttribute('#btn-report', 'aria-disabled'), 'true');
+  assert.equal(await p.getAttribute('#btn-summary', 'aria-disabled'), 'true');
+  await p.click('#btn-report', { force: true });                 // aria-disabled: düğme odaklanır ve tıklanır, nedenini söyler
+  assert.match(await text(p, '#report_msg'), /tesis verilerini girin/);
+  assert.equal(ctx.pages().length, 1, 'eksik veride yeni sekme açılmaz');
+  await p.click('#h_notice [data-example="otel"]'); await settle(p);
+  assert.equal(await p.getAttribute('#btn-report', 'aria-disabled'), 'false');
+  const errs = [];
+  ctx.on('page', (pg) => { pg.on('pageerror', (e) => errs.push(e.message)); pg.on('console', (m) => { if (m.type() === 'error') { errs.push(m.text()); } }); });
+  const [rp] = await Promise.all([ctx.waitForEvent('page'), p.click('#btn-report')]);
+  await rp.waitForLoadState('load');
+  assert.equal(await rp.locator('section.page').count(), 11);
+  assert.equal(await rp.title(), 'Örnek Tatil Köyü - 2025 Sürdürülebilirlik Raporu');
+  assert.equal(await rp.locator('h2', { hasText: 'Kaynaklar, tedarik ve çalışanlar' }).count(), 1);
+  assert.match(await rp.textContent('.cv-num'), /^34,4/);
+  assert.match(await rp.textContent('.cv-sample'), /Örnek rapor/);
+  assert.equal(await rp.textContent('.cv-grade'), 'B');
+  // "PDF olarak kaydet" yazdırma penceresini açar; araç çubuğu baskıda görünmez
+  await rp.evaluate(() => { window.__p = 0; window.print = () => { window.__p++; }; });
+  await rp.click('#tb-print');
+  await rp.waitForFunction(() => window.__p === 1, null, { timeout: 5000 });   // yazı tipi en çok 3 sn beklenir
+  await rp.emulateMedia({ media: 'print' });
+  assert.equal(await rp.isVisible('#tb-print'), false);
+  const pdf = await rp.pdf({ preferCSSPageSize: true, printBackground: true });
+  assert.equal((pdf.toString('latin1').match(/\/Type\s*\/Page[^s]/g) || []).length, 11, 'PDF sayfa sayısı');
+  assert.match(await text(p, '#report_msg'), /yeni sekmede açıldı/);
+  await p.fill('#h_name', 'Benim Otelim'); await settle(p);
+  assert.match(await text(p, '#report_msg'), /düğmeye yeniden basın/, 'veri değişince açık rapor eskidi uyarısı');
+  const [rp2] = await Promise.all([ctx.waitForEvent('page'), p.click('#btn-report')]);
+  await rp2.waitForLoadState('load');
+  assert.equal(await rp2.title(), 'Benim Otelim - 2025 Sürdürülebilirlik Raporu');
+  assert.equal(await rp2.locator('.cv-sample').count(), 0, 'gerçek ad girilince örnek etiketi yok');
+  assert.match(await text(p, '#report_msg'), /yeni sekmede açıldı/);
+  assert.deepEqual(errs, []);
+  assert.deepEqual(p.errors, []);
+  await ctx.close();
+});
+
+test('tek sayfalık özet ve kapak logosu: logo yüklenir, rapora ve özete girer, kaldırılır', async () => {
+  const p = await open();
+  const ctx = p.context();
+  await p.click('#h_notice [data-example="otel"]'); await settle(p);
+  assert.equal(await p.isVisible('#logo_prev'), false);
+  assert.equal(await text(p, '#logo_pick'), 'Kapak için logo ekle');
+  // logo: gizli dosya alanına örnek (kurgusal) logo verilir; tarayıcıda küçültülüp PNG olur
+  await p.setInputFiles('#logo_file', path.join(ROOT, 'tests/fixtures/ornek-logo.png'));
+  await p.waitForFunction(() => /^data:image\/png;base64,/.test(window.__tour.state().hotel.logo || ''));
+  await settle(p);
+  assert.equal(await p.isVisible('#logo_prev'), true);
+  assert.equal(await p.isVisible('#logo_remove'), true);
+  assert.equal(await text(p, '#logo_pick'), 'Logoyu değiştir');
+  assert.match(await text(p, '#report_msg'), /Logo eklendi/);
+  const dims = await p.evaluate(() => new Promise((ok) => { const i = new Image(); i.onload = () => ok([i.width, i.height]); i.src = window.__tour.state().hotel.logo; }));
+  assert.ok(dims[0] <= 600 && dims[1] <= 240, 'en çok 600 × 240: ' + dims);
+  // boyutsuz (yalnız viewBox) kare SVG: oranı korunur ve baskı için kutuya kadar büyütülür
+  const before = await p.evaluate(() => window.__tour.state().hotel.logo);
+  await p.setInputFiles('#logo_file', { name: 'kare.svg', mimeType: 'image/svg+xml',
+    buffer: Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="#0B6FA0"/></svg>') });
+  await p.waitForFunction((b) => { const l = window.__tour.state().hotel.logo; return l && l !== b; }, before);
+  const sq = await p.evaluate(() => new Promise((ok) => { const i = new Image(); i.onload = () => ok([i.width, i.height]); i.src = window.__tour.state().hotel.logo; }));
+  assert.deepEqual(sq, [240, 240], 'kare SVG 240 × 240 PNG olur');
+  // desteklenmeyen dosya
+  await p.setInputFiles('#logo_file', { name: 'logo.gif', mimeType: 'image/gif', buffer: Buffer.from('GIF89a') });
+  assert.match(await text(p, '#report_msg'), /PNG, JPG, SVG ya da WebP/);
+  // tam rapor: kapakta ve sayfa başlıklarında logo
+  const [rp] = await Promise.all([ctx.waitForEvent('page'), p.click('#btn-report')]);
+  await rp.waitForLoadState('load');
+  assert.equal(await rp.locator('.cv-logo img').count(), 1);
+  assert.equal(await rp.locator('.run-logo').count(), 10);
+  assert.ok(await rp.evaluate(() => document.querySelector('.cv-logo img').naturalWidth > 0), 'logo görüntüsü çözülür');
+  // tek sayfalık özet
+  const [sp] = await Promise.all([ctx.waitForEvent('page'), p.click('#btn-summary')]);
+  await sp.waitForLoadState('load');
+  assert.equal(await sp.locator('section.page').count(), 1);
+  assert.equal(await sp.title(), 'Örnek Tatil Köyü - 2025 Sürdürülebilirlik Özeti');
+  assert.equal(await sp.locator('.op-logo img').count(), 1);
+  assert.match(await sp.textContent('.tb'), /Özetiniz hazır/);
+  const spdf = await sp.pdf({ preferCSSPageSize: true, printBackground: true });
+  assert.equal((spdf.toString('latin1').match(/\/Type\s*\/Page[^s]/g) || []).length, 1, 'özet tek sayfa');
+  assert.match(await text(p, '#report_msg'), /Özet yeni sekmede açıldı/);
+  // logo kaldırılır
+  await p.click('#logo_remove'); await settle(p);
+  assert.equal(await p.evaluate(() => window.__tour.state().hotel.logo), null);
+  assert.equal(await p.isVisible('#logo_prev'), false);
+  assert.match(await text(p, '#report_msg'), /Logo kaldırıldı/);
+  assert.deepEqual(p.errors, []);
+  await ctx.close();
+});
+
+test('rapor göstergeleri: kimyasal, tedarik ve çalışan alanları kişi başı kutuları ve uyarıları günceller', async () => {
+  const p = await open();
+  await p.click('#h_notice [data-example="otel"]'); await settle(p);
+  assert.equal(await text(p, '#r_local'), '%65');
+  assert.equal(await text(p, '#r_pg_chem'), '0,33');
+  assert.equal(await text(p, '#r_pg_water'), '402');
+  await p.fill('#g_local', '48.000.000'); await settle(p);
+  assert.equal(await text(p, '#r_local'), '%50');
+  await p.fill('#g_local', '200.000.000'); await settle(p);
+  assert.equal(await text(p, '#r_local'), '—');
+  assert.match(await text(p, '#msgs'), /Yerel tedarikçilerden satın alma, toplam satın almadan büyük/);
   assert.deepEqual(p.errors, []);
   await p.context().close();
 });
