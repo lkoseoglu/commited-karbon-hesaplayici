@@ -5,3 +5,6 @@ tests/golden/oracle-work/
 *.log
 __pycache__/
 *.pyc
+
+# örnek rapor çıktısı (tools/report-sample.mjs)
+cikti-rapor/

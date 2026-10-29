@@ -134,7 +134,7 @@
             <span class="hint">120 oda × %60 doluluk × 365 = 26.280. Ücretsiz ama kullanılan odalar sayılır, no-show sayılmaz</span></div>
           <div class="f"><label for="h_guestnights">Misafir gecelemesi</label>
             <div class="inwrap"><input id="h_guestnights" type="text" data-bind="hotel.guestNights" data-type="int" data-min="0" placeholder="ör. 47.300"><span class="unit">geceleme</span></div>
-            <span class="hint">Kişi başı dengeleme maliyeti için</span></div>
+            <span class="hint">Kişi başı göstergeler (raporda) ve dengeleme için</span></div>
         </div>
         <p class="mini area-note" id="area_note">Ortak alanlar (lobi, restoran, mutfak, arka ofis) HCMI'ye göre oda ve toplantı alanı oranında ikiye paylaştırılır.</p>
       </fieldset>
@@ -162,7 +162,7 @@
       </fieldset>
 
       <fieldset class="fs" id="fs-yesil">
-        <legend>Yeşil elektrik belgeleri (YEK-G / I-REC)</legend>
+        <legend>Yenilenebilir elektrik belgeleri (YEK-G / I-REC)</legend>
         <p class="mini">Yıl içinde iptal ettirdiğiniz belgelerle karşılanan elektrik. Piyasa bazlı Kapsam 2'de şebeke elektriğinden düşülür, şebeke tüketiminizi aşamaz; konum bazlı sonuç değişmez.</p>
         <div id="market_rows" class="rowlist"></div>
         <button type="button" class="btn ghost sm" id="add_market">+ Belge ekle</button>
@@ -237,6 +237,27 @@
             <div class="inwrap"><input id="h_waste" type="text" data-bind="hotel.extras.wasteLandfillT" data-type="num" data-min="0" placeholder="ör. 165"><span class="unit">ton/yıl</span></div></div>
           <div class="f"><label for="h_recycle">Geri dönüşüm / komposta ayrılan</label>
             <div class="inwrap"><input id="h_recycle" type="text" data-bind="hotel.extras.wasteRecycledT" data-type="num" data-min="0" placeholder="ör. 55"><span class="unit">ton/yıl</span></div></div>
+        </div>
+      </fieldset>
+
+      <fieldset class="fs" id="fs-esg">
+        <legend>Kimyasal, tedarik ve çalışanlar (sürdürülebilirlik raporu için)</legend>
+        <p class="mini">Karbon hesabına girmez. Sürdürülebilirlik raporunda ve kişi başı göstergelerde kullanılır; boş bırakılan göstergeler rapora girmez.</p>
+        <div class="grid">
+          <div class="f"><label for="g_chem">Kimyasal tüketimi</label>
+            <div class="inwrap"><input id="g_chem" type="text" data-bind="hotel.esg.chemicalsKg" data-type="num" data-min="0" placeholder="ör. 15.600"><span class="unit">kg/yıl</span></div>
+            <span class="hint">Temizlik, çamaşır, havuz ve mutfak kimyasalları; satın alma kayıtlarından</span></div>
+          <div class="f"><label for="g_buy">Toplam satın alma</label>
+            <div class="inwrap"><input id="g_buy" type="text" data-bind="hotel.esg.purchaseTotalTl" data-type="num" data-min="0" placeholder="ör. 96.000.000"><span class="unit">TL/yıl</span></div>
+            <span class="hint">Mal ve hizmet alımlarının yıllık toplamı</span></div>
+          <div class="f"><label for="g_local">Yerel tedarikçilerden</label>
+            <div class="inwrap"><input id="g_local" type="text" data-bind="hotel.esg.purchaseLocalTl" data-type="num" data-min="0" placeholder="ör. 62.400.000"><span class="unit">TL/yıl</span></div>
+            <span class="hint">Tesisle aynı il ya da bölgedeki tedarikçiler</span></div>
+          <div class="f"><label for="g_staff">Ortalama çalışan sayısı</label>
+            <div class="inwrap"><input id="g_staff" type="text" data-bind="hotel.esg.staff" data-type="int" data-min="0" placeholder="ör. 145"><span class="unit">kişi</span></div></div>
+          <div class="f"><label for="g_trained">Çevre eğitimi alan çalışan</label>
+            <div class="inwrap"><input id="g_trained" type="text" data-bind="hotel.esg.staffTrained" data-type="int" data-min="0" placeholder="ör. 110"><span class="unit">kişi</span></div>
+            <span class="hint">Yıl içinde enerji, su, atık ya da kimyasal eğitimi alanlar</span></div>
         </div>
       </fieldset>
 
@@ -342,6 +363,12 @@
         <div class="int"><h3>Enerji yoğunluğu</h3><p class="v"><b id="r_int_kwh">—</b> <small>kWh/m²/yıl</small></p><p class="sub"><span id="r_kwh_rel">—</span></p></div>
         <div class="int"><h3>Su</h3><p class="v"><b id="r_int_water">—</b> <small>litre/oda-gece</small></p><p class="sub"><span id="r_water_rel">—</span></p></div>
         <div class="int"><h3>Atık</h3><p class="v"><b id="r_int_waste">—</b> <small>kg/dolu oda</small></p><p class="sub"><span id="r_waste_rel">—</span></p></div>
+      </div>
+      <div class="intens" id="intens_guest">
+        <div class="int"><h3>Enerji · kişi başı</h3><p class="v"><b id="r_pg_kwh">—</b> <small>kWh/misafir-gece</small></p><p class="sub" id="r_pg_kwh_sub">Misafir gecelemesini girin</p></div>
+        <div class="int"><h3>Su · kişi başı</h3><p class="v"><b id="r_pg_water">—</b> <small>litre/misafir-gece</small></p><p class="sub" id="r_pg_water_sub">—</p></div>
+        <div class="int"><h3>Kimyasal · kişi başı</h3><p class="v"><b id="r_pg_chem">—</b> <small>kg/misafir-gece</small></p><p class="sub" id="r_pg_chem_sub">—</p></div>
+        <div class="int"><h3>Yerel satın alma</h3><p class="v"><b id="r_local">—</b> <small>toplam alımın</small></p><p class="sub" id="r_local_sub">—</p></div>
       </div>
       <p class="full-inv">Tam envanter (tarama): <b id="r_full">—</b> tCO₂e/yıl <span class="mini">— HCMI + su + atık. Yeşil Taksonomi ve kurumsal ESG raporlaması bu rakamı ister; HCMI metriklerine girmez.</span></p>
     </section>
@@ -452,16 +479,16 @@
           <p class="sub">Önlemler sonrası kalan HCMI ayak izi · <span id="nz_offset_cost">—</span> TL/yıl</p>
         </div>
         <div class="kpi kpi-main">
-          <h3>Oda-gece başına dengeleme</h3>
+          <h3>Oda-gece başına dengeleme maliyeti</h3>
           <p class="big sm"><span id="nz_per_night">—</span> <small>TL/oda-gece</small></p>
-          <p class="sub">Karbon nötr konaklama bu tutarla sunulabilir — misafire yansıtılabilir ya da sponsorla karşılanabilir</p>
+          <p class="sub">Kalan emisyon için karbon kredisi maliyetinin oda-geceye düşen payı; misafire isteğe bağlı katkı olarak sunulabilir ya da sponsorla karşılanabilir. Konaklamanın "karbon nötr" olduğu anlamına gelmez.</p>
         </div>
       </div>
 
       <div class="two">
         <div class="card">
           <h3>Dengeleme — Gold Standard VER</h3>
-          <p class="mini">Commited, Gold Standard Impact Registry üzerinden iptal (retirement) işlemini sizin adınıza yapar; her iptal seri numarasıyla belgelenir ve misafire ya da kurumsal müşteriye sertifika olarak sunulabilir.</p>
+          <p class="mini">Commited, Gold Standard Impact Registry üzerinden iptal (retirement) işlemini sizin adınıza yapar; her iptal seri numarasıyla belgelenir. Belge, hangi projeden kaç ton kredinin iptal edildiğini gösterir; otelin ya da konaklamanın iklime etkisinin sıfırlandığını göstermez.</p>
           <div class="tblwrap"><table class="t kv" id="ver_table">
             <tbody>
               <tr><th scope="row">Kalan emisyon (önlemler sonrası)</th><td><span id="ver_t">—</span> tCO₂e</td></tr>
@@ -470,7 +497,7 @@
               <tr><th scope="row">Misafir gecelemesi başına</th><td><span id="ver_guest">—</span> TL</td></tr>
             </tbody>
           </table></div>
-          <p class="notice warn">HCMI kuralı: satın alınan karbon kredileri brüt emisyondan <b>düşülmez</b>; dengeleme ayrı bir satır olarak beyan edilir. Yukarıdaki HCMI metrikleri bu yüzden dengeleme öncesi brüt değerlerdir.</p>
+          <p class="notice warn">HCMI kuralı: satın alınan karbon kredileri brüt emisyondan <b>düşülmez</b>; dengeleme ayrı bir satır olarak beyan edilir. Yukarıdaki HCMI metrikleri bu yüzden dengeleme öncesi brüt değerlerdir.<br><b>AB 2024/825:</b> karbon kredisine dayanarak "karbon nötr", "iklim nötr", "CO₂ dengelenmiş konaklama" gibi iddialar tüketiciye yapılamaz. Dengelemeyi ancak ayrı bir iklim katkısı olarak, miktarı, projesi ve sicil numarasıyla anlatabilirsiniz.</p>
         </div>
         <div class="card">
           <h3>Kilometre taşı yılları — NZMFH 2. baskı</h3>
@@ -478,9 +505,10 @@
             <li data-y="2025"><b>2025 · Planla, taahhüt et, ölç</b><span>Net sıfır taahhüdü açıklanır; her kategori için ölçüm ve azaltım planı yayımlanır.</span></li>
             <li data-y="2030"><b>2030 · Yenilenebilir enerji ve dengeleme devrede</b><span>İklim eylemi için en kritik yıl. Yenilenebilir elektriğe geçiş ilerler, kalan emisyon için dengeleme yaklaşımı kurulur. Bina enerjisi emisyonunda 2019'a göre %45–50 azaltım.</span></li>
             <li data-y="2035"><b>2035 · Odak kalan emisyonlara ve değer zincirine kayar</b><span>Yenilenebilir elektrik tüm coğrafyalarda tamamlanır; tedarikçi sözleşmelerine net sıfır şartları işlenir.</span></li>
-            <li data-y="2040"><b>2040 · Bina için net sıfır iddiası</b><span>Kapsam 1 ve 2 asgariye iner; kalan emisyon ölçülüp dengelenir, dengeleme giderme (removal) projelerine kayar.</span></li>
+            <li data-y="2040"><b>2040 · Bina için net sıfır hedefi</b><span>Kapsam 1 ve 2 asgariye iner; kalan emisyon ölçülüp dengelenir, dengeleme giderme (removal) projelerine kayar.</span></li>
             <li data-y="2050"><b>2050 · Net sıfır</b><span>Değer zinciri derinlemesine karbonsuzlaşır; kaçınılamayan kalan emisyon ölçülür ve giderme ile kapatılır.</span></li>
           </ul>
+          <p class="mini">Bu patika bir planlama aracıdır. Bir net sıfır hedefini misafirlere ya da kamuya duyurmak için AB 2024/825; ölçülebilir ve tarihli ara hedefler içeren, kamuya açık bir uygulama planı ve bağımsız üçüncü tarafın düzenli doğrulamasını ister.</p>
         </div>
       </div>
 
@@ -511,6 +539,25 @@
         </div>
       </div>
 
+      <div class="report-card no-print" id="report-card">
+        <div class="rc-main">
+          <h3>Sürdürülebilirlik raporu (PDF)</h3>
+          <p>Kapaklı, 10–12 sayfalık rapor: karbon ayak izi, Türkiye kıyası, kaynak kullanımı, yerel tedarik ve çalışan göstergeleri, azaltım planı, net sıfır yol haritası ve imza alanı olan beyan. Tek sayfalık özeti tur operatörlerine ve kurumsal müşterilere hızlıca gönderebilirsiniz.</p>
+          <div class="rc-logo">
+            <span class="rc-logo-prev" id="logo_prev" hidden><img id="logo_img" alt="Kapak için yüklenen logo"></span>
+            <button class="btn ondeep sm" id="logo_pick" type="button">Kapak için logo ekle</button>
+            <button class="btn ondeep-link sm" id="logo_remove" type="button" hidden>Logoyu kaldır</button>
+            <input type="file" id="logo_file" accept="image/png,image/jpeg,image/svg+xml,image/webp" hidden>
+            <span class="rc-hint">PNG, JPG, SVG ya da WebP; en çok 5 MB. Yalnız raporda kullanılır.</span>
+          </div>
+          <p class="rc-msg" id="report_msg" role="status"></p>
+        </div>
+        <div class="rc-btns">
+          <button class="btn accent" id="btn-report" type="button">PDF raporu oluştur</button>
+          <button class="btn ondeep" id="btn-summary" type="button">Tek sayfalık özet</button>
+        </div>
+      </div>
+
       <article class="decl" id="decl" aria-labelledby="d_name">
         <header class="dh">
           <b id="d_name">—</b>
@@ -533,6 +580,17 @@
         <p class="mini">Metodoloji: HCMI v2.0 · GHG Protocol Kurumsal Standart. Değerler 12 aylık tüketim verisinden hesaplanmıştır ve dengeleme öncesi brüt emisyonu gösterir. Reklam ve pazarlama iddiası için bağımsız doğrulama önerilir.</p>
       </article>
 
+      <div class="notice" id="claims_note">
+        <b>Bu sonuçları misafirlere nasıl anlatabilirsiniz? (AB 2024/825)</b>
+        <ul class="claims">
+          <li><b>Yapabilirsiniz:</b> ölçülen değeri yöntemi, yılı ve kapsamıyla birlikte verin. Örnek: "2025 yılında oda-gece başına 34,4 kgCO₂e (HCMI v2.0, Kapsam 1-2 ve dış çamaşırhane)."</li>
+          <li><b>Yapabilirsiniz:</b> somut bir iyileştirmeyi neyle, ne kadar ve hangi dönemde olduğunu belirterek anlatın. Örnek: "LED dönüşümüyle elektrik tüketimi 2024'e göre %12 azaldı."</li>
+          <li><b>Yapmayın:</b> "çevre dostu otel", "yeşil konaklama", "iklim dostu tatil" gibi genel iddialar kullanmayın. Bu ifadeler ancak tanınmış bir çevre etiketi ya da kanıtlanmış olağanüstü bir performansla desteklenebilir.</li>
+          <li><b>Yapmayın:</b> karbon kredisine dayanarak "karbon nötr", "iklim nötr" ya da "CO₂ dengelenmiş" demeyin.</li>
+          <li><b>Kıyas yaparken:</b> hangi kıyas setinin, hangi yılın ve hangi segmentin kullanıldığını yazın. Örnek: "CHSB 2026 Türkiye 5★ ortalamasının %30 altında."</li>
+        </ul>
+      </div>
+
       <div class="two">
         <fieldset class="fs" id="fs-event">
           <legend>Toplantı / etkinlik karbon hesabı</legend>
@@ -554,13 +612,13 @@
             <tr><th scope="row">Katılımcı konaklaması</th><td><span id="e_stay">—</span> kgCO₂e</td></tr>
             <tr><th scope="row">Etkinlik toplamı</th><td><span id="e_total">—</span> kgCO₂e</td></tr>
             <tr><th scope="row">Katılımcı başına</th><td><span id="e_pp">—</span> kgCO₂e</td></tr>
-            <tr><th scope="row">Karbon nötr etkinlik maliyeti</th><td><span id="e_cost">—</span> TL</td></tr>
+            <tr><th scope="row">Etkinlik emisyonunu dengeleme maliyeti</th><td><span id="e_cost">—</span> TL</td></tr>
           </tbody></table></div>
         </fieldset>
 
         <div class="cta" id="outputs">
           <h3>Çıktıları alın</h3>
-          <p>Beyanı teklifinize, özeti yönetiminize, JSON'u kendi sisteminize ya da Commited'a aktarın.</p>
+          <p>Sürdürülebilirlik raporunu (yukarıda) iş ortaklarınıza gönderin; beyanı teklifinize, özeti yönetiminize, JSON'u kendi sisteminize ya da Commited'a aktarın.</p>
           <div class="btn-row">
             <button class="btn primary" id="btn-decl" type="button">Beyanı kopyala</button>
             <button class="btn ghost" id="btn-print" type="button">Beyanı PDF olarak kaydet</button>
@@ -657,8 +715,8 @@
           <div class="bars" id="ar_bars"></div>
         </div>
         <div class="cta">
-          <h3>Dengeleme ve Yeşil Acenta rotası</h3>
-          <p>TÜRSAB Yeşil Acenta programı, paket tur dengelemesi ve müşteriye sunulabilir sertifika için görüşelim.</p>
+          <h3>Azaltım, dengeleme ve Yeşil Acenta programı</h3>
+          <p>TÜRSAB Yeşil Acenta programı, paket turların ölçülmesi ve azaltılması, karbon kredisiyle iklim katkısı için görüşelim. Bu katkı müşteriye "nötr tur" olarak değil; iptal edilen kredi miktarı ve projesiyle anlatılır.</p>
           <div class="btn-row">
             <button class="btn primary" id="btn-acopy" type="button">Özeti kopyala</button>
             <a class="btn ghost" id="btn-awa" href="https://wa.me/" target="_blank" rel="noopener">WhatsApp ile paylaş</a>
@@ -704,6 +762,15 @@
       <p>Ulaşım DEFRA 2025 faktörleriyle (uçuşlarda ışınımsal etki dahil), ofis elektriği Türkiye'nin resmî tüketim noktası faktörüyle hesaplanır. Konaklama katsayısı varsayılan olarak <b>37,9 kgCO₂e/oda-gece</b>'dir: CHSB 2026'nın Türkiye 4 yıldız ortalaması. Segment seçimi katsayıyı CHSB 2026 Türkiye ortalamasıyla doldurur (lüks 59,6 · 5★ 48,9 · 4★ 37,9 · 3★ 25,4 · apart 20,2); karışık portföyde "oda-geceleri segmentlere dağıtayım" kutusuyla hesap satır satır yapılır. Tedarikçi otelin kendi HCMI değeri varsa en doğrusu odur.</p>
       <h3>Taksonomi kontrol listesi</h3>
       <p>Türkiye Yeşil Taksonomisi Yönetmeliği (Resmî Gazete 24.09.2026, Sayı 33380) ve İklim Değişikliği Başkanlığı'nın turizm ve konaklama için taslak teknik tarama kriterlerine dayanır. Kriterler Başkanlıkça her yıl 15 Aralık'a kadar güncellenebilir; skor hukuki uygunluk beyanı değildir.</p>
+      <h3>Çevresel iddialar — AB 2024/825</h3>
+      <p>AB'nin 2024/825 sayılı Direktifi (tüketicinin yeşil dönüşüm için güçlendirilmesi), tüketiciye yönelik çevresel iddiaları sınırlar. AB'li misafirlere ve tur operatörlerine yapılan iletişimde de dikkate alınmalıdır. Bu hesaplayıcının ekranları, rapor ve beyan metinleri buna göre yazılmıştır:</p>
+      <ul>
+        <li>Karbon kredisi brüt emisyondan düşülmez. Dengelemeye dayalı "karbon nötr" ve "iklim nötr" ifadeleri kullanılmaz.</li>
+        <li>"Çevre dostu", "yeşil", "iklim dostu" gibi genel iddialar yoktur. Her değer yöntemi, yılı ve kapsamıyla verilir.</li>
+        <li>Kıyaslar kaynağıyla (CHSB 2026 Türkiye, segment) birlikte gösterilir.</li>
+        <li>Net sıfır patikası bir planlama aracıdır. Gelecekteki bir hedefin kamuya duyurulması için uygulama planı ve bağımsız doğrulama gerekir.</li>
+        <li>"Doğrulanmadı — iç hesaplama" olarak işaretli değerler reklam iddiası olarak kullanılmamalıdır.</li>
+      </ul>
       <h3>Önceki sürümden farklar</h3>
       <p id="meth_diff">Bu sürümde sonuçlar önceki hesaplayıcıdan biraz farklı çıkar, çünkü hesap artık resmî HCMI aracıyla birebir aynıdır: (1) yakıt faktörleri HCMI v2.0'ın resmî değerleridir (önceki sürüm DEFRA kullanıyordu; ör. doğal gaz 2,045 → 2,155 kgCO₂e/m³, motorin 2,56 → 2,87 kgCO₂e/L); (2) dış çamaşırhane, kg başına sabit 0,65 yerine HCMI'nın enerji tabanlı tahminiyle hesaplanır (≈0,72 kgCO₂e/kg); (3) soğutucu gaz GWP değerleri HCMI listesindendir (R-410A 2088 → 2100); (4) toplantı metriği satılan salon saatine değil, HCMI kuralına göre yılda 3.650 saate bölünür; (5) sayılar Türkçe yazımla girilir (1.480.000). Örnek tatil köyünde toplam 1.038 → 1.060 tCO₂e, oda-gece 33,7 → 34,4 kgCO₂e oldu; kıyas notu değişmedi (B). Eski kayıtlarınız açıldığında yeni yönteme otomatik aktarılır.</p>
       <p class="foot">Hesaplama tarayıcınızda yapılır. Üye olmadan kullanırsanız hiçbir veri sunucuya gönderilmez; "bu tarayıcıda saklansın" seçeneği verileri yalnız kendi tarayıcınızda tutar. <b>Üye olup "Hesabıma kaydet" derseniz</b> e-posta adresiniz, tesis bilgileriniz ve girdiğiniz faaliyet verileri Commited Danışmanlık A.Ş. adına Google Firebase üzerinde saklanır; yalnız siz ve Commited yetkilileri görebilir. Kişisel verileriniz <a href="https://www.commitedevents.app/yeni-sayfa" target="_blank" rel="noopener">Aydınlatma Metni</a> kapsamında işlenir; silinmesi için info@commited.app'e yazabilirsiniz. © cOmmited — commited.app · Bir Fibabanka iştirakidir.</p>
@@ -767,6 +834,7 @@
 <script src="assets/js/turizm/agency.js"></script>
 <script src="assets/js/turizm/texts.js"></script>
 <script src="assets/js/turizm/storage.js"></script>
+<script src="assets/js/turizm/report.js"></script>
 <!-- Arayüz -->
 <script src="assets/js/turizm/ui.js"></script>
 <script src="assets/js/turizm/form.js"></script>

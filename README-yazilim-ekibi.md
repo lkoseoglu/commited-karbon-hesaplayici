@@ -4,6 +4,86 @@ commitedevents.app (Squarespace) sitesine iframe ile gömülen, sunucu gerektirm
 tarayıcıda yapan) karbon hesaplama modülleri. GitHub Pages üzerinden yayınlanır:
 `https://lkoseoglu.github.io/commited-karbon-hesaplayici/<dosya>.html`
 
+## 2026-10-29 — Sürdürülebilirlik raporu v6.1 (Adım 5): PDF rapor, tek sayfalık özet, kapak logosu, karbon dışı göstergeler
+
+> **Durum:** 2026-10-29'da onaylandı ve canlıya alındı (GitHub web arayüzünden klasör klasör yüklendi; Squarespace'te
+> değişiklik gerekmedi). Geri dönüş: bu bölümden önceki sürümün dosyalarını GitHub geçmişinden geri yükleyin.
+> Bu sürüm iki çalışmanın birleşimidir: 21 Ekim'de onaylanan 10 sayfalık rapor tasarımı + 29 Ekim'de başka bir
+> oturumda yapılan karbon dışı göstergeler ve AB 2024/825 ifade düzeltmeleri (o oturumun `claude/rapor-pdf.patch`
+> dosyasındaki modal önizleme ve `turizm-report.css` alınmadı; rapor yeni sekmede açılan tek HTML'dir).
+
+**Ne yapar:** otel hesabı tamamlanınca Adım 5'teki rapor kartında iki düğme var:
+- **PDF raporu oluştur:** kapaklı A4 rapor (örnek otelde 11 sayfa) yeni sekmede açılır.
+- **Tek sayfalık özet:** tur operatörleri ve kurumsal müşteriler için tek A4 sayfa.
+
+Açılan sekmedeki **PDF olarak kaydet** düğmesi tarayıcının yazdırma penceresini açar (hedef: "PDF olarak kaydet").
+Sunucu, ek kütüphane ya da üyelik gerekmez; belge tamamen tarayıcıda üretilir ve sayılar ekrandakilerle aynı
+`compute(state)` sonucundan gelir. Kartta **Kapak için logo ekle** ile otel logosu yüklenir (aşağıda).
+
+**Rapor sayfaları** (örnek otelde 11; bölüm numaraları ve içindekiler otomatik): kapak · yönetici özeti ve
+içindekiler · 1 tesis ve raporlama sınırları · 2 karbon ayak izi (kapsam ve kaynak dağılımı, enerji ve emisyon
+defteri) · 3 CHSB 2026 Türkiye kıyası · 4 kaynaklar, tedarik ve çalışanlar (misafir gecelemesi başına karbon,
+enerji, su, atık, kimyasal; yenilenebilir elektrik, geri kazanım, yerel satın alma ve çevre eğitimi oranları) ·
+5 azaltım planı · 6 NZMFH net sıfır yol haritası · 7 uyum, etkinlik ve dengeleme (Yeşil Taksonomi, etkinlik
+örneği, kalan emisyon, "Bu raporun kullanımı (AB 2024/825)") · 8 yöntem, emisyon faktörleri, terimler ·
+9 beyan (imza alanı) ve arka kapak bandı. Defter 12 satırı, faktör tablosu 11 satırı aşarsa kendi sayfasına
+geçer. Net sıfır hesabı yoksa 6, kaynak/tedarik/çalışan verisi hiç yoksa 4 atlanır; boş bloklar basılmaz.
+
+**Karbon dışı göstergeler (karbon hesabına girmez):**
+- Yeni alanlar `hotel.esg`: `chemicalsKg` (kimyasal, kg/yıl), `purchaseTotalTl` ve `purchaseLocalTl` (toplam ve
+  yerel tedarikçilerden satın alma, TL/yıl), `staff` (ortalama çalışan), `staffTrained` (çevre eğitimi alan).
+  Ekranda Adım 1'de "Kimyasal, tedarik ve çalışanlar" kutusu; Adım 2'de 4 kişi başı kutusu (`#intens_guest`).
+- `compute.js` → `R.esg` (`esgOf`): `perGuest {kwh, waterM3, wasteKg, chemKg, co2Kg}` (misafir gecelemesi
+  başına = otel raporlarındaki "kişi başı"), `localPct`, `trainedPct`, `recycleRate`, `wasteT`, `any`.
+  Yerel > toplam ya da eğitim alan > çalışan girilirse oran hesaplanmaz ve "Veri kontrolü"nde uyarı çıkar.
+- JSON çıktısında `sustainability` bloğu; logo JSON'a girmez. `appVersion` 6.1.0.
+
+**Kapak logosu:** `hotel.logo` = tarayıcıda en çok 600 × 240 piksele sığdırılmış PNG (JPEG ise JPEG) data URL.
+PNG, JPEG, SVG, WebP kabul edilir (en çok 5 MB); SVG baskıda net çıksın diye kutuya kadar büyütülür, en/boy
+oranı viewBox'tan okunur. `model.logoOf()` yalnız `data:image/png|jpeg;base64` biçimini ve en çok 400.000
+karakteri kabul eder (başka her şey `null`; rapora `esc()` ile girer). Logo kapakta beyaz bir plakada, sayfa
+başlıklarında küçük, özette üstte görünür; yoksa cOmmited yazısı. Tarayıcı belleğine ve kullanıcı "Hesabıma
+kaydet" derse bulut kaydına durumla birlikte gider.
+
+**AB 2024/825 (ECGT) ifadeleri:** ekranda, beyanda, özette ve raporda dengelemeye dayalı "karbon nötr / iklim
+nötr" iddiası yok; "karbon nötr konaklama/etkinlik" yerine "dengeleme maliyeti"; "yeşil elektrik" yerine
+"yenilenebilir elektrik belgesi" (Turizm + Kapsam 3); Adım 5'te "misafirlere nasıl anlatabilirsiniz"
+(yapabilirsiniz / yapmayın) kutusu; Metodoloji'de "Çevresel iddialar" bölümü. `tests/unit/turizm-esg.test.mjs`
+bu ifadelerin yalnız tırnak içinde, yasak örneği olarak geçebildiğini denetler.
+
+**Kod:**
+- `assets/js/turizm/report.js` → `TURIZM.report.build(state, R, opts)` belgenin HTML metnini döndürür (DOM'a
+  dokunmaz; Node'da da çalışır). `opts.variant`: `'report'` (varsayılan) ya da `'summary'` (tek sayfa).
+  `canBuild(state, R)` → `{ok, reason}`: düğmelerin durumu ve kullanıcıya gösterilen açıklama. Diğer `opts`:
+  `toolbar` (ekrandaki kaydet çubuğu), `sample` (örnek otel etiketi), `fontCss` (yerel yazı tipi; verilmezse
+  Google Fonts DM Sans), `generatedAt`, `reportId`.
+- `app.js` → `reportState()` her hesapta düğmeleri (`aria-disabled`), logo önizlemesini ve açıklamayı günceller;
+  `openReport(variant)` belgeyi `window.open('', '_blank')` + `document.write` ile açar. Açılır pencere
+  engellenirse kullanıcıya söylenir. Belge açıldıktan sonra veri değişirse "düğmeye yeniden basın" uyarısı çıkar.
+  Logo: `onLogoFile()` → `rasterLogo()`.
+- Tasarım: sabit A4 sayfalar (`@page` kenar boşluğu 0, `print-color-adjust: exact`), grafikler satır içi SVG
+  (mm biriminde), kapak deseni tesis adı, şehir ve yıldan üretilen eş yükselti çizgileri (`_isobaths`: her
+  tesise özgü, her seferinde aynı). Kapsam renkleri S1 `#D4643A`, S2 `#0B6FA0`, S3 `#13906A`; A–E not renkleri.
+  `CO<sub>2</sub>e` yazılır ve `≤`, `★` kullanılmaz (DM Sans'ta olmayan karakter başka yazı tipine düşmesin).
+- Yazı tipi: belgedeki Google Fonts bağlantısı `media="print"` + `onload` ile yüklenir (yavaş ağda ya da
+  engelleyici eklentide sayfa beklemez). "PDF olarak kaydet" yazı tipini en çok 3 sn bekler.
+- Tema: logo önizleme zemini `--logo-plate` (theme-sea.css; koyu modda da beyaz).
+
+**Denetim:**
+```bash
+node tools/report-sample.mjs /tmp/rapor            # örnek otel, kurgusal logoyla (tests/fixtures/ornek-logo.png):
+node tools/report-sample.mjs /tmp/rapor --no-logo  #   ornek-surdurulebilirlik-raporu.pdf + ozeti.pdf + sayfa PNG'leri;
+                                                   #   her sayfada kalan boşluğu (mm) yazar, taşma varsa hata döner
+```
+Yazı tipi dosyaları `@fontsource-variable/dm-sans` geliştirme bağımlılığından gelir (internet gerekmez).
+Testler: `tests/unit/turizm-report.test.mjs` (15) sayfa sayısı, sayıların hesapla aynı olması, içindekiler, eksik
+ve uç veriler, HTML kaçışı, defter satırları = HCMI toplamı, kaynaklar bölümü, özet, logo;
+`tests/unit/turizm-esg.test.mjs` (9) göstergeler ve ifade denetimi; `tests/e2e/turizm-v6.test.mjs` rapor (11
+sayfa, PDF 11 sayfa), özet (PDF 1 sayfa), logo yükleme/SVG/kaldırma, gösterge alanları ve uyarılar.
+
+**Sıradaki:** İngilizce rapor (metinler şimdilik `report.js` içinde; çeviri için tek tabloya taşınmalı),
+yıllar arası karşılaştırma (önceki yılın kaydı Firestore'da varsa).
+
 ## 2026-10-20 — Turizm v6: resmî HCMI motoru ve yeni ekranlar (2026-10-21'den beri CANLI)
 
 > **Durum:** v6 2026-10-21'de canlıya alındı. `turizm-karbon-hesaplayici.html` artık v6'dır; commitedevents.app
@@ -27,7 +107,7 @@ tarayıcıda yapan) karbon hesaplama modülleri. GitHub Pages üzerinden yayınl
 - **Veri kontrolü:** motorun ve sayfanın uyarıları tek listede; "Alana git" ilgili alanı açıp odaklar.
 - **Net sıfır:** NZMFH 2. baskı Tablo 3, Kategori 1 (bina enerjisi) — üç ölçütten en az biri; tablo görünümü.
 - **Çıktılar:** beyan, yönetici özeti, JSON (`commited.hotel.hcmi/2`), WhatsApp, **beyanı PDF olarak kaydet**
-  (yalnız beyan kartı basılır).
+  (yalnız beyan kartı basılır), kapaklı **sürdürülebilirlik raporu** ve **tek sayfalık özet** (en üstteki bölüm).
 - **Eski kayıtlar** (tarayıcıdaki `commited-hotel-v1` ve Firestore'daki eski `inputs`) açılırken
   otomatik aktarılır; aktarım notları kullanıcıya gösterilir.
 
@@ -60,6 +140,7 @@ assets/js/turizm/compute.js ekrandaki her sayı: compute(state) (saf)
 assets/js/turizm/agency.js  acente hesabı (v5 ile aynı)
 assets/js/turizm/texts.js   beyan, özet, JSON, WhatsApp metinleri
 assets/js/turizm/storage.js tarayıcı belleği (commited-turizm-v2; eski anahtarı okur)
+assets/js/turizm/report.js  sürdürülebilirlik raporu ve tek sayfalık özet: build() HTML metni üretir (DOM'a dokunmaz)
 assets/js/turizm/ui.js · form.js · render.js · chart.js · app.js   arayüz (DOM)
 assets/js/turizm/cloud.js   Firebase üyelik ve kayıt (ES modülü; yüklenemezse sayfa üyeliksiz çalışır)
 assets/css/turizm-app.css   sayfa stilleri (yalnız theme-sea.css değişkenleri; sabit renk yok)
@@ -91,9 +172,9 @@ aktarımı da sınar).
 
 ```bash
 npm install                     # bir kez
-npm test                        # 223 birim testi: HCMI motoru (resmî Excel altın referansı), Türkiye faktörleri,
-                                #   kıyas, net sıfır, önlemler, Türkçe sayı, durum modeli, hesap katmanı, tema
-npm run test:e2e                # 16 uçtan uca test: Turizm sayfası (12) + Turizm ve Kapsam 3 erişilebilirliği (4)
+npm test                        # 247 birim testi: HCMI motoru (resmî Excel altın referansı), Türkiye faktörleri,
+                                #   kıyas, net sıfır, önlemler, Türkçe sayı, durum modeli, hesap katmanı, rapor, göstergeler, tema
+npm run test:e2e                # 19 uçtan uca test: Turizm sayfası (15) + Turizm ve Kapsam 3 erişilebilirliği (4)
 node tests/e2e/probe-v6.mjs /tmp/ekran   # açık/koyu/telefon tam sayfa ekran görüntüleri
 ```
 
@@ -101,7 +182,7 @@ Uçtan uca testler gerçek Chromium'da çalışır, Firebase ve CDN'i saplar (in
 denetler: boş açılış, örnek sonuçlarının Node hesabıyla aynı olması, Türkçe sayı ve hatalı giriş, enerji
 satırı ekle/sil/birim/elle faktör, HCMI seçenekleri, önlemler ve patika, acente, tarayıcı belleği ve eski
 anahtar aktarımı, üyelik (kayıt → kaydet → çıkış → giriş → son kayıt; eski kaydı "Kayıtlarım"dan açma),
-kopyala/PDF, axe (WCAG 2.1 AA) açık ve koyu modda, 390 px'te yatay kaydırma olmaması.
+kopyala/PDF, PDF sürdürülebilirlik raporu, axe (WCAG 2.1 AA) açık ve koyu modda, 390 px'te yatay kaydırma olmaması.
 GitHub Actions (`.github/workflows/ci.yml`, 2026-10-21'den beri etkin) `main`'e her yüklemede ve her pull
 request'te ikisini de çalıştırır; sonuç GitHub'da **Actions** sekmesinde görünür (elle: Actions → testler → Run workflow).
 
@@ -225,6 +306,7 @@ Kapsam 3 1.418.888 kg); tema ve görünüm değişiklikleri bu sayıları deği�
 | `assets/js/tr-reference.js`, `benchmarks.js`, `pathway.js`, `measures.js`, `num-input.js` | Türkiye faktörleri ve kaynakları · CHSB 2026 kıyası · NZMFH net sıfır · azaltım önlemleri · Türkçe sayı. Her birinin başında kaynak ve kurallar yazılı. |
 | `assets/js/turizm/*.js`, `assets/css/turizm-app.css` | v6 sayfasının uygulama katmanı (yukarıdaki "Mimari"). |
 | `tools/promote-v6.py` | v6 önizlemesini canlı adrese taşıdı (2026-10-21; v5 arşivlendi). Tekrar çalıştırılırsa hiçbir şey yapmaz. |
+| `tools/report-sample.mjs` | Örnek otel için sürdürülebilirlik raporu, tek sayfalık özet ve sayfa görüntüleri üretir; sayfa taşmalarını ölçer (en üstteki "Sürdürülebilirlik raporu v6.1" bölümü). `tests/fixtures/ornek-logo.*` kurgusal örnek logodur. |
 | `.github/workflows/ci.yml` | GitHub Actions: `main`'e her yüklemede ve her pull request'te birim + uçtan uca testler (2026-10-21'den beri etkin). |
 | `kapsam3-karbon-hesaplayici.html` | Kapsam 3 Karbon Hesaplayıcı (turizm tedarik zinciri). Firebase (giriş/kayıt), SheetJS (Excel), jsPDF (PDF) CDN'den yüklenir. |
 | `karbon-admin.html` | Kapsam 3 hesaplayıcısının yönetici paneli: emisyon ve harcama faktörlerini düzenler, Firestore'a (`config/current`) yazar. Herkese açık sayfaya konmaz. |
