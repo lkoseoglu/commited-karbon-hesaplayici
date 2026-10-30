@@ -46,6 +46,7 @@
   --hero-ink:#F2F9FC; --hero-soft:#DDEFF8; --hero-label:#8FD0EE;
   --wave-1:rgba(255,255,255,.10); --wave-2:rgba(255,255,255,.18); --wave-3:var(--bg);
   --hero-glass:rgba(255,255,255,.10); --hero-glass-line:rgba(255,255,255,.30);
+  --hero-good:#8FE0AE; --hero-bad:#FF9E92; --hero-warn:#F2D27A;   /* koyu ust alanda durum renkleri (iki modda ayni) */
 
   /* --- dugmeler --- */
   --btn-a:#0D7AAE; --btn-b:#075E8C;
@@ -88,6 +89,7 @@
     --hero-ink:#F2F9FC; --hero-soft:#CFE8F5; --hero-label:#8FD0EE;
     --wave-1:rgba(255,255,255,.07); --wave-2:rgba(255,255,255,.12); --wave-3:var(--bg);
     --hero-glass:rgba(255,255,255,.08); --hero-glass-line:rgba(255,255,255,.26);
+    --hero-good:#8FE0AE; --hero-bad:#FF9E92; --hero-warn:#F2D27A;
     --btn-a:#2D95C8; --btn-b:#1A78A8;
     --shadow:0 1px 2px rgba(0,0,0,.35),0 8px 24px rgba(0,0,0,.28);
     --shadow-h:0 2px 4px rgba(0,0,0,.4),0 14px 32px rgba(0,0,0,.4);
@@ -116,6 +118,7 @@
   --hero-ink:#F2F9FC; --hero-soft:#CFE8F5; --hero-label:#8FD0EE;
   --wave-1:rgba(255,255,255,.07); --wave-2:rgba(255,255,255,.12); --wave-3:var(--bg);
   --hero-glass:rgba(255,255,255,.08); --hero-glass-line:rgba(255,255,255,.26);
+  --hero-good:#8FE0AE; --hero-bad:#FF9E92; --hero-warn:#F2D27A;
   --btn-a:#2D95C8; --btn-b:#1A78A8;
   --shadow:0 1px 2px rgba(0,0,0,.35),0 8px 24px rgba(0,0,0,.28);
   --shadow-h:0 2px 4px rgba(0,0,0,.4),0 14px 32px rgba(0,0,0,.4);
