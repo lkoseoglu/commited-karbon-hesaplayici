@@ -1,0 +1,578 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Commited · Dijital Ürün Pasaportu</title>
+<meta name="description" content="Tekstil ve elektronik ürünler için dijital ürün pasaportu oluşturun ve QR ile yayınlayın. Powered by Commited.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;650;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
+<style>
+:root{
+  --bg:#F5F7F4; --surface:#FFFFFF; --surface-2:#EEF2ED;
+  --fg:#15201B; --muted:#5C6B63; --line:#E1E7E1;
+  --accent:#0F6E4E; --accent-2:#148A61; --accent-ink:#FFFFFF;
+  --public:#0F6E4E; --public-bg:#E4F1EA;
+  --authority:#9A6412; --authority-bg:#F6ECD8;
+  --internal:#5A6472; --internal-bg:#E9ECF0;
+  --danger:#B23B2E;
+  --radius:14px; --radius-sm:9px;
+  --mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+  --sans:'IBM Plex Sans',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0D1310; --surface:#141D18; --surface-2:#1B2620;
+  --fg:#E7EDE8; --muted:#97A69D; --line:#243029;
+  --accent:#3FBF8E; --accent-2:#51D2A0; --accent-ink:#06120C;
+  --public:#4FC996; --public-bg:#143026;
+  --authority:#D9A441; --authority-bg:#33280F;
+  --internal:#93A0AE; --internal-bg:#1E2630;
+  --danger:#E8745F; color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#0D1310; --surface:#141D18; --surface-2:#1B2620;
+  --fg:#E7EDE8; --muted:#97A69D; --line:#243029;
+  --accent:#3FBF8E; --accent-2:#51D2A0; --accent-ink:#06120C;
+  --public:#4FC996; --public-bg:#143026;
+  --authority:#D9A441; --authority-bg:#33280F;
+  --internal:#93A0AE; --internal-bg:#1E2630;
+  --danger:#E8745F; color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);line-height:1.5;font-size:15px;-webkit-font-smoothing:antialiased}
+img{max-width:100%}
+a{color:var(--accent)}
+h1,h2,h3{text-wrap:balance;margin:0}
+.mono{font-family:var(--mono)}
+.wrap{max-width:860px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.topbar{position:sticky;top:0;z-index:20;background:var(--surface);border-bottom:1px solid var(--line)}
+.topbar .wrap{display:flex;align-items:center;gap:12px;padding-block:12px}
+.brand{display:flex;align-items:center;gap:9px;font-weight:600;letter-spacing:-.01em;cursor:pointer}
+.brand .dot{width:22px;height:22px;border-radius:6px;background:var(--accent);display:grid;place-items:center;color:var(--accent-ink);font-weight:700;font-size:13px;font-family:var(--mono)}
+.brand small{display:block;font-weight:500;color:var(--muted);font-size:11px;letter-spacing:.04em;text-transform:uppercase}
+.spacer{flex:1}
+.btn{font-family:inherit;font-size:14px;font-weight:600;border-radius:var(--radius-sm);border:1px solid var(--line);background:var(--surface);color:var(--fg);padding:9px 15px;cursor:pointer;display:inline-flex;align-items:center;gap:7px;text-decoration:none}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary:hover{background:var(--accent-2);border-color:var(--accent-2)}
+.btn.sm{padding:6px 11px;font-size:13px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.theme-btn{border:1px solid var(--line);background:var(--surface);color:var(--muted);width:36px;height:36px;border-radius:var(--radius-sm);cursor:pointer;font-size:15px}
+main{padding-block:22px 64px}
+.eyebrow{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.page-h{font-size:24px;font-weight:650;letter-spacing:-.02em;margin:4px 0 2px}
+.sub{color:var(--muted);font-size:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px;margin-top:18px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px;display:flex;flex-direction:column;gap:9px;text-decoration:none;color:inherit;cursor:pointer}
+.card:hover{border-color:var(--accent)}
+.card .cat{font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.card .nm{font-size:16px;font-weight:600;letter-spacing:-.01em;min-width:0;overflow-wrap:anywhere}
+.card .br{color:var(--muted);font-size:13px}
+.card .foot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:4px;padding-top:10px;border-top:1px solid var(--line)}
+.co2{font-family:var(--mono);font-size:12px;color:var(--accent);font-weight:600}
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;letter-spacing:.02em}
+.pill.pub{color:var(--public);background:var(--public-bg)}
+.pill.auth{color:var(--authority);background:var(--authority-bg)}
+.pill.int{color:var(--internal);background:var(--internal-bg)}
+.pill.ok{color:var(--public);background:var(--public-bg)}
+.empty{border:1px dashed var(--line);border-radius:var(--radius);padding:40px 22px;text-align:center;color:var(--muted);margin-top:18px;background:var(--surface)}
+.notice{border:1px solid var(--line);background:var(--surface-2);border-radius:var(--radius-sm);padding:12px 14px;font-size:13.5px;color:var(--muted);margin-top:16px}
+.chooser{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px}
+.choice{border:1.5px solid var(--line);border-radius:var(--radius);background:var(--surface);padding:18px;cursor:pointer;text-align:left;font-family:inherit;color:inherit}
+.choice:hover{border-color:var(--accent)}
+.choice.on{border-color:var(--accent);background:var(--public-bg)}
+.choice h3{font-size:16px;margin-bottom:4px}
+.choice p{margin:0;color:var(--muted);font-size:13px}
+.section{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-top:14px}
+.section>h3{font-size:12px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:13px}
+.field:last-child{margin-bottom:0}
+.field>label{font-size:13.5px;font-weight:600;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.field .req{color:var(--danger)}
+.field .u{color:var(--muted);font-weight:500;font-size:12px}
+.field input,.field textarea,.field select{font-family:inherit;font-size:14px;padding:9px 11px;border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--bg);color:var(--fg);width:100%}
+.field textarea{resize:vertical;min-height:58px}
+.field input:focus,.field textarea:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent)}
+.field.invalid input,.field.invalid textarea{border-color:var(--danger)}
+.err{color:var(--danger);font-size:12px}
+.hint{color:var(--muted);font-size:12px}
+.check{display:flex;align-items:center;gap:9px;font-size:14px;cursor:pointer}
+.check input{width:17px;height:17px;accent-color:var(--accent)}
+.rep-row{display:flex;gap:8px;margin-bottom:7px}
+.rep-row input{min-width:0}
+.rep-row .rm{flex:0 0 auto;width:34px;border:1px solid var(--line);background:var(--surface);color:var(--muted);border-radius:var(--radius-sm);cursor:pointer}
+.add-row{font-size:13px;color:var(--accent);background:none;border:none;cursor:pointer;padding:2px 0;font-weight:600}
+.publishbar{position:sticky;bottom:0;z-index:15;margin-top:16px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:13px 15px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.progress{flex:1;min-width:140px}
+.progress .bar{height:7px;border-radius:999px;background:var(--surface-2);overflow:hidden}
+.progress .bar i{display:block;height:100%;background:var(--accent);width:0;transition:width .25s}
+.progress small{color:var(--muted);font-size:12px}
+.pp-hero{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:20px;display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start}
+.pp-hero .main{flex:1;min-width:200px;display:flex;flex-direction:column;gap:6px}
+.pp-hero h1{font-size:23px;letter-spacing:-.02em}
+.pp-hero .br{color:var(--muted);font-weight:500}
+.qrbox{background:#fff;border-radius:var(--radius-sm);padding:10px;display:grid;place-items:center}
+.qrbox img,.qrbox canvas{display:block}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:16px}
+.fact{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-sm);padding:13px}
+.fact .k{font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.fact .v{font-size:18px;font-weight:650;margin-top:3px;font-family:var(--mono);letter-spacing:-.01em}
+.pp-sec{margin-top:16px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px}
+.pp-sec h3{font-size:12px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+.row{display:flex;justify-content:space-between;gap:16px;padding:8px 0;border-top:1px solid var(--line)}
+.row:first-of-type{border-top:none}
+.row .k{color:var(--muted);font-size:13.5px}
+.row .v{font-weight:550;text-align:right;overflow-wrap:anywhere}
+.certs{display:flex;flex-wrap:wrap;gap:8px}
+.cert{border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:12.5px;font-weight:600;display:flex;align-items:center;gap:6px}
+.cert .n{font-family:var(--mono);color:var(--muted);font-weight:500}
+.sharebox{margin-top:14px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.sharebox input{flex:1;min-width:180px;font-family:var(--mono);font-size:12px;padding:8px 10px;border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--bg);color:var(--fg)}
+.foot-note{margin-top:22px;color:var(--muted);font-size:12px;text-align:center;line-height:1.6}
+.back{display:inline-flex;align-items:center;gap:6px;color:var(--muted);font-size:13px;text-decoration:none;margin-bottom:8px;font-weight:600;background:none;border:none;cursor:pointer;font-family:inherit}
+.lang{display:inline-flex;border:1px solid var(--line);border-radius:var(--radius-sm);overflow:hidden}
+.lang button{font-family:var(--mono);font-size:12px;font-weight:600;border:none;background:var(--surface);color:var(--muted);padding:0 10px;height:34px;cursor:pointer}
+.lang button.on{background:var(--accent);color:var(--accent-ink)}
+.label-panel{margin-top:16px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px}
+.label-panel h3{font-size:12px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+.label-opts{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.label-opts button{font-family:inherit;font-size:13px;font-weight:600;border:1.5px solid var(--line);background:var(--surface);color:var(--fg);border-radius:var(--radius-sm);padding:7px 12px;cursor:pointer}
+.label-opts button.on{border-color:var(--accent);background:var(--public-bg)}
+.label-stage{background:var(--surface-2);border-radius:var(--radius-sm);padding:18px;display:grid;place-items:center;overflow:auto}
+.dpp-label{background:#fff;color:#111;border:1px dashed #9aa59f;font-family:var(--sans);display:flex;gap:3mm;align-items:center;padding:2.5mm;box-sizing:border-box}
+.dpp-label .lq{flex:0 0 auto;display:grid;place-items:center}
+.dpp-label .lq img,.dpp-label .lq canvas{display:block;width:100%!important;height:auto!important}
+.dpp-label .lt{flex:1;min-width:0;display:flex;flex-direction:column;gap:.6mm;line-height:1.15}
+.dpp-label .l-ey{font-size:5.5pt;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#0F6E4E}
+.dpp-label .l-nm{font-weight:700;overflow-wrap:anywhere}
+.dpp-label .l-br{color:#444}
+.dpp-label .l-co{font-family:var(--mono);font-weight:600;color:#0F6E4E}
+.dpp-label .l-sc{color:#333}
+.dpp-label .l-hri{font-family:var(--mono);font-size:5pt;color:#111;overflow-wrap:anywhere}.dpp-label.s70 .l-hri{font-size:6pt}.dpp-label.s100 .l-hri{font-size:8pt}
+.dpp-label .l-ft{font-size:5pt;color:#666;margin-top:auto}
+.dpp-label.s50{width:50mm;height:30mm}.dpp-label.s50 .lq{width:24mm}.dpp-label.s50 .l-nm{font-size:7pt}.dpp-label.s50 .l-br,.dpp-label.s50 .l-co,.dpp-label.s50 .l-sc{font-size:5.5pt}
+.dpp-label.s70{width:70mm;height:40mm}.dpp-label.s70 .lq{width:33mm}.dpp-label.s70 .l-nm{font-size:9pt}.dpp-label.s70 .l-br,.dpp-label.s70 .l-co,.dpp-label.s70 .l-sc{font-size:6.5pt}
+.dpp-label.s100{width:100mm;height:60mm;padding:4mm;gap:5mm}.dpp-label.s100 .lq{width:50mm}.dpp-label.s100 .l-ey{font-size:7pt}.dpp-label.s100 .l-nm{font-size:13pt}.dpp-label.s100 .l-br,.dpp-label.s100 .l-co,.dpp-label.s100 .l-sc{font-size:8.5pt}.dpp-label.s100 .l-ft{font-size:6pt}
+@media print{
+  @page{margin:8mm}
+  body.printing{background:#fff!important}
+  body.printing *{visibility:hidden}
+  body.printing #printArea,body.printing #printArea *{visibility:visible}
+  body.printing #printArea{position:absolute;left:0;top:0;padding:0;background:none}
+  body.printing .dpp-label{border:.2mm solid #bbb}
+}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.001ms!important;transition:none!important}}
+@media (max-width:480px){.chooser{grid-template-columns:1fr}.page-h{font-size:21px}}
+</style>
+</head>
+<body>
+<div class="topbar"><div class="wrap">
+  <div class="brand" onclick="goPortal()">
+    <span class="dot">C</span>
+    <span>Commited Pasaport<small id="brandSub">Dijital Ürün Pasaportu</small></span>
+  </div>
+  <span class="spacer"></span>
+  <div class="lang" role="group" aria-label="Dil / Language"><button id="lTR" onclick="setLang('tr')">TR</button><button id="lEN" onclick="setLang('en')">EN</button></div>
+  <button class="theme-btn" id="themeBtn" title="Tema" aria-label="Tema değiştir">◐</button>
+</div></div>
+<main><div class="wrap" id="app"></div></main>
+
+<script>
+"use strict";
+/* ===== field schema (common + category) ===== */
+var COMMON=[
+ {title:"Kimlik",fields:[
+   {c:"product_name",l:"Ürün adı",t:"TEXT",r:1,a:"PUBLIC"},
+   {c:"brand",l:"Marka",t:"TEXT",r:1,a:"PUBLIC"},
+   {c:"sku",l:"Model / SKU",t:"TEXT",r:1,a:"PUBLIC"},
+   {c:"gtin",l:"GTIN (barkod)",t:"TEXT",a:"PUBLIC",note:"GS1 Türkiye'den alınan 8, 12, 13 veya 14 haneli numara — kontrol hanesi doğrulanır"},
+   {c:"lot",l:"Parti / lot no",t:"TEXT",a:"PUBLIC",note:"Parti düzeyinde pasaport için (GS1 AI 10)"},
+   {c:"serial",l:"Seri no",t:"TEXT",a:"PUBLIC",note:"Tekil ürün düzeyinde pasaport için (GS1 AI 21)"},
+   {c:"weight_g",l:"Ağırlık",t:"NUMBER",u:"g",a:"PUBLIC"},
+   {c:"color",l:"Renk",t:"TEXT",a:"PUBLIC"}]},
+ {title:"Menşe",fields:[
+   {c:"country_origin",l:"Menşe ülkesi",t:"TEXT",r:1,a:"PUBLIC"},
+   {c:"facility",l:"Üretim tesisi",t:"TEXT",r:1,a:"AUTHORITY"}]},
+ {title:"Çevresel performans",fields:[
+   {c:"carbon",l:"Karbon ayak izi",t:"NUMBER",u:"kgCO₂e",a:"PUBLIC",note:"Üretimde Commited karbon motorundan otomatik gelecek"}]}
+];
+var TAIL=[
+ {title:"Kullanım ve yaşam sonu",fields:[
+   {c:"care",l:"Bakım talimatları",t:"TEXTAREA",r:1,a:"PUBLIC"},
+   {c:"end_of_life",l:"Geri dönüşüm / bertaraf",t:"TEXTAREA",r:1,a:"PUBLIC"}]},
+ {title:"Sertifikalar",fields:[
+   {c:"certificates",l:"Sertifikalar",t:"REP",a:"PUBLIC",sub:[{c:"type",l:"Tür (ör. GOTS)"},{c:"number",l:"No"}]}]}
+];
+var TEXTILE=[
+ {title:"Malzeme",fields:[
+   {c:"fiber_composition",l:"Lif kompozisyonu",t:"REP",r:1,a:"PUBLIC",sub:[{c:"fiber",l:"Lif"},{c:"pct",l:"%",t:"NUMBER"}]},
+   {c:"recycled_content",l:"Geri dönüştürülmüş içerik",t:"NUMBER",u:"%",a:"PUBLIC"},
+   {c:"fabric_weight",l:"Kumaş gramajı",t:"NUMBER",u:"g/m²",a:"PUBLIC"}]},
+ {title:"Kimyasal güvenlik",fields:[
+   {c:"reach",l:"REACH uyumlu",t:"BOOL",r:1,a:"PUBLIC"},
+   {c:"azo_free",l:"Azo boya içermez",t:"BOOL",r:1,a:"AUTHORITY"},
+   {c:"svhc",l:"SVHC (>%0,1) notu",t:"TEXTAREA",a:"AUTHORITY"}]},
+ {title:"Tedarik zinciri",fields:[
+   {c:"tier1_processes",l:"Tier 1 süreçler",t:"TEXTAREA",r:1,a:"AUTHORITY",note:"ör. boyama, dikim"},
+   {c:"tier1_suppliers",l:"Tier 1 tedarikçiler",t:"REP",a:"AUTHORITY",sub:[{c:"name",l:"Tedarikçi"}]}]},
+ {title:"Dayanıklılık",fields:[
+   {c:"durability",l:"Dayanıklılık / onarılabilirlik",t:"TEXTAREA",a:"PUBLIC"}]}
+];
+var ELECTRONICS=[
+ {title:"Malzeme",fields:[
+   {c:"material_comp",l:"Malzeme bileşimi",t:"REP",r:1,a:"PUBLIC",sub:[{c:"mat",l:"Malzeme"},{c:"pct",l:"%",t:"NUMBER"}]},
+   {c:"crm",l:"Kritik hammaddeler",t:"TEXTAREA",a:"AUTHORITY"}]},
+ {title:"Madde uyumu",fields:[
+   {c:"rohs",l:"RoHS uyumlu",t:"BOOL",r:1,a:"PUBLIC"},
+   {c:"reach_scip",l:"REACH / SCIP notu",t:"TEXTAREA",a:"AUTHORITY"}]},
+ {title:"Enerji",fields:[
+   {c:"energy_class",l:"Enerji verimlilik sınıfı",t:"TEXT",a:"PUBLIC"},
+   {c:"power_kwh_year",l:"Güç tüketimi",t:"NUMBER",u:"kWh/yıl",a:"PUBLIC"}]},
+ {title:"Dayanıklılık ve onarım",fields:[
+   {c:"repair_score",l:"Onarılabilirlik skoru",t:"NUMBER",a:"PUBLIC"},
+   {c:"spare_years",l:"Yedek parça süresi",t:"NUMBER",u:"yıl",a:"PUBLIC"},
+   {c:"sw_update_years",l:"Yazılım güncelleme süresi",t:"NUMBER",u:"yıl",a:"PUBLIC"}]},
+ {title:"Güvenlik ve batarya",fields:[
+   {c:"ce_mark",l:"CE işareti",t:"BOOL",r:1,a:"PUBLIC"},
+   {c:"battery_passport",l:"Batarya pasaportu bağlantısı",t:"URL",a:"PUBLIC"}]},
+ {title:"Yaşam sonu",fields:[
+   {c:"weee",l:"WEEE / geri dönüşüm bilgisi",t:"TEXTAREA",r:1,a:"PUBLIC"}]}
+];
+var CATS={
+  TEXTILE:{label:"Tekstil",desc:"Hazır giyim, ev tekstili, aksesuar",sections:COMMON.concat(TEXTILE,TAIL)},
+  ELECTRONICS:{label:"Elektronik",desc:"Tüketici elektroniği, cihazlar",sections:COMMON.concat(ELECTRONICS,TAIL)}
+};
+function fieldsOf(cat){var o=[];CATS[cat].sections.forEach(function(s){s.fields.forEach(function(f){o.push(f)})});return o;}
+function fieldDef(cat,code){return fieldsOf(cat).filter(function(f){return f.c===code})[0];}
+
+/* ===== i18n (TR / EN) ===== */
+var EN_F={product_name:"Product name",brand:"Brand",sku:"Model / SKU",gtin:"GTIN (barcode)",lot:"Batch / lot no",serial:"Serial no",weight_g:"Weight",color:"Colour",
+ country_origin:"Country of origin",facility:"Manufacturing facility",carbon:"Carbon footprint",
+ care:"Care instructions",end_of_life:"Recycling / disposal",certificates:"Certificates",
+ fiber_composition:"Fibre composition",recycled_content:"Recycled content",fabric_weight:"Fabric weight",
+ reach:"REACH compliant",azo_free:"Free of azo dyes",svhc:"SVHC (>0.1%) note",
+ tier1_processes:"Tier 1 processes",tier1_suppliers:"Tier 1 suppliers",durability:"Durability / repairability",
+ material_comp:"Material composition",crm:"Critical raw materials",rohs:"RoHS compliant",reach_scip:"REACH / SCIP note",
+ energy_class:"Energy efficiency class",power_kwh_year:"Power consumption",repair_score:"Repairability score",
+ spare_years:"Spare parts availability",sw_update_years:"Software update period",ce_mark:"CE marking",
+ battery_passport:"Battery passport link",weee:"WEEE / recycling information"};
+var EN_U={"yıl":"years","kWh/yıl":"kWh/year"};
+var EN_S={"Kimlik":"Identity","Menşe":"Origin","Çevresel performans":"Environmental performance",
+ "Kullanım ve yaşam sonu":"Use and end of life","Sertifikalar":"Certificates","Malzeme":"Materials",
+ "Kimyasal güvenlik":"Chemical safety","Tedarik zinciri":"Supply chain","Dayanıklılık":"Durability",
+ "Madde uyumu":"Substance compliance","Enerji":"Energy","Dayanıklılık ve onarım":"Durability and repair",
+ "Güvenlik ve batarya":"Safety and battery","Yaşam sonu":"End of life"};
+var EN_N={"GS1 Türkiye'den alınan 8, 12, 13 veya 14 haneli numara — kontrol hanesi doğrulanır":"8, 12, 13 or 14-digit number from GS1 — check digit is validated","Parti düzeyinde pasaport için (GS1 AI 10)":"For batch-level passports (GS1 AI 10)","Tekil ürün düzeyinde pasaport için (GS1 AI 21)":"For item-level passports (GS1 AI 21)","Üretimde Commited karbon motorundan otomatik gelecek":"Will be filled automatically by the Commited carbon engine","ör. boyama, dikim":"e.g. dyeing, sewing"};
+var EN_SUB={"Tür (ör. GOTS)":"Type (e.g. GOTS)","Lif":"Fibre","Malzeme":"Material","Tedarikçi":"Supplier"};
+var UI={
+ tr:{cat_TEXTILE:"Tekstil",cat_ELECTRONICS:"Elektronik",desc_TEXTILE:"Hazır giyim, ev tekstili, aksesuar",desc_ELECTRONICS:"Tüketici elektroniği, cihazlar",
+  sub_brand:"Dijital Ürün Pasaportu",portal_t:"Üretici paneli",portal_s:"Ürünlerinizi ekleyin, pasaport oluşturun ve QR ile yayınlayın.",
+  new_btn:"+ Yeni pasaport",empty_b:"Henüz pasaport oluşturmadınız.",empty_s:"Başlamak için “Yeni pasaport” oluşturun.",live:"Yayında",unnamed:"(adsız)",
+  wiz_t:"Yeni pasaport",wiz_s:"Ürün kategorisini seçin, verileri girin, yayınlayın.",back:"‹ Panele dön",
+  a_PUBLIC:"Herkese açık",a_AUTHORITY:"Otorite",a_INTERNAL:"İç",yes:"Evet",no:"Hayır",add_row:"+ Satır ekle",del:"Sil",
+  required:"Zorunlu alan",req_count:"zorunlu alan",publish:"Yayınla ve QR oluştur",
+  dpp:"Dijital Ürün Pasaportu",unnamed_p:"(adsız ürün)",verified:"✓ Doğrulanmış pasaport",
+  f_carbon:"Karbon ayak izi",f_rec:"Geri dönüştürülmüş",f_origin:"Menşe",f_energy:"Enerji sınıfı",
+  auth_show:"Otorite görünümü (gümrük/denetim)",auth_hide:"Otorite alanlarını gizle",copy:"Bağlantıyı kopyala",copied:"Kopyalandı ✓",
+  label_btn:"QR etiketi",label_t:"Ürün etiketi",label_lang:"Etiket dili",print:"Yazdır / PDF",
+  label_hint:"Gerçek boyutta yazdırılır (tarayıcıda ölçek %100). QR'ın ürün, ambalaj veya eşlik eden belgede bulunması gerekir.",
+  scan:"Ürün pasaportu için okutun",
+  foot:"Bu pasaport ESPR (EU 2024/1781) çerçevesine göre hazırlanmıştır.",
+  lang_note:"Girilen değerler (ör. bakım talimatı) yazıldığı dilde gösterilir.",bad_gtin:"Geçersiz GTIN (hane sayısı veya kontrol hanesi hatalı)",ids:"Tanımlayıcılar",dl:"GS1 Digital Link",gran:"Pasaport düzeyi",g_model:"Model",g_batch:"Parti",g_item:"Tekil ürün",jsonld:"JSON-LD"},
+ en:{cat_TEXTILE:"Textile",cat_ELECTRONICS:"Electronics",desc_TEXTILE:"Apparel, home textiles, accessories",desc_ELECTRONICS:"Consumer electronics, appliances",
+  sub_brand:"Digital Product Passport",portal_t:"Manufacturer panel",portal_s:"Add your products, create passports and publish them with a QR code.",
+  new_btn:"+ New passport",empty_b:"You have not created a passport yet.",empty_s:"Create a “New passport” to get started.",live:"Live",unnamed:"(untitled)",
+  wiz_t:"New passport",wiz_s:"Choose a product category, enter the data, publish.",back:"‹ Back to panel",
+  a_PUBLIC:"Public",a_AUTHORITY:"Authority",a_INTERNAL:"Internal",yes:"Yes",no:"No",add_row:"+ Add row",del:"Remove",
+  required:"Required field",req_count:"required fields",publish:"Publish and create QR",
+  dpp:"Digital Product Passport",unnamed_p:"(untitled product)",verified:"✓ Verified passport",
+  f_carbon:"Carbon footprint",f_rec:"Recycled content",f_origin:"Origin",f_energy:"Energy class",
+  auth_show:"Authority view (customs/surveillance)",auth_hide:"Hide authority fields",copy:"Copy link",copied:"Copied ✓",
+  label_btn:"QR label",label_t:"Product label",label_lang:"Label language",print:"Print / PDF",
+  label_hint:"Prints at actual size (set browser scale to 100%). The QR must be on the product, its packaging or accompanying documents.",
+  scan:"Scan for the product passport",
+  foot:"This passport is prepared under the ESPR (EU 2024/1781) framework.",
+  lang_note:"Entered values (e.g. care instructions) are shown in the language they were written in.",bad_gtin:"Invalid GTIN (wrong length or check digit)",ids:"Identifiers",dl:"GS1 Digital Link",gran:"Passport level",g_model:"Model",g_batch:"Batch",g_item:"Item",jsonld:"JSON-LD"}
+};
+var LANG=(function(){var m=/[?&]l=(en|tr)/.exec(location.search);if(m)return m[1];
+  try{var s=localStorage.getItem("dpp-lang");if(s)return s}catch(e){}
+  return /^tr/i.test(navigator.language||"tr")?"tr":"en";})();
+function T(k){return (UI[LANG]&&UI[LANG][k])||UI.tr[k]||k;}
+function TL(k,lang){return (UI[lang]&&UI[lang][k])||k;}
+function FL(f,lang){lang=lang||LANG;return lang==="en"&&EN_F[f.c]?EN_F[f.c]:f.l;}
+function FU(f,lang){lang=lang||LANG;return lang==="en"&&EN_U[f.u]?EN_U[f.u]:f.u;}
+function SL(t){return LANG==="en"&&EN_S[t]?EN_S[t]:t;}
+function NL(n){return LANG==="en"&&EN_N[n]?EN_N[n]:n;}
+function SUBL(l){return LANG==="en"&&EN_SUB[l]?EN_SUB[l]:l;}
+function paintLang(){var a=document.getElementById("lTR"),b=document.getElementById("lEN");
+  if(a)a.classList.toggle("on",LANG==="tr");if(b)b.classList.toggle("on",LANG==="en");
+  document.documentElement.lang=LANG;var bs=document.getElementById("brandSub");if(bs)bs.textContent=T("sub_brand");}
+window.setLang=function(l){LANG=l;try{localStorage.setItem("dpp-lang",l)}catch(e){}
+  paintLang();var w=document.getElementById("form")||document.querySelector(".chooser");
+  if(!currentParam()&&w){paintWizard();}else{render();}};
+
+/* ===== helpers ===== */
+var app=document.getElementById("app");
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function setTheme(t){try{document.documentElement.setAttribute("data-theme",t);localStorage.setItem("dpp-theme",t)}catch(e){}}
+(function(){try{var t=localStorage.getItem("dpp-theme");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}})();
+document.getElementById("themeBtn").onclick=function(){
+  var cur=document.documentElement.getAttribute("data-theme");
+  var dark=cur?cur==="dark":matchMedia("(prefers-color-scheme:dark)").matches;
+  setTheme(dark?"light":"dark");
+};
+function baseUrl(){return location.origin+location.pathname;}
+function encodePassport(p){return LZString.compressToEncodedURIComponent(JSON.stringify(p));}
+function decodePassport(s){try{return JSON.parse(LZString.decompressFromEncodedURIComponent(s))}catch(e){return null}}
+function getSaved(){try{return JSON.parse(localStorage.getItem("dpp-passports")||"[]")}catch(e){return[]}}
+function saveLocal(p){try{var a=getSaved();a.unshift(p);localStorage.setItem("dpp-passports",JSON.stringify(a.slice(0,100)))}catch(e){}}
+
+/* ===== GS1 ===== */
+function gtinDigits(g){return String(g||"").replace(/\D/g,"");}
+function gtinValid(g){var d=gtinDigits(g);if([8,12,13,14].indexOf(d.length)<0)return false;
+  var sum=0,body=d.slice(0,-1);for(var i=0;i<body.length;i++){var n=+body[body.length-1-i];sum+=n*(i%2===0?3:1);}
+  return (10-sum%10)%10===+d[d.length-1];}
+function gtin14(g){var d=gtinDigits(g);while(d.length<14)d="0"+d;return d;}
+function digitalLink(v){if(!v.gtin||!gtinValid(v.gtin))return null;
+  return "https://id.gs1.org/01/"+gtin14(v.gtin)+(v.lot?"/10/"+encodeURIComponent(v.lot):"")+(v.serial?"/21/"+encodeURIComponent(v.serial):"");}
+function hri(v){if(!v.gtin||!gtinValid(v.gtin))return "";return "(01) "+gtin14(v.gtin)+(v.lot?" (10) "+v.lot:"")+(v.serial?" (21) "+v.serial:"");}
+function granularity(v){return v.serial?"g_item":(v.lot?"g_batch":"g_model");}
+function passportUrl(v,enc){var q="";if(v.gtin&&gtinValid(v.gtin)){q="01="+gtin14(v.gtin)+(v.lot?"&10="+encodeURIComponent(v.lot):"")+(v.serial?"&21="+encodeURIComponent(v.serial):"")+"&";}
+  return baseUrl()+"?"+q+"p="+enc;}
+
+/* ===== routing ===== */
+function currentParam(){var m=/[?&]p=([^&]+)/.exec(location.search);return m?m[1]:null;}
+function render(){
+  var enc=currentParam();
+  if(enc){var p=decodePassport(enc);if(p)return renderPublic(p,enc);}
+  renderPortal();
+}
+window.goPortal=function(){history.replaceState(null,"",baseUrl());render();};
+window.addEventListener("popstate",render);
+
+/* ===== portal ===== */
+function head(title,sub){return '<span class="eyebrow">Commited · DPP</span><h1 class="page-h">'+esc(title)+'</h1>'+(sub?'<div class="sub">'+esc(sub)+'</div>':'');}
+function renderPortal(){
+  var saved=getSaved();
+  var h=head(T("portal_t"),T("portal_s"))
+   +'<div style="margin-top:16px"><button class="btn primary" onclick="startWizard()">'+T("new_btn")+'</button></div>';
+  if(!saved.length){
+    h+='<div class="empty"><b>'+T("empty_b")+'</b><br>'+T("empty_s")+'</div>';
+  }else{
+    h+='<div class="grid">';
+    saved.forEach(function(p){var enc=encodePassport(p);var co=p.values&&p.values.carbon;
+      h+='<div class="card" onclick="openEnc(\''+enc+'\')">'
+        +'<span class="cat">'+esc(T("cat_"+p.category))+'</span>'
+        +'<span class="nm">'+esc(p.name||T("unnamed"))+'</span>'
+        +'<span class="br">'+esc(p.brand||"")+'</span>'
+        +'<span class="foot"><span class="pill ok">'+T("live")+'</span>'
+        +(co?'<span class="co2">'+esc(co)+' kgCO₂e</span>':'')+'</span></div>';
+    });
+    h+='</div>';
+  }
+  app.innerHTML=h;
+}
+window.openEnc=function(enc){var p=decodePassport(enc)||{values:{}};var u=passportUrl(p.values||{},enc);history.replaceState(null,"",u.slice(u.indexOf("?")));render();};
+
+/* ===== wizard ===== */
+var draft={category:null,values:{}};
+window.startWizard=function(){draft={category:null,values:{}};
+  try{var d=localStorage.getItem("dpp-draft");if(d)draft=JSON.parse(d)}catch(e){}
+  paintWizard();};
+function saveDraft(){try{localStorage.setItem("dpp-draft",JSON.stringify(draft))}catch(e){}}
+function badge(a){var m={PUBLIC:["pub",T("a_PUBLIC")],AUTHORITY:["auth",T("a_AUTHORITY")],INTERNAL:["int",T("a_INTERNAL")]}[a]||["int",a];return '<span class="pill '+m[0]+'">'+m[1]+'</span>';}
+function paintWizard(){
+  var h=head(T("wiz_t"),T("wiz_s"))
+    +'<button class="back" onclick="goPortal()">'+T("back")+'</button>'
+    +'<div class="chooser">'
+    +'<button class="choice'+(draft.category==="TEXTILE"?" on":"")+'" onclick="pickCat(\'TEXTILE\')"><h3>'+T("cat_TEXTILE")+'</h3><p>'+T("desc_TEXTILE")+'</p></button>'
+    +'<button class="choice'+(draft.category==="ELECTRONICS"?" on":"")+'" onclick="pickCat(\'ELECTRONICS\')"><h3>'+T("cat_ELECTRONICS")+'</h3><p>'+T("desc_ELECTRONICS")+'</p></button>'
+    +'</div>'+(draft.category?'<div id="form"></div>':'');
+  app.innerHTML=h;if(draft.category)paintForm();
+}
+window.pickCat=function(c){draft.category=c;saveDraft();paintWizard();};
+function paintForm(){
+  var cat=draft.category,v=draft.values,html="";
+  CATS[cat].sections.forEach(function(s){html+='<div class="section"><h3>'+esc(SL(s.title))+'</h3>';
+    s.fields.forEach(function(f){html+=renderField(f,v[f.c]);});html+='</div>';});
+  html+='<div class="publishbar"><div class="progress"><div class="bar"><i id="pbar"></i></div><small id="ptext"></small></div>'
+    +'<button class="btn primary" id="pubBtn" onclick="publish()">'+T("publish")+'</button></div>';
+  document.getElementById("form").innerHTML=html;updateProgress();
+}
+function renderField(f,val){
+  var id="f_"+f.c;
+  var lab='<label>'+esc(FL(f))+(f.r?' <span class="req">*</span>':'')+(f.u?' <span class="u">('+esc(FU(f))+')</span>':'')+' '+badge(f.a)+'</label>';
+  var body="";
+  if(f.t==="BOOL"){body='<label class="check"><input type="checkbox" '+(val?"checked":"")+' onchange="setVal(\''+f.c+'\',this.checked)"> '+T("yes")+'</label>';
+    return '<div class="field">'+lab+body+note(f)+'</div>';}
+  if(f.t==="REP"){body='<div id="rep_'+f.c+'">'+repRows(f,val)+'</div><button type="button" class="add-row" onclick="repAdd(\''+f.c+'\')">'+T("add_row")+'</button>';
+    return '<div class="field">'+lab+body+note(f)+'</div>';}
+  if(f.t==="TEXTAREA"){body='<textarea oninput="setVal(\''+f.c+'\',this.value)">'+esc(val||"")+'</textarea>';}
+  else{var typ=f.t==="NUMBER"?"number":(f.t==="URL"?"url":"text");
+    body='<input type="'+typ+'" value="'+esc(val==null?"":val)+'" oninput="setVal(\''+f.c+'\',this.value)">';}
+  return '<div class="field" id="field_'+f.c+'">'+lab+body+note(f)+'<span class="err" id="err_'+f.c+'" hidden></span></div>';
+}
+function note(f){return f.note?'<span class="hint">'+esc(NL(f.note))+'</span>':"";}
+function repRows(f,val){val=val||[];var h="";for(var i=0;i<val.length;i++)h+=repRow(f,i,val[i]);if(!val.length)h+=repRow(f,0,{});return h;}
+function repRow(f,i,row){row=row||{};var h='<div class="rep-row">';
+  f.sub.forEach(function(sf){var t=sf.t==="NUMBER"?"number":"text";
+    h+='<input type="'+t+'" placeholder="'+esc(SUBL(sf.l))+'" value="'+esc(row[sf.c]==null?"":row[sf.c])+'" oninput="repSet(\''+f.c+'\','+i+',\''+sf.c+'\',this.value)">';});
+  h+='<button type="button" class="rm" onclick="repDel(\''+f.c+'\','+i+')" aria-label="'+T("del")+'">×</button></div>';return h;}
+window.setVal=function(c,v){draft.values[c]=v;saveDraft();clearErr(c);updateProgress();};
+window.repSet=function(c,i,sc,v){var a=draft.values[c]||[];while(a.length<=i)a.push({});a[i][sc]=v;draft.values[c]=a;saveDraft();updateProgress();};
+window.repAdd=function(c){var f=fieldDef(draft.category,c);var a=draft.values[c]||[];a.push({});draft.values[c]=a;document.getElementById("rep_"+c).innerHTML=repRows(f,a);saveDraft();};
+window.repDel=function(c,i){var f=fieldDef(draft.category,c);var a=draft.values[c]||[];a.splice(i,1);draft.values[c]=a;document.getElementById("rep_"+c).innerHTML=repRows(f,a);saveDraft();updateProgress();};
+function clearErr(c){var el=document.getElementById("field_"+c);if(el)el.classList.remove("invalid");var e=document.getElementById("err_"+c);if(e)e.hidden=true;}
+function filled(f,v){if(v==null||v==="")return false;
+  if(f.t==="REP"){if(!v.length)return false;return v.some(function(r){return f.sub.some(function(sf){return r[sf.c]!=null&&r[sf.c]!==""})});}
+  if(f.t==="BOOL")return v===true;return true;}
+function updateProgress(){var req=fieldsOf(draft.category).filter(function(f){return f.r;});
+  var done=req.filter(function(f){return filled(f,draft.values[f.c]);}).length;
+  var pct=req.length?Math.round(done/req.length*100):100;
+  var bar=document.getElementById("pbar"),tx=document.getElementById("ptext");
+  if(bar)bar.style.width=pct+"%";if(tx)tx.textContent=done+" / "+req.length+" "+T("req_count");}
+function cleanVals(v){var o={};for(var k in v){var x=v[k];
+  if(Array.isArray(x)){x=x.filter(function(r){return r&&Object.keys(r).some(function(kk){return r[kk]!=null&&r[kk]!==""})});if(x.length)o[k]=x;}
+  else if(x!=null&&x!=="")o[k]=x;}return o;}
+window.publish=function(){
+  var cat=draft.category,bad=[];
+  fieldsOf(cat).forEach(function(f){if(f.r&&!filled(f,draft.values[f.c]))bad.push(f);});
+  if(draft.values.gtin&&!gtinValid(draft.values.gtin))bad.unshift(fieldDef(cat,"gtin"));
+  if(bad.length){bad.forEach(function(f){var el=document.getElementById("field_"+f.c);if(el)el.classList.add("invalid");
+    var e=document.getElementById("err_"+f.c);if(e){e.textContent=f.c==="gtin"?T("bad_gtin"):T("required");e.hidden=false;}});
+    var first=document.getElementById("field_"+bad[0].c);if(first)first.scrollIntoView({behavior:"smooth",block:"center"});return;}
+  var p={category:cat,name:draft.values.product_name||"",brand:draft.values.brand||"",sku:draft.values.sku||"",
+    values:cleanVals(draft.values),createdAt:Date.now()};
+  saveLocal(p);try{localStorage.removeItem("dpp-draft")}catch(e){}
+  draft={category:null,values:{}};
+  var enc=encodePassport(p);var u=passportUrl(p.values,enc);history.replaceState(null,"",u.slice(u.indexOf("?")));render();
+};
+
+/* ===== public passport ===== */
+var showAuth=false,curP=null;
+function renderPublic(p,enc){
+  var cat=p.category,v=p.values||{};
+  var url=passportUrl(v,enc);curP=p;
+  var co=v.carbon,rc=v.recycled_content;
+  var h='<button class="back" onclick="goPortal()">'+T("back")+'</button>';
+  h+='<div class="pp-hero"><div class="main">'
+    +'<span class="eyebrow">'+esc(T("cat_"+cat))+' · '+T("dpp")+'</span>'
+    +'<h1>'+esc(p.name||T("unnamed_p"))+'</h1>'
+    +'<div class="br">'+esc(p.brand||"")+(v.sku?' · <span class="mono">'+esc(v.sku)+'</span>':'')+'</div>'
+    +'<div style="margin-top:6px"><span class="pill ok">'+T("verified")+'</span></div></div>'
+    +'<div><div class="qrbox" id="qr"></div></div></div>';
+  h+='<div class="facts">';
+  if(co)h+=fact(T("f_carbon"),esc(co)+" kgCO₂e");
+  if(rc)h+=fact(T("f_rec"),esc(rc)+"%");
+  if(v.country_origin)h+=fact(T("f_origin"),esc(v.country_origin));
+  if(cat==="ELECTRONICS"&&v.energy_class)h+=fact(T("f_energy"),esc(v.energy_class));
+  h+='</div>';
+  var dl=digitalLink(v);
+  h+='<div class="pp-sec"><h3>'+T("ids")+'</h3>'
+    +(dl?'<div class="row"><span class="k">GTIN</span><span class="v mono">'+gtin14(v.gtin)+'</span></div>':'')
+    +(v.lot?'<div class="row"><span class="k">'+esc(FL(fieldDef(cat,"lot")))+'</span><span class="v mono">'+esc(v.lot)+'</span></div>':'')
+    +(v.serial?'<div class="row"><span class="k">'+esc(FL(fieldDef(cat,"serial")))+'</span><span class="v mono">'+esc(v.serial)+'</span></div>':'')
+    +'<div class="row"><span class="k">'+T("gran")+'</span><span class="v">'+T(granularity(v))+'</span></div>'
+    +(dl?'<div class="row"><span class="k">'+T("dl")+'</span><span class="v mono" style="font-size:12px">'+esc(dl)+'</span></div>':'')
+    +'</div>';
+  CATS[cat].sections.forEach(function(s){
+    if(s.title==="Sertifikalar"){var certs=v.certificates||[];if(!certs.length)return;
+      h+='<div class="pp-sec"><h3>'+SL("Sertifikalar")+'</h3><div class="certs">';
+      certs.forEach(function(c){h+='<span class="cert">'+esc(c.type||"Sertifika")+(c.number?' <span class="n">'+esc(c.number)+'</span>':'')+'</span>';});
+      h+='</div></div>';return;}
+    var rows=s.fields.filter(function(f){if(f.c==="gtin"||f.c==="lot"||f.c==="serial")return false;if(f.a==="AUTHORITY"&&!showAuth)return false;return filled(f,v[f.c]);});
+    if(!rows.length)return;
+    h+='<div class="pp-sec"><h3>'+esc(SL(s.title))+'</h3>';
+    rows.forEach(function(f){h+='<div class="row"><span class="k">'+esc(FL(f))+(f.a==="AUTHORITY"?' '+badge("AUTHORITY"):'')+'</span><span class="v">'+esc(fmtVal(f,v[f.c]))+'</span></div>';});
+    h+='</div>';
+  });
+  h+='<div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap">'
+    +'<button class="btn sm" onclick="toggleAuth()">'+(showAuth?T("auth_hide"):T("auth_show"))+'</button>'
+    +'<button class="btn sm" onclick="toggleLabel()">▦ '+T("label_btn")+'</button>'
+    +'<button class="btn sm" onclick="downloadJsonLd()">{ } '+T("jsonld")+'</button></div>';
+  if(showLabel)h+=labelPanel(p,url);
+  h+='<div class="sharebox"><input id="shareUrl" readonly value="'+esc(url)+'"><button class="btn sm" id="copyBtn" onclick="copyLink()">'+T("copy")+'</button></div>';
+  h+='<div class="foot-note">'+T("foot")+(LANG==="en"?'<br>'+T("lang_note"):'')+'<br>Powered by <b>Commited</b> · '+T("dpp")+'</div>';
+  app.innerHTML=h;
+  try{new QRCode(document.getElementById("qr"),{text:url,width:132,height:132,colorDark:"#15201B",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.M});}catch(e){}
+  if(showLabel)drawLabelQR(url);
+}
+window.toggleAuth=function(){showAuth=!showAuth;render();};
+window.copyLink=function(){var i=document.getElementById("shareUrl"),b=document.getElementById("copyBtn");
+  try{navigator.clipboard.writeText(i.value).then(function(){b.textContent=T("copied");setTimeout(function(){b.textContent=T("copy")},1500);},function(){i.select();});}
+  catch(e){i.select();}};
+function fact(k,v){return '<div class="fact"><div class="k">'+k+'</div><div class="v">'+v+'</div></div>';}
+function fmtVal(f,v){if(f.t==="BOOL")return v?T("yes"):T("no");
+  if(f.t==="REP"){if(f.c==="fiber_composition"||f.c==="material_comp")return v.map(function(r){return (r.fiber||r.mat||"")+(r.pct?" %"+r.pct:"");}).filter(Boolean).join(", ");
+    return v.map(function(r){return r.name||r.type||Object.values(r).filter(Boolean).join(" ");}).filter(Boolean).join(", ");}
+  return v+(f.u?" "+FU(f):"");}
+
+/* ===== printable QR label ===== */
+var showLabel=false,labelSize="s70",labelLang=null;
+window.toggleLabel=function(){showLabel=!showLabel;render();
+  if(showLabel){var e=document.getElementById("labelPanel");if(e)e.scrollIntoView({behavior:"smooth",block:"center"});}};
+window.setLabelSize=function(s){labelSize=s;render();};
+window.setLabelLang=function(l){labelLang=l;render();};
+function labelPanel(p,url){
+  var ll=labelLang||LANG,v=p.values||{};
+  var sizes=[["s50","50 × 30 mm"],["s70","70 × 40 mm"],["s100","100 × 60 mm"]];
+  var h='<div class="label-panel" id="labelPanel"><h3>'+T("label_t")+'</h3><div class="label-opts">';
+  sizes.forEach(function(z){h+='<button class="'+(labelSize===z[0]?"on":"")+'" onclick="setLabelSize(\''+z[0]+'\')">'+z[1]+'</button>';});
+  h+='<span style="flex:1"></span>';
+  [["tr","TR"],["en","EN"],["both","TR + EN"]].forEach(function(z){h+='<button class="'+(ll===z[0]?"on":"")+'" onclick="setLabelLang(\''+z[0]+'\')">'+z[1]+'</button>';});
+  h+='</div><div class="label-stage"><div id="printArea"><div class="dpp-label '+labelSize+'">'
+    +'<div class="lq" id="labelQR"></div><div class="lt">'
+    +'<span class="l-ey">'+lbl("dpp",ll)+'</span>'
+    +'<span class="l-nm">'+esc(p.name||"")+'</span>'
+    +'<span class="l-br">'+esc(p.brand||"")+(v.sku?' · '+esc(v.sku):'')+'</span>'
+    +(v.carbon?'<span class="l-co">'+esc(v.carbon)+' kgCO₂e</span>':'')
+    +(hri(v)?'<span class="l-hri">'+esc(hri(v))+'</span>':'')
+    +'<span class="l-sc">'+lbl("scan",ll)+'</span>'
+    +'<span class="l-ft">Powered by Commited · ESPR (EU) 2024/1781</span>'
+    +'</div></div></div></div>'
+    +'<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px">'
+    +'<button class="btn primary sm" onclick="printLabel()">⎙ '+T("print")+'</button>'
+    +'<span class="hint">'+T("label_hint")+'</span></div></div>';
+  return h;
+}
+function lbl(k,ll){return ll==="both"?TL(k,"tr")+' / '+TL(k,"en"):TL(k,ll);}
+function drawLabelQR(url){var el=document.getElementById("labelQR");if(!el)return;
+  try{new QRCode(el,{text:url,width:512,height:512,colorDark:"#000000",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.M});}catch(e){}}
+window.printLabel=function(){document.body.classList.add("printing");
+  setTimeout(function(){window.print();setTimeout(function(){document.body.classList.remove("printing")},300);},60);};
+window.addEventListener("afterprint",function(){document.body.classList.remove("printing")});
+
+/* ===== JSON-LD export ===== */
+window.downloadJsonLd=function(){var p=curP;if(!p)return;var v=p.values||{},cat=p.category;
+  var props=[];fieldsOf(cat).forEach(function(f){if(f.a!=="PUBLIC"||!filled(f,v[f.c]))return;
+    if(["product_name","brand","sku","gtin","lot","serial","certificates"].indexOf(f.c)>=0)return;
+    props.push({"@type":"PropertyValue",propertyID:f.c,name:EN_F[f.c]||f.l,value:f.t==="REP"?fmtVal(f,v[f.c]):v[f.c],unitText:f.u||undefined});});
+  var doc={"@context":{"@vocab":"https://schema.org/","gs1":"https://ref.gs1.org/voc/"},
+    "@type":"Product","@id":digitalLink(v)||undefined,name:p.name,brand:{"@type":"Brand",name:p.brand},
+    model:v.sku,gtin:v.gtin?gtin14(v.gtin):undefined,"gs1:batchNumber":v.lot||undefined,"gs1:serialNumber":v.serial||undefined,
+    countryOfOrigin:v.country_origin,category:cat,
+    "gs1:certificationInfo":(v.certificates||[]).map(function(c){return{"@type":"gs1:CertificationDetails","gs1:certificationStandard":c.type,"gs1:certificationIdentification":c.number}}),
+    additionalProperty:props,url:passportUrl(v,encodePassport(p)),
+    "gs1:productionDate":undefined,dateCreated:new Date(p.createdAt||Date.now()).toISOString(),
+    "conformsTo":"ESPR (EU) 2024/1781"};
+  var txt=JSON.stringify(doc,null,2);
+  var box=document.getElementById("jsonBox");if(!box){box=document.createElement("div");box.id="jsonBox";box.className="label-panel";
+    var foot=document.querySelector(".foot-note");foot.parentNode.insertBefore(box,foot);}
+  box.innerHTML='<h3>JSON-LD</h3><textarea readonly style="width:100%;min-height:220px;font-family:var(--mono);font-size:12px;padding:10px;border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--bg);color:var(--fg)">'+esc(txt)+'</textarea>'
+    +'<div style="margin-top:8px"><button class="btn sm" onclick="navigator.clipboard&&navigator.clipboard.writeText(document.querySelector(\'#jsonBox textarea\').value)">'+T("copy")+'</button></div>';
+  box.scrollIntoView({behavior:"smooth",block:"center"});
+  var blob=new Blob([txt],{type:"application/ld+json"});
+  var a=document.createElement("a");a.href=URL.createObjectURL(blob);
+  a.download="dpp-"+(v.gtin?gtin14(v.gtin):(v.sku||"urun")).replace(/[^\w-]/g,"_")+".jsonld";
+  document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},500);};
+
+paintLang();
+render();
+</script>
+</body>
+</html>
