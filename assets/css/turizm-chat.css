@@ -1,0 +1,89 @@
+/* =====================================================================
+   Turizm Karbon Hesaplayıcısı — SOHBETLE DOLDURMA (assets/js/turizm/chat.js)
+   Yalnız tema değişkenleri kullanılır (theme-sea.css); sabit renk kodu yoktur.
+   ===================================================================== */
+
+/* ---------- Form / Sohbet seçici ---------- */
+.fill-switch{display:flex; flex-wrap:wrap; align-items:center; gap:10px 16px; margin:0 0 14px}
+.fill-q{margin:0; font-weight:700; font-size:15px}
+.fill-btns{display:flex; flex-wrap:wrap; gap:8px; flex:1 1 420px}
+.fill-b{flex:1 1 200px; display:flex; flex-direction:column; gap:2px; text-align:left; font:inherit; cursor:pointer;
+  border:1.5px solid var(--line); background:var(--surface); color:var(--ink); border-radius:14px; padding:10px 16px}
+.fill-b b{font-size:15.5px}
+.fill-b small{font-size:13px; color:var(--muted)}
+.fill-b:hover{border-color:var(--brand)}
+.fill-b[aria-pressed="true"]{border-color:var(--brand); background:var(--surface2); box-shadow:inset 0 0 0 1px var(--brand)}
+
+/* Sohbet açıkken form sekmeleri ve panelleri gizlenir */
+body.fill-chat .tabs, body.fill-chat #panel-otel, body.fill-chat #panel-acente{display:none !important}
+
+/* ---------- Sohbet kartı ---------- */
+.chat{border:1px solid var(--line); background:var(--surface); border-radius:18px; box-shadow:var(--shadow); overflow:hidden; margin-bottom:18px;
+  display:flex; flex-direction:column}
+.chat-top{display:flex; flex-wrap:wrap; align-items:center; gap:8px 18px; padding:12px 16px; background:var(--deep); color:var(--on-deep); border-bottom:1px solid var(--deep-line)}
+.chat-title{display:flex; align-items:center; gap:8px; font-size:15px}
+.chat-dot{width:10px; height:10px; border-radius:50%; background:var(--accent)}
+.chat-live{display:flex; flex-wrap:wrap; gap:6px 16px; flex:1 1 auto}
+.chat-live .cl{display:flex; flex-direction:column; line-height:1.15}
+.chat-live .cl small{font-size:11.5px; color:var(--on-deep-label); font-weight:600}
+.chat-live .cl b{font-size:16px; font-variant-numeric:tabular-nums}
+.chat-prog{display:flex; flex-direction:column; gap:4px; min-width:150px; font-size:12.5px; color:var(--on-deep-soft)}
+.chat-track{height:6px; border-radius:3px; background:var(--deep-line); overflow:hidden}
+.chat-track i{display:block; height:100%; width:0; background:var(--accent); transition:width .25s}
+
+.chat-log{display:flex; flex-direction:column; gap:10px; padding:16px; overflow-y:auto; min-height:220px; max-height:min(56vh, 620px); background:var(--bg)}
+.cb{max-width:min(680px, 88%); border-radius:16px; padding:10px 14px; font-size:15px; line-height:1.45}
+.cb p{margin:0}
+.cb.bot{align-self:flex-start; background:var(--surface); border:1px solid var(--line); border-bottom-left-radius:6px}
+.cb.bot.sec{background:var(--chip); border-color:var(--brand-soft); font-size:14px; color:var(--ink)}
+.cb.me{align-self:flex-end; background:var(--brand); color:var(--on-brand); border-bottom-right-radius:6px; font-weight:600}
+.cb:has(.cres){max-width:100%; width:100%}
+.cb .ch{display:block; margin-top:4px; font-size:13px; color:var(--muted)}
+
+.chat-comp{padding:14px 16px 12px; border-top:1px solid var(--line); background:var(--surface); display:flex; flex-direction:column; gap:10px}
+.cc-row{display:flex; gap:8px; align-items:stretch; flex-wrap:wrap}
+.cc-row .btn{flex:0 0 auto}
+.cin-wrap{flex:1 1 260px; display:flex; align-items:center; border:1.5px solid var(--line); border-radius:12px; background:var(--bg); min-width:0}
+.cin-wrap:focus-within{border-color:var(--brand)}
+.cin{flex:1 1 auto; min-width:0; border:0; background:transparent; color:var(--ink); font:inherit; font-size:16px; padding:11px 12px; font-variant-numeric:tabular-nums}
+.cin:focus{outline:none}
+select.cin{flex:1 1 260px; border:1.5px solid var(--line); border-radius:12px; background:var(--bg); padding:10px 12px}
+.cu{font-size:13px; color:var(--muted); padding:0 12px 0 4px; white-space:nowrap}
+.cunit{border:0; border-left:1px solid var(--line); background:transparent; color:var(--ink); font:inherit; font-size:14px; padding:0 10px; align-self:stretch; max-width:150px}
+
+.cc-opts{display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:8px}
+.copt{display:flex; flex-direction:column; gap:2px; text-align:left; font:inherit; cursor:pointer; border:1.5px solid var(--brand-soft); background:var(--surface);
+  color:var(--ink); border-radius:12px; padding:10px 14px}
+.copt b{font-size:15px}
+.copt small{font-size:12.5px; color:var(--muted)}
+.copt:hover{border-color:var(--brand); background:var(--chip)}
+.copt.cur{border-color:var(--brand); box-shadow:inset 0 0 0 1px var(--brand)}
+
+.cc-multi{display:grid; grid-template-columns:repeat(auto-fill, minmax(260px, 1fr)); gap:6px 10px; max-height:min(40vh, 380px); overflow-y:auto; padding:2px}
+.cc-multi .cg{grid-column:1 / -1; margin:6px 0 0; font-size:12.5px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.06em}
+.cchk{display:flex; gap:10px; align-items:flex-start; border:1px solid var(--line); border-radius:10px; padding:8px 10px; cursor:pointer; background:var(--surface)}
+.cchk:has(input:checked){border-color:var(--brand); background:var(--chip)}
+.cchk input{margin-top:3px; accent-color:var(--brand)}
+.cchk b{display:block; font-size:14px; font-weight:600}
+.cchk small{display:block; font-size:12.5px; color:var(--muted)}
+
+.cc-extra{display:flex; flex-wrap:wrap; gap:8px 12px; align-items:center}
+.cback{font-size:14px; margin-left:auto}
+.cwarn{margin:0; min-height:0; font-size:13.5px; color:var(--danger-ink); font-weight:600}
+.cwarn:empty{display:none}
+
+.cres{margin-top:10px}
+.ckv{display:grid; grid-template-columns:repeat(auto-fill, minmax(180px, 1fr)); gap:8px; margin:0}
+.ckv div{background:var(--surface2); border-radius:10px; padding:8px 12px}
+.ckv dt{font-size:12.5px; color:var(--muted); font-weight:600}
+.ckv dd{margin:2px 0 0; font-size:17px; font-weight:800; font-variant-numeric:tabular-nums}
+.cmsgs{margin:4px 0 0; padding-left:18px; font-size:13.5px}
+
+@media (max-width:640px){
+  .chat-log{max-height:52vh; min-height:160px; padding:12px}
+  .cb{max-width:94%}
+  .chat-prog{min-width:0; flex:1 1 100%}
+  .cc-opts{grid-template-columns:minmax(0,1fr)}
+  .cc-row .btn{flex:1 1 auto}
+}
+@media print{ .fill-switch, .chat{display:none !important} }
