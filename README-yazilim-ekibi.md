@@ -37,9 +37,11 @@ açılır (`open({ guest: true })` ziyaretçi). Toplam 268 birim + 31 uçtan uca
 
 ## 2026-10-31 — Squarespace: hareketli deniz zemini (yalnız hesaplayıcı sayfaları)
 
-> **Durum:** 2026-10-31'de onaylandı; Squarespace → Tasarım → Özel CSS'in **sonuna** eklenecek (1-7 numaralı "deniz"
-> bloğu aynen kalır). Geri almak için 8 numaralı bloğu silmek yeterli. Eklemek için siteyi yöneten Squarespace hesabıyla
-> giriş gerekir (lkoseoglu35@gmail.com hesabının bu siteye yetkisi yok).
+> **Durum:** 2026-10-31'de onaylandı ve canlıya alındı: Squarespace → Özel CSS'in **sonuna** 8 numaralı blok olarak
+> eklendi (1-7 aynen kaldı). Eklemeden önce sitedeki CSS'in yedekle birebir aynı olduğu SHA-256 ile doğrulandı; ekledikten
+> sonraki tam metin `docs/squarespace-ozel-css-tamami.css` (SHA-256 `7a9765d3…`). Canlıda denendi: iki hesaplayıcı
+> sayfasında 4 katman ve 8 animasyon çalışıyor, yatay kaydırma yok; ana sayfa etkilenmedi. Geri almak için 8 numaralı
+> bloğu silmek yeterli. Not: Squarespace'te düzenleme yetkisi siteyi yöneten hesaptadır (lkoseoglu35@gmail.com değil).
 
 **İstek:** "Arkadaki düz mavi duvar kağıdı daha alımlı olabilir mi? Hareket eden dalga vb." Zemin hesaplayıcının
 değil, Squarespace sayfasının gövdesidir (`body#collection-...` ile yalnız Turizm ve Kapsam 3 sayfaları).
@@ -431,7 +433,7 @@ Kod, **Web Sitesi → Sayfalar → Özel Kod → Özel CSS** içinde, mevcut kod
   Yeni hesaplayıcı sayfası eklenirse kimliğini tarayıcı konsolunda `document.body.id` ile öğrenip her
   `body#collection-…` seçicisinin yanına ekleyin.
 - Bloğun kaynağı `docs/squarespace-deniz-temasi.css` (yalnız yeni blok), sitenin **tüm** Özel CSS'inin
-  o günkü yedeği `docs/squarespace-ozel-css-tamami.css`. Squarespace'te değişiklik yapıldıkça yedek
+  güncel yedeği `docs/squarespace-ozel-css-tamami.css` (son güncelleme 2026-10-31, 8 numaralı blok eklendikten sonra). Squarespace'te değişiklik yapıldıkça yedek
   güncellenmelidir; Squarespace CSS sürüm geçmişi tutmaz.
 - Neleri değiştirir: sayfa zemini (açık denizden derin laciverte degrade), şeffaf üst menü ve bölümler,
   lacivert menü düğmeleri (aktif sayfa altın sarısı `#E8C547`), beyaz "hap" içinde logo, lacivert açılır
@@ -481,7 +483,7 @@ Kapsam 3 1.418.888 kg); tema ve görünüm değişiklikleri bu sayıları deği�
 | `assets/css/theme-sea.css` | İki hesaplayıcının ortak "Deniz" teması: tüm renkler, koyu mod, üst alan, dalgalar, ortak menü. Sayfalarda sabit renk kodu yok. |
 | `tools/sea-waves-snippet.py` | İki sayfadaki özdeş dalga (`.sea-waves`) işaretlemesini üretir. |
 | `docs/squarespace-deniz-temasi.css` | Squarespace Özel CSS'ine eklenen "Deniz" zemin bloğu (yalnız yeni blok). |
-| `docs/squarespace-ozel-css-tamami.css` | Sitenin **tüm** Özel CSS'inin 2026-10-20 tarihli birebir yedeği. |
+| `docs/squarespace-ozel-css-tamami.css` | Sitenin **tüm** Özel CSS'inin birebir yedeği (son güncelleme 2026-10-31: 8 numaralı hareketli zemin bloğu eklendi). |
 | `tests/`, `package.json` | Birim testleri (tema tutarlılığı), uçtan uca ve erişilebilirlik testleri (Playwright + axe), sayı referansları (`tests/golden`). Ayrıntı: "Testler" bölümü. |
 
 ## Kapsam 3 hesaplayıcısı — config v4.0
