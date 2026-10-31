@@ -6,7 +6,8 @@ tarayıcıda yapan) karbon hesaplama modülleri. GitHub Pages üzerinden yayınl
 
 ## 2026-10-31 — Üyelik şartı ve parlayan örnek düğmesi (v6.3)
 
-> **Durum:** onay bekliyor; `uyelik-sarti` dalında. Canlıya alınınca bu satır güncellenecek.
+> **Durum:** 2026-10-31'de onaylandı ve canlıya alındı (`git push`, GitHub Actions testleri yeşil). Canlıda denendi:
+> ziyaretçi alana tıklayınca kayıt penceresi açılıyor, alan boş kalıyor; örnek düğmesi altın ve parlıyor.
 
 **İstek (Levent Bey):** "Otel karbon modülünde kullanıcı giriş yapmadan ya da kaydı olmadan veri girişine
 başlayamasın." İki sekmede de (otel ve acente) geçerli; ziyaretçi örneği görebilir. Ayrıca canlıda gözden kaçan
@@ -36,8 +37,9 @@ açılır (`open({ guest: true })` ziyaretçi). Toplam 268 birim + 31 uçtan uca
 
 ## 2026-10-31 — Squarespace: hareketli deniz zemini (yalnız hesaplayıcı sayfaları)
 
-> **Durum:** onay bekliyor. Squarespace → Tasarım → Özel CSS'in **sonuna** eklenecek (1-7 numaralı "deniz" bloğu
-> aynen kalır). Geri almak için 8 numaralı bloğu silmek yeterli.
+> **Durum:** 2026-10-31'de onaylandı; Squarespace → Tasarım → Özel CSS'in **sonuna** eklenecek (1-7 numaralı "deniz"
+> bloğu aynen kalır). Geri almak için 8 numaralı bloğu silmek yeterli. Eklemek için siteyi yöneten Squarespace hesabıyla
+> giriş gerekir (lkoseoglu35@gmail.com hesabının bu siteye yetkisi yok).
 
 **İstek:** "Arkadaki düz mavi duvar kağıdı daha alımlı olabilir mi? Hareket eden dalga vb." Zemin hesaplayıcının
 değil, Squarespace sayfasının gövdesidir (`body#collection-...` ile yalnız Turizm ve Kapsam 3 sayfaları).
