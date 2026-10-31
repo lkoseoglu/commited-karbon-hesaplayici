@@ -180,9 +180,12 @@
   // Sayfanın HTML'inde yazılı (Türkçe yazımlı) sayılar: 1.480.000 → 1,480,000 · 12,5 → 12.5.
   // Yalnız açılışta HTML'de bulunan metin düğümlerine ve placeholder'lara uygulanır; uygulamanın
   // sonradan yazdığı sayılar zaten seçilen dilde biçimlenir (NUM.format), onlara dokunulmaz.
-  var TRNUM = /\d{1,3}(?:\.\d{3})+(?:,\d+)?(?!\d|[.,]\d)|\d+,\d+(?!\d|[.,]\d)/g;
+  var TRNUM = /[1-9]\d{0,2}(?:\.\d{3})+(?:,\d+)?(?!\d|[.,]\d)|\d+,\d+(?!\d|[.,]\d)/g;
   function enNums(s) {
-    return s.replace(TRNUM, function (t) {
+    return s.replace(TRNUM, function (t, off, str) {
+      // daha büyük bir sayının parçasıysa (ör. zaten İngilizce yazılmış 4,684,000 içindeki 684,000) dokunma
+      var b = str.charAt(off - 1);
+      if (/\d/.test(b) || ((b === ',' || b === '.') && /\d/.test(str.charAt(off - 2)))) { return t; }
       var parts = t.replace(/\./g, '').split(',');
       parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
       return parts.join('.');
@@ -335,7 +338,8 @@
     key: function (s) { return template(s).key; },
     has: function (s) { return lookup(s) !== null; },
     find: function (s) { return lookup(s, 1); },          // düzenli ifadelerin içinden: çeviri ya da null
-    missing: function () { return Object.keys(miss); }
+    missing: function () { return Object.keys(miss); },
+    enNums: enNums                                         // testler için: sabit metindeki Türkçe sayıları İngilizce yazar
   };
   // Node testleri ve sayfa açılmadan önce: sayı biçimi seçilen dile uysun
   if (root.NUM && root.NUM.setLocale) { root.NUM.setLocale(lang); }

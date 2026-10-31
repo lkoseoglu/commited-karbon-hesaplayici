@@ -56,7 +56,10 @@ dolaşır, İngilizce ekranda kalan Türkçeyi listeler); `node tools/i18n-topla
 doğrulama durumları, yıl yok, kendi referansı, tahminler, taksonomi, geçmiş yıllar, acente çeşitleri) ekranda, panelde,
 raporda, özette ve panoda Türkçe kalmaması; canlı geçiş ve İngilizce sayı girişi; ziyaretçi bildirimi, kayıt penceresi
 ve rapor sekmesi; rapor sayfalarının A4'e sığması (Türkçe ve İngilizce); erişilebilirlik (açık ve koyu tema).
-Toplam 270 birim + 37 uçtan uca test.
+`tests/unit/i18n.test.mjs` (6 test): sözlükte Türkçe harf kalmaması (özel adlar hariç), şablon ve `{#n}` sırası,
+değişken cümle kalıpları, panoya kopyalanan metin, sabit metindeki Türkçe sayıların çevrimi, İngilizce sayı girişi.
+Toplam 276 birim + 37 uçtan uca test. İngilizce örnek rapor: `node tools/report-sample.mjs cikti-rapor --en`
+(`sample-sustainability-report.pdf`, `sample-sustainability-summary.pdf`).
 
 **Önbellek ve sürüm:** GitHub Pages her dosyayı 10 dakika önbellekte tutar; yayından hemen sonra yeni sayfa eski bir
 JavaScript dosyasıyla karışmasın diye `turizm-karbon-hesaplayici.html` ve `turizm-admin.html` içindeki yerel dosya

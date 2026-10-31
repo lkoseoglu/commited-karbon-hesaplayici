@@ -1,7 +1,9 @@
 // Örnek PDF raporu ve tek sayfalık özet üretir: hesap motoru (Node vm) → assets/js/turizm/report.js → HTML → Chromium → PDF.
 // Kullanım (repo kökünde):
-//   node tools/report-sample.mjs [çıktı-klasörü] [--no-logo]
+//   node tools/report-sample.mjs [çıktı-klasörü] [--no-logo] [--en]
 //   → <klasör>/ornek-surdurulebilirlik-raporu.pdf + sayfa-XX.png, ornek-surdurulebilirlik-ozeti.pdf + ozet-01.png, HTML'ler
+//   --en: İngilizce örnek (sample-sustainability-report.pdf, sample-sustainability-summary.pdf); rapor, sitedeki gibi
+//         Türkçe üretilir ve tarayıcıda i18n.js + i18n-en.js ile çevrilir
 // Örnek otel, kurgusal logoyla (tests/fixtures/ornek-logo.png) basılır; --no-logo ile logosuz.
 // Sitede rapor tarayıcıda üretilir (app.js → "PDF raporu oluştur" / "Tek sayfalık özet"); bu betik tasarımı denetlemek,
 // örnek PDF hazırlamak ve sayfa taşmalarını ölçmek içindir. DM Sans yazı tipi devDependency'den gelir (internet gerekmez).
@@ -14,11 +16,14 @@ import { loadApp, ROOT } from '../tests/helpers/load-hcmi.mjs';
 const args = process.argv.slice(2);
 const OUT = path.resolve(args.find((a) => !a.startsWith('--')) || path.join(ROOT, 'cikti-rapor'));
 const withLogo = !args.includes('--no-logo');
+const EN = args.includes('--en');
 fs.mkdirSync(OUT, { recursive: true });
 
 const ctx = loadApp();
 const T = ctx.TURIZM;
+if (EN) { T.i18n.setLang('en'); }                              // sayılar 1,234.5 yazımıyla
 const st = T.model.exampleState();
+if (EN) { st.hotel.name = T.model.SAMPLE_NAMES.en; }
 st.hotel.taxonomy = { t_izleme: true, t_su: true };          // taksonomi bölümü dolu görünsün
 if (withLogo) {
   st.hotel.logo = T.model.logoOf('data:image/png;base64,' + fs.readFileSync(path.join(ROOT, 'tests/fixtures/ornek-logo.png')).toString('base64'));
@@ -35,14 +40,26 @@ const fontCss = [['dm-sans-latin-ext-opsz-normal.woff2', LATIN_EXT], ['dm-sans-l
 const exe = [process.env.CHROME_PATH, '/opt/google/chrome/chrome', '/usr/bin/google-chrome'].find((p) => p && fs.existsSync(p));
 const browser = await chromium.launch({ ...(exe ? { executablePath: exe } : {}), args: ['--no-sandbox', '--disable-dev-shm-usage'] });
 const out = { errors: [] };
-for (const [variant, base, png] of [['report', 'ornek-surdurulebilirlik-raporu', 'sayfa'], ['summary', 'ornek-surdurulebilirlik-ozeti', 'ozet']]) {
+const FILES = EN ? [['report', 'sample-sustainability-report', 'page'], ['summary', 'sample-sustainability-summary', 'summary']]
+  : [['report', 'ornek-surdurulebilirlik-raporu', 'sayfa'], ['summary', 'ornek-surdurulebilirlik-ozeti', 'ozet']];
+for (const [variant, base, png] of FILES) {
   const html = T.report.build(st, R, { generatedAt: new Date(), sample: true, fontCss, variant });
   const htmlPath = path.join(OUT, base + '.html');
   fs.writeFileSync(htmlPath, html);
   const page = await browser.newPage();
   page.on('pageerror', (e) => out.errors.push(variant + ': ' + e.message));
   await page.goto('file://' + htmlPath, { waitUntil: 'load' });
+  if (EN) {                                                    // sitedeki rapor sekmesi gibi: çevir, sonra sayfaları sığdır
+    for (const f of ['assets/js/num-input.js', 'assets/js/tr-reference.js', 'assets/js/turizm/i18n.js', 'assets/js/turizm/i18n-en.js']) {
+      await page.addScriptTag({ path: path.join(ROOT, f) });
+      // Sitedeki rapor sekmesinde olduğu gibi yalnız çeviri: start() sayfadaki sayıları "Türkçe yazılmış sabit metin"
+      // sayıp İngilizce yazıma çevirmeye kalkar; rapor HTML'i zaten İngilizce sayılarla üretildi.
+      if (f.endsWith('i18n.js')) { await page.evaluate(() => { window.TURIZM.i18n.start = function () {}; }); }
+    }
+    await page.evaluate(() => { window.TURIZM.i18n.setLang('en'); document.documentElement.lang = 'en'; });
+  }
   await page.evaluate(() => document.fonts.ready);
+  await page.evaluate(() => { if (window.__fitPages) { window.__fitPages(); } });
   // Her sayfada gövdenin altında kalan boşluk (mm); eksi değer taşma demektir
   out[variant] = await page.evaluate(() => [...document.querySelectorAll('.page')].map((p, i) => {
     const body = p.querySelector('.body, .op-body'); if (!body) { return null; }

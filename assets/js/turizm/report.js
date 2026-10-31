@@ -1174,7 +1174,7 @@
     return '<script>(function(){'
       + 'function over(pg,b){var lim=b.getBoundingClientRect().bottom,bk=pg.querySelector(".back"),m=0,k=b.children,j,r;'
       + 'if(bk){lim=Math.min(lim,bk.getBoundingClientRect().top);}'
-      + 'for(j=0;j<k.length;j++){r=k[j].getBoundingClientRect();if(r.height>0&&r.bottom>m){m=r.bottom;}}return m>lim+1;}'
+      + 'for(j=0;j<k.length;j++){r=k[j].getBoundingClientRect();if(r.height>0&&r.bottom>m){m=r.bottom;}}return m>lim+0.1;}'
       + 'function fit(){var ps=document.querySelectorAll(".page"),n,i;for(n=0;n<ps.length;n++){var pg=ps[n],b=pg.querySelector(".op-body")||pg.querySelector(".body");if(!b){continue;}'
       + 'for(i=1;i<=3;i++){pg.classList.remove("fit"+i);}for(i=1;i<=3&&over(pg,b);i++){pg.classList.add("fit"+i);}}}'
       + 'window.__fitPages=fit;fit();window.addEventListener("load",fit);window.addEventListener("beforeprint",fit);'
