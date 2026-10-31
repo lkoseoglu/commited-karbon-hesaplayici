@@ -31,7 +31,7 @@
   function h(tag, attrs, kids) { return U().h(tag, attrs, kids); }
   function n(x, d) { return isNum(x) ? root.NUM.format(x, d === undefined ? 1 : d) : '—'; }
   function n1(x) { return n(x, 1); }
-  function pct(x, d) { return isNum(x) ? '%' + n(x, d === undefined ? 0 : d) : '—'; }
+  function pct(x, d) { return isNum(x) ? root.NUM.pct(n(x, d === undefined ? 0 : d)) : '—'; }
   function money(x) {
     if (!isNum(x)) { return '—'; }
     var a = Math.abs(x);
@@ -129,7 +129,7 @@
     var ratioTxt = '';
     if (isNum(H.ratio)) {
       var p = Math.round(Math.abs(1 - H.ratio) * 100);
-      ratioTxt = p < 3 ? 'tesisiniz ortalamada' : 'tesisiniz %' + p + (H.ratio < 1 ? ' altında' : ' üzerinde');
+      ratioTxt = p < 3 ? 'tesisiniz ortalamada' : 'tesisiniz ' + root.NUM.pct(p) + (H.ratio < 1 ? ' altında' : ' üzerinde');
     }
     var refTxt = H.refIsCustom ? 'Kendi referansınız ' + n1(H.ref) + ' kg' : (m.segmentLabel || 'Segment') + ' ortalaması ' + n1(H.ref) + ' kg';
     kids.push(h('div', { class: 'dh-main' }, [
@@ -161,7 +161,7 @@
         below.push(h('span', { class: 'dh-after' + (near ? ' low' : ''), style: 'left:' + clampPct(ap, 5, 95).toFixed(2) + '%' }, [
           h('i', { 'aria-hidden': 'true' }), h('span', { text: 'Planla ' + n1(H.afterCpor) })]));
       }
-      var label = 'Kıyas şeridi: tesisiniz ' + n1(H.cpor) + ' kg ile ' + H.grade + ' bandında; ' + refTxt.toLowerCase() + (isNum(H.afterCpor) ? '; planınızla ' + n1(H.afterCpor) + ' kg' : '') + '.';
+      var label = 'Kıyas şeridi: tesisiniz ' + n1(H.cpor) + ' kg ile ' + H.grade + ' bandında; ' + refTxt.charAt(0).toLocaleLowerCase('tr') + refTxt.slice(1) + (isNum(H.afterCpor) ? '; planınızla ' + n1(H.afterCpor) + ' kg' : '') + '.';
       kids.push(h('div', { class: 'dh-scale', role: 'img', 'aria-label': label }, [
         h('span', { class: 'dh-mark', style: '--x:' + pos.toFixed(2) + '%' }, [
           h('span', { class: 'dh-marklbl', style: 'left:' + clampPct(pos, 7, 93).toFixed(2) + '%', text: 'Bu tesis ' + n1(H.cpor) }),

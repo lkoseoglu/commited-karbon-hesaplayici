@@ -15,7 +15,7 @@ const PAGES = ['turizm-karbon-hesaplayici.html', 'kapsam3-karbon-hesaplayici.htm
   .filter((f) => fs.existsSync(path.join(ROOT, f)) && rd(f).includes('<header class="hero">'));
 const APP_PAGE = PAGES.find((f) => rd(f).includes('assets/css/turizm-app.css'));
 // Sayfanın yüklediği yerel stil dosyaları (tema dosyası hariç) da sayfa stili sayılır
-const linkedCss = (html) => [...html.matchAll(/<link rel="stylesheet" href="(assets\/css\/[^"]+\.css)">/g)]
+const linkedCss = (html) => [...html.matchAll(/<link rel="stylesheet" href="(assets\/css\/[^"?]+\.css)(?:\?[^"]*)?">/g)]
   .map((m) => m[1]).filter((f) => !/theme-sea\.css$/.test(f)).map((f) => rd(f)).join('\n');
 
 // "{ ... }" blogunu dengeli sayarak al
@@ -61,7 +61,7 @@ for (const f of PAGES) {
   const localDefs = Object.fromEntries([...html.matchAll(/(--[a-z0-9-]+)\s*:/gi)].map((m) => [m[1], 1]));
 
   test(f + ': tema dosyasini yukler', () => {
-    assert.match(html, /<link rel="stylesheet" href="assets\/css\/theme-sea\.css">/);
+    assert.match(html, /<link rel="stylesheet" href="assets\/css\/theme-sea\.css(?:\?v=[^"]+)?">/);
   });
 
   test(f + ': sayfa stillerinde sabit renk kodu yok (yalniz Google marka mavisi)', () => {
@@ -109,8 +109,8 @@ if (fs.existsSync(path.join(ROOT, ADMIN_PAGE))) {
   const all = page + '\n' + linked;
   const localDefs = Object.fromEntries([...all.matchAll(/(--[a-z0-9-]+)\s*:/gi)].map((m) => [m[1], 1]));
   test(ADMIN_PAGE + ': tema dosyasini ve turizm stillerini yukler; sabit renk yok; her var(--x) tanimli', () => {
-    assert.match(page, /<link rel="stylesheet" href="assets\/css\/theme-sea\.css">/);
-    assert.match(page, /<link rel="stylesheet" href="assets\/css\/turizm-admin\.css">/);
+    assert.match(page, /<link rel="stylesheet" href="assets\/css\/theme-sea\.css(?:\?v=[^"]+)?">/);
+    assert.match(page, /<link rel="stylesheet" href="assets\/css\/turizm-admin\.css(?:\?v=[^"]+)?">/);
     const hex = [...css.matchAll(/#[0-9a-fA-F]{6}\b|#[0-9a-fA-F]{3}\b/g)].map((m) => m[0].toUpperCase()).filter((h) => h !== '#4285F4');
     assert.deepEqual(hex, [], 'sabit renkler: ' + hex.join(', '));
     const used = new Set([...all.matchAll(/var\((--[a-z0-9-]+)/gi)].map((m) => m[1]));

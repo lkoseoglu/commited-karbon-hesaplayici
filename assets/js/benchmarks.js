@@ -92,7 +92,7 @@
     var ratio = value / ref, p = ratio - 1;
     if (Math.abs(p) < 0.03) { return { ratio: ratio, deltaPct: p * 100, text: 'segment ortalamasında', direction: 'same' }; }
     var pct = Math.round(Math.abs(p) * 100);
-    return { ratio: ratio, deltaPct: p * 100, text: '%' + pct + (p < 0 ? ' altında' : ' üzerinde'), direction: p < 0 ? 'below' : 'above' };
+    return { ratio: ratio, deltaPct: p * 100, text: (root.NUM && root.NUM.pct ? root.NUM.pct(pct) : '%' + pct) + (p < 0 ? ' altında' : ' üzerinde'), direction: p < 0 ? 'below' : 'above' };
   }
 
   /** CPOR için not: referans verilmezse segmentin CHSB değeri kullanılır. */

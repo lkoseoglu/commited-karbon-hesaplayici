@@ -4,6 +4,70 @@ commitedevents.app (Squarespace) sitesine iframe ile gömülen, sunucu gerektirm
 tarayıcıda yapan) karbon hesaplama modülleri. GitHub Pages üzerinden yayınlanır:
 `https://lkoseoglu.github.io/commited-karbon-hesaplayici/<dosya>.html`
 
+## 2026-10-31 — İngilizce sürüm (v6.4): Turizm hesaplayıcısı Türkçe | English
+
+> **Durum:** `ingilizce` dalında hazır, testler yeşil; **canlıya alınmadı** (Levent Bey'in onayı bekleniyor).
+> Canlıya alınca: `git checkout main && git merge ingilizce && git push`. Squarespace'te değişiklik gerekmez
+> (dil düğmesi hesaplayıcının içinde).
+
+**İstek (Levent Bey):** Sitenin sağ üstündeki dil menüsünde yalnız Türkçe var; İngilizce (Almanca, Rusça) istendi.
+O menü Weglot ile çalışıyor; Weglot projesi silinmiş, üç dil için Business planı (aylık 29 €) gerekiyor. Karar:
+"para vermeyelim, çeviriyi sen yap". Kapsam: önce Turizm hesaplayıcısı, bütünüyle (formlar, panel, PDF raporu ve
+özet, panoya kopyalanan beyan ve özetler, WhatsApp metni, üyelik penceresi, bildirimler, hata mesajları).
+
+**Kullanım:** hesaplayıcının sağ üstünde `Türkçe | English` düğmesi; doğrudan İngilizce bağlantı
+`https://lkoseoglu.github.io/commited-karbon-hesaplayici/turizm-karbon-hesaplayici.html?lang=en`.
+Öncelik: `?lang=en|tr` → tarayıcıda hatırlanan seçim (`localStorage` `turizm.lang`) → Türkçe. Geçiş sayfayı yenilemez;
+girilen veriler korunur, sayılar yeni yazımla yeniden çizilir.
+
+**Mimari** (Türkçe kaynak metindir; sayfa her zaman Türkçe çizilir, İngilizce seçiliyse ekrandaki metin çevrilir):
+- `assets/js/turizm/i18n.js` — dilden bağımsız çeviri katmanı. `MutationObserver` ile ekrana gelen her metni ve
+  `placeholder`, `title`, `aria-label`, `alt` özniteliklerini çevirir; asıl Türkçe metni düğümde saklar, Türkçeye
+  dönünce geri yazar. Arama sırası: sözlük → kalıplar (içinde ad geçen değişken cümleler) → cümlelere bölme →
+  ` · ` listesine bölme. Anahtar bir **şablondur**: boşluklar teke, sayılar `{#}`; İngilizcede sayıların sırası
+  değişiyorsa `{#1}`, `{#2}`. İngilizcede `%12` kendiliğinden `12%` olur.
+- `translate="no"` olan bölge çevrilmez (kullanıcının yazdığı ad, marka). `data-en="..."` bir öğeye elle İngilizce
+  verir; `data-en-placeholder="..."` gibi `data-en-<öznitelik>` bir öznitelik için.
+- Kod içinden: `TURIZM.i18n.t('Form temizlendi')`; panoya kopyalanan çok satırlı metin için `TURIZM.i18n.tLines(metin)`
+  (madde işaretlerini korur, "Etiket: değer" satırlarında ikisini ayrı çevirir).
+- `assets/js/turizm/i18n-en.js` — İngilizce sözlük (yaklaşık 1.600 giriş, 79 kalıp; ülke adları `tr-reference.js`'ten).
+  Terimler: oda-gece → occupied room / room nights · Kapsam → Scope · kıyas → benchmark · önlem → measure ·
+  dengeleme → offsetting · beyan → statement · TL → TRY · tesis → property (İngiliz yazımı).
+- Sayılar (`assets/js/num-input.js` 1.1.0): `NUM.setLocale('en')` ile `1,234.5` yazımı ve İngilizce giriş kuralları
+  (`1,480,000` binlik, `12.5` ondalık); `NUM.pct()` Türkçede `%12`, İngilizcede `12%`. Kodda `'%' + x` yerine `NUM.pct(x)`.
+- Dil değişince `turizm:lang` olayı: `app.js` formları, sonuçları ve paneli yeni sayı yazımıyla yeniden çizer; örnek
+  tesisin adı da dile uyar (Örnek Tatil Köyü ⇄ Sample Resort; `model.SAMPLE_NAMES`, `isSampleName`).
+- Rapor ve özet: yeni sekmeye yazılan HTML `i18n.apply()` ile çevrilir, `<html lang="en">` olur.
+
+**Yeni bir Türkçe metin eklerken** İngilizcesini `i18n-en.js`'e yazın. Unutulursa `tests/e2e/turizm-en.test.mjs`
+hangi metnin eksik kaldığını yazar. Toplu tarama: `node tools/i18n-topla.mjs --en cikti.json` (bütün ekran durumlarını
+dolaşır, İngilizce ekranda kalan Türkçeyi listeler); `node tools/i18n-topla.mjs --eksik` sözlükte olmayan metinleri.
+
+**Bu sürümde düzeltilen eski hatalar** (Türkçe ekranı da etkiler):
+- Rapor sayfaları ve tek sayfalık özet A4'e her zaman sığmıyordu (çok önlem, tahmin notları, uzun tesis adı): içerik
+  alt bilgiye biniyordu. Artık her sayfa açılışta, yazı tipi yüklenince ve yazdırmadan önce kendini sığdırır
+  (`report.js` `fitScript`, `.fit1`–`.fit3`: önce aralıklar, sonra yazı küçülür). Özetteki önlem listesi en çok üç ad
+  ve "ve N önlem daha".
+- Net sıfır sayfasında bütün önlemler seçiliyse "en büyük ek potansiyel: ." boş kalıyordu; artık "Önerilen önlemlerin
+  hepsi planda." yazar. NZMFH tablosunda `kgco₂e/m²` → `kgCO₂e/m²`; panel kıyas şeridinin ekran okuyucu metninde
+  `str luxury` → `STR Luxury`.
+
+**Testler:** `tests/e2e/turizm-en.test.mjs` (6 test): 23 veri durumunda (segmentler, önlemsiz ve tüm önlemler,
+doğrulama durumları, yıl yok, kendi referansı, tahminler, taksonomi, geçmiş yıllar, acente çeşitleri) ekranda, panelde,
+raporda, özette ve panoda Türkçe kalmaması; canlı geçiş ve İngilizce sayı girişi; ziyaretçi bildirimi, kayıt penceresi
+ve rapor sekmesi; rapor sayfalarının A4'e sığması (Türkçe ve İngilizce); erişilebilirlik (açık ve koyu tema).
+Toplam 270 birim + 37 uçtan uca test.
+
+**Önbellek ve sürüm:** GitHub Pages her dosyayı 10 dakika önbellekte tutar; yayından hemen sonra yeni sayfa eski bir
+JavaScript dosyasıyla karışmasın diye `turizm-karbon-hesaplayici.html` ve `turizm-admin.html` içindeki yerel dosya
+bağlantıları sürüm taşır (`assets/js/turizm/app.js?v=6.4.0`). `APP_VERSION` (`model.js`) artırılınca bu bağlantılar
+da aynı sürüme çekilmeli; `tests/unit/onbellek.test.mjs` unutulursa uyarır.
+
+**Sonraki adımlar (karar bekliyor):** Kapsam 3 hesaplayıcısı ve Squarespace sayfalarının kendisi henüz yalnız Türkçe;
+sitedeki eski Weglot dil menüsü gizlenebilir; Almanca ve Rusça aynı yapıyla eklenebilir (`i18n-de.js`, `i18n-ru.js`,
+anahtarlar aynı). Sözlük her ziyaretçiye yüklenir (sıkıştırılmış yaklaşık 56 KB); gerekirse yalnız İngilizce seçilince
+yüklenecek biçime getirilebilir.
+
 ## 2026-10-31 — Üyelik şartı ve parlayan örnek düğmesi (v6.3)
 
 > **Durum:** 2026-10-31'de onaylandı ve canlıya alındı (`git push`, GitHub Actions testleri yeşil). Canlıda denendi:

@@ -8,3 +8,6 @@ __pycache__/
 
 # örnek rapor çıktısı (tools/report-sample.mjs)
 cikti-rapor/
+
+# i18n toplayıcısının çıktısı (node tools/i18n-topla.mjs), her çalıştırmada yeniden üretilir
+tools/i18n-kaynak.json

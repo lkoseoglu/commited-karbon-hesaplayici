@@ -185,7 +185,7 @@
     if (!(prev > 0)) { return null; }
     var p = (cur - prev) / prev * 100;
     if (Math.abs(p) < 0.5) { return { pct: 0, better: null, dir: 'same', text: vs + 'değişmedi', since: from + 'değişmedi' }; }
-    var down = p < 0, pc = '%' + f(Math.abs(p), Math.abs(p) < 10 ? 1 : 0);
+    var down = p < 0, pc = root.NUM.pct(f(Math.abs(p), Math.abs(p) < 10 ? 1 : 0));
     return { pct: p, better: m.better === 'down' ? down : !down, dir: down ? 'down' : 'up',
              text: vs + pc + (down ? ' daha az' : ' daha fazla'), since: from + pc + (down ? ' azaldı' : ' arttı') };
   }

@@ -15,13 +15,23 @@
        "1 480 000" → 1480000 (boşluk ve ince boşluk atılır)
        harf içeren metin ("12 kWh") → NaN  (sessizce tahmin edilmez)
 
-   format(x, digits, minDigits) → "1.234,5"   (locale'e bağlı değildir; her ortamda aynı)
+   format(x, digits, minDigits) → "1.234,5"   (tarayıcı diline bağlı değildir; her ortamda aynı)
+
+   İngilizce (v6.4): setLocale('en') ile format "1,234.5" yazar, pct("12") → "12%" (Türkçede "%12").
+     Okumada İngilizce yazım esas alınır: tek virgül + 3 rakam binliktir ("1,234" = 1234), tek nokta
+     her zaman ondalıktır ("1.234" = 1,234). Türkçe tam yazım ("1.234.567,89", "12,5") yine okunur.
 
    attach(input, opts) → tarayıcıda alanı Türkçe sayı alanı yapar (blur'da biçimler).
    Klasik betik: globalThis.NUM atar.
    ========================================================================= */
 (function (root) {
   'use strict';
+
+  var locale = 'tr';
+  function setLocale(l) { locale = l === 'en' ? 'en' : 'tr'; }
+  function getLocale() { return locale; }
+  /** Biçimlenmiş sayıya yüzde işareti: Türkçe "%12", İngilizce "12%" */
+  function pct(s) { return locale === 'en' ? s + '%' : '%' + s; }
 
   function parse(text, opts) {
     opts = opts || {};
@@ -51,7 +61,9 @@
       out = gr.join('') + '.' + fp;
     } else if (hasComma) {
       var cparts = s.split(',');
-      if (cparts.length > 2) {                                       // 1,234,567 → binlik (İngilizce yazım)
+      if (locale === 'en' && opts.kind !== 'factor' && /^\d{1,3}(?:,\d{3})+$/.test(s)) {
+        out = cparts.join('');                                       // İngilizce: 1,234 ve 1,234,567 → binlik
+      } else if (cparts.length > 2) {                                // 1,234,567 → binlik (İngilizce yazım)
         if (!/^\d{1,3}(?:,\d{3})+$/.test(s)) { return NaN; }
         out = cparts.join('');
       } else {
@@ -63,8 +75,8 @@
       if (dparts.length > 2) {                                       // 1.234.567 → binlik
         if (!/^\d{1,3}(?:\.\d{3})+$/.test(s)) { return NaN; }
         out = dparts.join('');
-      } else if (opts.kind !== 'factor' && /^[1-9]\d{0,2}\.\d{3}$/.test(s)) {
-        out = dparts.join('');                                       // 1.234 → 1234
+      } else if (locale !== 'en' && opts.kind !== 'factor' && /^[1-9]\d{0,2}\.\d{3}$/.test(s)) {
+        out = dparts.join('');                                       // 1.234 → 1234 (yalnız Türkçede)
       } else {
         if (dparts[0] === '' && dparts[1] === '') { return NaN; }
         out = (dparts[0] === '' ? '0' : dparts[0]) + '.' + dparts[1];
@@ -84,9 +96,10 @@
     var fixed = ax.toFixed(d), parts = fixed.split('.');
     var ip = parts[0], fp = parts[1] || '';
     while (fp.length > m && fp.charAt(fp.length - 1) === '0') { fp = fp.slice(0, -1); }
-    ip = ip.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    var en = locale === 'en';
+    ip = ip.replace(/\B(?=(\d{3})+(?!\d))/g, en ? ',' : '.');
     var isZero = Number(fixed) === 0;
-    return (x < 0 && !isZero ? '-' : '') + ip + (fp ? ',' + fp : '');
+    return (x < 0 && !isZero ? '-' : '') + ip + (fp ? (en ? '.' : ',') + fp : '');
   }
 
   /** Alan metnini sayıya çevir: boş → null, geçersiz → NaN */
@@ -106,10 +119,11 @@
     input.setAttribute('spellcheck', 'false');
     function validate() {
       var v = parse(input.value, opts), bad = false, msg = '';
-      if (typeof v === 'number' && isNaN(v)) { bad = true; msg = 'Sayı yazın, örn. 1.480.000 veya 12,5'; }
+      var en = locale === 'en';
+      if (typeof v === 'number' && isNaN(v)) { bad = true; msg = en ? 'Enter a number, e.g. 1,480,000 or 12.5' : 'Sayı yazın, örn. 1.480.000 veya 12,5'; }
       else if (typeof v === 'number') {
-        if (opts.min !== undefined && v < opts.min) { bad = true; msg = 'En az ' + format(opts.min, 6) + ' olabilir'; }
-        if (opts.max !== undefined && v > opts.max) { bad = true; msg = 'En fazla ' + format(opts.max, 6) + ' olabilir'; }
+        if (opts.min !== undefined && v < opts.min) { bad = true; msg = en ? 'Minimum ' + format(opts.min, 6) : 'En az ' + format(opts.min, 6) + ' olabilir'; }
+        if (opts.max !== undefined && v > opts.max) { bad = true; msg = en ? 'Maximum ' + format(opts.max, 6) : 'En fazla ' + format(opts.max, 6) + ' olabilir'; }
       }
       if (bad) { input.setAttribute('aria-invalid', 'true'); input.title = msg; }
       else { input.removeAttribute('aria-invalid'); input.removeAttribute('title'); }
@@ -122,5 +136,6 @@
     });
   }
 
-  root.NUM = { version: '1.0.0', parse: parse, format: format, read: read, attach: attach };
+  root.NUM = { version: '1.1.0', parse: parse, format: format, read: read, attach: attach,
+               setLocale: setLocale, getLocale: getLocale, pct: pct };
 })(typeof globalThis !== 'undefined' ? globalThis : self);

@@ -40,8 +40,8 @@
     return a >= 1e9 ? fx(x / 1e9, 1, true) + ' milyar TL' : a >= 1e6 ? fx(x / 1e6, 1, true) + ' milyon TL' : tl(x) + ' TL';
   }
   function pos(x) { return isNum(x) && x > 0; }
-  function pc(x, d) { return isNum(x) ? '%' + fx(x, d === undefined ? 0 : d) : '—'; }   // x yüzde cinsinden
-  function pcf(x) { return isNum(x) ? '%' + fx(x, 1, true) : '—'; }                     // tablolarda sabit 1 ondalık
+  function pc(x, d) { return isNum(x) ? root.NUM.pct(fx(x, d === undefined ? 0 : d)) : '—'; }   // x yüzde cinsinden
+  function pcf(x) { return isNum(x) ? root.NUM.pct(fx(x, 1, true)) : '—'; }                     // tablolarda sabit 1 ondalık
   // Cümle içinde küçük harf: ilk kelime kısaltmaysa (LED, BMS, GES) dokunma; Türkçe I → ı
   function lc(s) {
     s = String(s || '');
@@ -75,7 +75,7 @@
     if (!isNum(ratio)) { return '—'; }
     var p = Math.round(Math.abs(1 - ratio) * 100);
     if (p < 2) { return 'ortalamada'; }
-    return '%' + p + (ratio < 1 ? ' altında' : ' üzerinde');
+    return root.NUM.pct(p) + (ratio < 1 ? ' altında' : ' üzerinde');
   }
   var COLORS = {
     ink: '#0E2233', ink2: '#4A6578', line: '#CFE0EA', grid: '#DCE9F0', mist: '#EBF5FA', ocean: '#0B6FA0', soft: '#BCDDEE',
@@ -101,7 +101,7 @@
   /** Yüzde halkası (0–1): ortası yüzde yazılı, mm biriminde */
   function ring(frac, label) {
     var r = 9.2, C = 2 * Math.PI * r, f = Math.max(0, Math.min(1, isNum(frac) ? frac : 0));
-    var p = f * 100, txt = '%' + fx(p, p > 0 && p < 10 ? 1 : 0);
+    var p = f * 100, txt = root.NUM.pct(fx(p, p > 0 && p < 10 ? 1 : 0));
     return '<svg class="ring" viewBox="0 0 24 24" role="img" aria-label="' + esc(label + ': ' + txt) + '">'
       + '<circle cx="12" cy="12" r="' + r + '" fill="none" stroke="#DCE9F0" stroke-width="3.2"/>'
       + (f > 0 ? '<circle cx="12" cy="12" r="' + r + '" fill="none" stroke="' + COLORS.ocean + '" stroke-width="3.2" transform="rotate(-90 12 12)" stroke-dasharray="'
@@ -576,7 +576,7 @@
       rows.push({ cells: ['Dış çamaşırhane (Kapsam 3)', R.result.laundry.tonnageT !== null ? fx(R.result.laundry.tonnageT, 1) + ' ton çamaşır' : 'Dolu odadan tahmin',
         fx(lk / 1000, 1, true), '—', tn(sc.s3Laundry), pcf(sc.s3Laundry / T.hcmiT * 100)] });
     }
-    rows.push({ cls: 'total', cells: ['HCMI ayak izi toplamı', '', fx(totK / 1000, 1, true), '', tn(T.hcmiT), '%100,0'] });
+    rows.push({ cls: 'total', cells: ['HCMI ayak izi toplamı', '', fx(totK / 1000, 1, true), '', tn(T.hcmiT), pcf(100)] });
     var tbl = table([{ t: 'Kaynak', w: '33%' }, { t: 'Yıllık miktar' }, { t: 'Enerji, MWh', num: 1 }, { t: 'Faktör, kg/kWh', num: 1 }, { t: 't ' + CO2E, num: 1 }, { t: 'Pay', num: 1 }], rows, { cls: 'ledger' });
     var ledgerNote = '<p class="note">Yerinde üretilen yenilenebilir enerji (GES) sıfır emisyonla sayılır; yenilenebilir elektrik payı ' + pcf(R.renewable.elecPct)
       + ', toplam enerjide ' + pcf(R.renewable.energyPct) + '. Dış çamaşırhane enerjisi HCMI ton başı katsayılarıyla hesaplanır.</p>';
@@ -677,7 +677,7 @@
     var legend = '<div class="legend"><span><i class="ln" style="border-color:' + COLORS.ocean + '"></i>Plan: seçilen önlemlerle bina enerjisi emisyonu</span>'
       + '<span><i class="ln dash"></i>NZMFH izin verilen üst sınır</span><span><i class="wash"></i>Açık</span></div>';
     var rows = ev.map(function (e) {
-      var ok = e.passedTests.filter(function (t) { return t.ok; }).map(function (t) { return t.label.toLowerCase(); });
+      var ok = e.passedTests.filter(function (t) { return t.ok; }).map(function (t) { return lc(t.label); });
       return { cells: [String(e.year), tn(e.targetTco2e), pc(e.reductionPct, 1), tn(e.planTco2e), e.met ? '—' : tn(e.gapTco2e),
         (e.met ? icon('good') + ' Karşılanıyor' + (ok.length ? ': ' + ok.join(', ') : '') : icon('warn') + ' Açık var')] };
     });
@@ -701,8 +701,9 @@
       + '<div class="cols2 blk"><div><h3>Hesabın temeli</h3><p class="sm">Net Zero Methodology for Hotels (NZMFH, 2. baskı, 2023) Tablo 3, Kategori 1: binanın enerji kullanımından doğan emisyon, yani sabit yakıtlar ve satın alınan elektrik ve ısı. '
       + 'Baz yıl ' + P.baseYear + ': ' + tn(P.baseT) + ' t. Araç yakıtı, soğutucu gaz ve dış çamaşırhane (toplam ' + tn(excl) + ' t) NZMFH\'de ayrı kategorilerdir. '
       + 'Her kilometre taşında mutlak azaltım, yoğunluk azaltımı veya metrekare başına seviye eşiğinden en az birinin sağlanması gerekir.</p></div>'
-      + '<div><h3>Açığı kapatmak için</h3><p class="sm">Planda olmayan önlemlerden en büyük ek potansiyel: '
-      + unsel.map(function (r) { return lc(r.tr) + ' (' + tn(r.reductionT) + ' t)'; }).join(', ') + '. '
+      + '<div><h3>Açığı kapatmak için</h3><p class="sm">'
+      + (unsel.length ? 'Planda olmayan önlemlerden en büyük ek potansiyel: ' + unsel.map(function (r) { return lc(r.tr) + ' (' + tn(r.reductionT) + ' t)'; }).join(', ') + '. '
+        : 'Önerilen önlemlerin hepsi planda. ')
       + 'Şebeke elektriği için yenilenebilir elektrik tedariki (YEK-G, I-REC veya ikili anlaşma) uzun vadeli hedeflerin ana kaldıracıdır. Hedefleri yılda bir güncel verilerle yeniden hesaplayın.</p></div></div>';
   }
 
@@ -1126,13 +1127,20 @@
       '.op-body{position:absolute;top:70mm;left:17mm;right:17mm;bottom:15mm}',
       '.op .kpis{margin-bottom:5mm}.op .blk{margin-bottom:4.6mm}',
       '.op svg.scale{margin-bottom:1mm}',
-      '.hbars.compact{gap:1mm}.hbars.compact .hb-row{grid-template-columns:30mm 1fr;font-size:7.9pt}',
+      '.hbars.compact{gap:1mm}.hbars.compact .hb-row{grid-template-columns:33mm 1fr;font-size:7.9pt}',
       'dl.oprs{margin:0}',
-      'dl.oprs div{display:grid;grid-template-columns:30mm 1fr;padding:1.25mm 0;border-bottom:0.2mm solid #DCE9F0;font-size:8.2pt;line-height:1.35}',
+      'dl.oprs div{display:grid;grid-template-columns:34mm 1fr;padding:1.25mm 0;border-bottom:0.2mm solid #DCE9F0;font-size:8.2pt;line-height:1.35}',
       'dl.oprs dt{color:#4A6578}dl.oprs dd{margin:0;font-weight:500}',
       '.op-p{margin-bottom:0;height:100%}.op-p p{font-size:8.3pt;line-height:1.45}',
       'dl.op-meta{display:grid;grid-template-columns:1fr 1.25fr 1fr 0.7fr;gap:2.4mm 6mm;margin:0;border-top:0.35mm solid #0E2233;padding-top:2.6mm;font-size:7.8pt}',
       'dl.op-meta dt{color:#4A6578}dl.op-meta dd{margin:0.3mm 0 0;font-weight:500}',
+      // sayfa A4'e sığmazsa (uzun ad, çok önlem, tahmin notları, İngilizce metin): önce aralıklar, sonra yazı küçülür
+      '.page.fit1 .blk{margin-bottom:3.6mm}.page.fit1 .take{margin-bottom:4mm}.page.fit1 .kpis{margin-bottom:4.5mm}.page.fit1 .panel{margin-bottom:3.2mm}.page.fit1 p{margin-bottom:1.4mm}.page.fit1 table.t td{padding-top:1mm;padding-bottom:1mm}',
+      '.page.fit2 .body{font-size:8.6pt}.page.fit2 .take{font-size:11pt}.page.fit2 .sm,.page.fit2 .panel p,.page.fit2 .note{font-size:7.5pt}.page.fit2 table.t{font-size:7.8pt}.page.fit2 .hb-row{font-size:7.9pt}',
+      '.page.fit3 .body{top:17.5mm;bottom:13.5mm;font-size:8.2pt}.page.fit3 .take{font-size:10.4pt}.page.fit3 .sm,.page.fit3 .panel p,.page.fit3 .note{font-size:7.1pt}.page.fit3 table.t{font-size:7.4pt}',
+      '.op.fit1 .kpis{margin-bottom:3.4mm}.op.fit1 .blk{margin-bottom:3.2mm}.op.fit1 dl.oprs div{padding:0.8mm 0}.op.fit1 .hbars.compact{gap:0.5mm}.op.fit1 .note{margin-top:1.4mm}',
+      '.op.fit2 .op-p p,.op.fit2 dl.oprs div{font-size:7.7pt;line-height:1.38}.op.fit2 .hbars.compact .hb-row{font-size:7.5pt}.op.fit2 .note,.op.fit2 dl.op-meta{font-size:7.2pt}.op.fit2 .op-body h3{font-size:9.4pt;margin-bottom:1.6mm}.op.fit2 .panel{padding-top:3mm;padding-bottom:1.8mm}',
+      '.op.fit3 .op-body{top:67.5mm;bottom:13.5mm}.op.fit3 .kpi .v{font-size:17pt}.op.fit3 .kpi .s,.op.fit3 .kpi .l{font-size:7.2pt}.op.fit3 .op-p p,.op.fit3 dl.oprs div{font-size:7.3pt}.op.fit3 .note,.op.fit3 dl.op-meta{font-size:6.8pt}',
       // ekranda üst araç çubuğu (yazdırmada görünmez)
       '.tb{position:sticky;top:0;z-index:10;background:#05304D;color:#F2F9FC;font-size:10pt;line-height:1.45;margin:-8mm 0 8mm;padding:3mm 0;box-shadow:0 2px 10px rgba(3,32,58,.3)}',
       '.tb-in{max-width:210mm;margin:0 auto;display:flex;gap:6mm;align-items:center;justify-content:space-between;padding:0 4mm}',
@@ -1157,6 +1165,20 @@
       + 'if(!l||l.sheet){after();}else{l.addEventListener("load",after);l.addEventListener("error",fin);}}'
       + 'b.addEventListener("click",function(){b.disabled=true;fonts(function(){b.disabled=false;window.print();});});'
       + 'try{b.focus();}catch(e){}})();</script>';
+  }
+
+  /** Bir sayfanın içeriği A4'e sığmıyorsa (alt bilgiye ya da son sayfadaki banda taşıyorsa) o sayfaya .fit1 → .fit3
+      sınıflarını sırayla ekler. Açılışta, yazı tipi yüklenince ve yazdırmadan önce çalışır; İngilizce ekranda
+      çeviriden sonra app.js window.__fitPages()'i yeniden çağırır. */
+  function fitScript() {
+    return '<script>(function(){'
+      + 'function over(pg,b){var lim=b.getBoundingClientRect().bottom,bk=pg.querySelector(".back"),m=0,k=b.children,j,r;'
+      + 'if(bk){lim=Math.min(lim,bk.getBoundingClientRect().top);}'
+      + 'for(j=0;j<k.length;j++){r=k[j].getBoundingClientRect();if(r.height>0&&r.bottom>m){m=r.bottom;}}return m>lim+1;}'
+      + 'function fit(){var ps=document.querySelectorAll(".page"),n,i;for(n=0;n<ps.length;n++){var pg=ps[n],b=pg.querySelector(".op-body")||pg.querySelector(".body");if(!b){continue;}'
+      + 'for(i=1;i<=3;i++){pg.classList.remove("fit"+i);}for(i=1;i<=3&&over(pg,b);i++){pg.classList.add("fit"+i);}}}'
+      + 'window.__fitPages=fit;fit();window.addEventListener("load",fit);window.addEventListener("beforeprint",fit);'
+      + 'if(document.fonts&&document.fonts.ready){document.fonts.ready.then(fit,function(){});}})();</script>';
   }
 
   /** Rapor oluşturulabilir mi? Düğme durumu ve açıklaması için. */
@@ -1221,7 +1243,9 @@
     var plan;
     if (sn && sn.any && sn.valid) {
       var names = R.ranking.filter(function (r) { return sn.applied.indexOf(r.id) >= 0; }).map(function (r) { return lc(r.tr); });
-      plan = 'Seçilen ' + names.length + ' önlem: ' + names.join(', ') + '. Yıllık azaltım <b>' + tn(sn.savedT) + ' t ' + CO2E + '</b> (' + pc(sn.savedT / T.hcmiT * 100, 0) + '); yatırım '
+      // tek sayfaya sığsın: en çok üç önlem adı (sıralama en büyük azaltımdan), gerisi sayıyla
+      var shown = names.length > 4 ? names.slice(0, 3).join(', ') + ' ve ' + (names.length - 3) + ' önlem daha' : names.join(', ');
+      plan = 'Seçilen ' + names.length + ' önlem: ' + shown + '. Yıllık azaltım <b>' + tn(sn.savedT) + ' t ' + CO2E + '</b> (' + pc(sn.savedT / T.hcmiT * 100, 0) + '); yatırım '
         + tlShort(sn.capexTl) + ', geri ödeme ' + fx(sn.paybackYears, 1) + ' yıl.';
     } else {
       var best = R.ranking.filter(function (r) { return r.id !== 'green' && isNum(r.reductionT) && r.reductionT > 0; }).sort(function (a2, b2) { return b2.reductionT - a2.reductionT; }).slice(0, 3);
@@ -1296,7 +1320,7 @@
     return '<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=860">'
       + '<title>' + esc((h.name || 'Tesis') + ' - ' + title) + '</title>'
       + (opts.fontCss ? '' : GOOGLE_FONTS) + '<style>' + css(opts.fontCss || '') + '</style></head><body>'
-      + (opts.toolbar ? toolbar(summary) : '') + pages + (opts.toolbar ? toolbarScript() : '') + '</body></html>';
+      + (opts.toolbar ? toolbar(summary) : '') + pages + fitScript() + (opts.toolbar ? toolbarScript() : '') + '</body></html>';
   }
 
   NS.report = { version: '1.1.0', build: build, canBuild: canBuild, _isobaths: isobaths };

@@ -8,6 +8,9 @@
 (function (root) {
   'use strict';
 
+  // Paylaşılan düz metin seçili dilde (i18n.js; yoksa olduğu gibi)
+  function lines(x) { var I = root.TURIZM && root.TURIZM.i18n; return I ? I.tLines(x) : x; }
+
   var NS = root.TURIZM = root.TURIZM || {};
   var U, M, F;
   var SCOPE_TR = { 1: 'Kapsam 1', 2: 'Kapsam 2', 3: 'Kapsam 3' };
@@ -303,18 +306,18 @@
     if (p) {
       rows.push([{ text: p.baseYear + ' (baz)', th: true }, fm.t(p.baseT), 'baz yıl', fm.t(p.baseT), '—', '—']);
       p.evaluation.forEach(function (e) {
-        rows.push([{ text: String(e.year), th: true }, fm.t(e.targetTco2e), '%' + fm.n(e.reductionPct, 0), fm.t(e.planTco2e),
+        rows.push([{ text: String(e.year), th: true }, fm.t(e.targetTco2e), root.NUM.pct(fm.n(e.reductionPct, 0)), fm.t(e.planTco2e),
                    e.met ? '0' : fm.t(e.gapTco2e), { text: e.met ? 'Hedefte' : 'Açık var', cls: e.met ? 'ok' : 'bad' }]);
       });
     }
     U.fillTable(U.el('path_table') && U.el('path_table').tBodies[0], rows, 'Veri bekleniyor', 6);
     T('path_note', p
-      ? 'Baz yıl ' + p.baseYear + (p.yearGiven ? '' : ' (rapor yılı girilmediği için varsayıldı)') + ' — ' + p.cls.label + ': yıllık %' + p.cls.annualPct
+      ? 'Baz yıl ' + p.baseYear + (p.yearGiven ? '' : ' (rapor yılı girilmediği için varsayıldı)') + ' — ' + p.cls.label + ': yıllık ' + root.NUM.pct(p.cls.annualPct)
         + ' pratik kuralı. Hedef, her kilometre taşında üç NZMFH ölçütünden en az birini sağlayan en yüksek emisyondur. Grafik bina enerjisini (sabit yakıtlar + elektrik ve ısı) izler; araç yakıtı, soğutucu gaz ve dış çamaşırhane ayrı kategorilerdir.'
       : '');
     var m30 = p ? p.m2030 : null, o = R.offsets;
     T('nz_t2030', m30 ? fm.t(m30.targetTco2e) : '—');
-    T('nz_r2030', m30 ? '%' + fm.n(m30.reductionPct, 0) : '—');
+    T('nz_r2030', m30 ? root.NUM.pct(fm.n(m30.reductionPct, 0)) : '—');
     T('nz_gap', m30 ? fm.t(m30.gapTco2e) : '—');
     T('nz_gap_sub', !p ? '—' : (!m30 ? 'Baz yılınız 2030 ya da sonrası; tablodaki sonraki kilometre taşlarına bakın.'
       : (m30.met ? 'Patikanın önündesiniz — seçilen önlemler 2030 hedefini karşılıyor.'
@@ -361,7 +364,7 @@
     T('e_pp', e.valid ? fm.n(e.perPersonKg, 1) : '—');
     T('e_cost', e.valid ? fm.tl(e.costTl) : '—');
     var wa = U.el('btn-wa');
-    if (wa) { wa.href = NS.texts.whatsappUrl(on ? NS.texts.executive(s, R) : ''); }
+    if (wa) { wa.href = NS.texts.whatsappUrl(on ? lines(NS.texts.executive(s, R)) : ''); }
   }
 
   // ------------------------------------------------------------------ acente
@@ -383,7 +386,7 @@
     T('as_n', st.split && st.nights > 0 ? fm.n(st.nights, 0) : '—');
     T('as_w', st.split && st.nights > 0 ? fm.n(st.cpor, 1) : '—');
     T('as_t', st.split && st.nights > 0 ? fm.n(st.kg / 1000, 1) : '—');
-    var wa = U.el('btn-awa'); if (wa) { wa.href = NS.texts.whatsappUrl(on ? NS.texts.agencySummary(s, A) : ''); }
+    var wa = U.el('btn-awa'); if (wa) { wa.href = NS.texts.whatsappUrl(on ? lines(NS.texts.agencySummary(s, A)) : ''); }
   }
 
   // ------------------------------------------------------------------ metodoloji (bir kez)

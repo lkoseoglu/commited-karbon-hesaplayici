@@ -21,8 +21,8 @@
   function f(x, d) { return isNum(x) ? root.NUM.format(x, d === undefined ? 1 : d) : '—'; }
   function t(x) { return isNum(x) ? root.NUM.format(x, Math.abs(x) < 100 ? 1 : 0) : '—'; }       // ton: 100 altı 1 ondalık
   function tl(x) { return isNum(x) ? root.NUM.format(Math.round(x), 0) : '—'; }
-  function pct01(x) { return isNum(x) ? '%' + root.NUM.format(x * 100, 0) : '—'; }
-  function pct100(x) { return isNum(x) ? '%' + root.NUM.format(x, 0) : '—'; }
+  function pct01(x) { return isNum(x) ? root.NUM.pct(root.NUM.format(x * 100, 0)) : '—'; }
+  function pct100(x) { return isNum(x) ? root.NUM.pct(root.NUM.format(x, 0)) : '—'; }
   function r2(x, d) { if (!isNum(x)) { return null; } var p = Math.pow(10, d); return Math.round(x * p) / p; }
 
   function title(s) {

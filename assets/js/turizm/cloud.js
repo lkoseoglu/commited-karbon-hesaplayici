@@ -45,8 +45,10 @@ const ERR = {
 };
 const errText = (e) => ERR[(e && e.code) || ""] || (e && e.message) || "Beklenmeyen bir hata oluştu.";
 const showErr = (m) => { $("authErr").textContent = m || ""; };
-const fmtKg = (kg) => (kg >= 1000 ? (kg / 1000).toLocaleString("tr-TR", { maximumFractionDigits: 1 }) + " tCO₂e"
-                                  : Math.round(kg).toLocaleString("tr-TR") + " kgCO₂e");
+// Sayı ve tarih seçili dilde (i18n.js: Türkçe 1.234,5 · İngilizce 1,234.5)
+const fmtKg = (kg) => (kg >= 1000 ? globalThis.NUM.format(kg / 1000, 1) + " tCO₂e" : globalThis.NUM.format(Math.round(kg), 0) + " kgCO₂e");
+const isEn = () => !!(globalThis.TURIZM && globalThis.TURIZM.i18n && globalThis.TURIZM.i18n.lang() === "en");
+const fmtDate = (d, withTime) => (withTime ? d.toLocaleString(isEn() ? "en-GB" : "tr-TR") : d.toLocaleDateString(isEn() ? "en-GB" : "tr-TR"));
 const el = (tag, attrs = {}, kids = []) => {
   const e = document.createElement(tag);
   for (const [k, v] of Object.entries(attrs)) { if (k === "text") e.textContent = v; else if (k === "class") e.className = v; else e.setAttribute(k, v); }
@@ -164,9 +166,11 @@ function loadRecord(r) {
   if (!r || !r.inputs) return;
   const res = T().apply(r.inputs);
   T().setMode(r.type === "agency" ? "acente" : "otel");
-  const dt = r.createdAt && r.createdAt.toDate ? r.createdAt.toDate().toLocaleDateString("tr-TR") : "";
-  const parts = [{ b: "Kayıtlı verileriniz yüklendi" }, " (" + (r.company || "") + (r.year ? " · " + r.year : "") + (dt ? " · kayıt " + dt : "") + "). ",
-    "Değiştirip \"Hesabıma kaydet\" derseniz yeni bir kayıt olarak eklenir; eski kayıtlar silinmez."];
+  const dt = r.createdAt && r.createdAt.toDate ? fmtDate(r.createdAt.toDate()) : "";
+  // Tarih ve tesis adı ayrı metin parçası: İngilizce çeviri (i18n.js) cümleyi bulabilsin
+  const parts = [{ b: "Kayıtlı verileriniz yüklendi" }, " (" + (r.company || "") + (r.year ? " · " + r.year : "") + ")"];
+  if (dt) parts.push(" · ", "kayıt", " " + dt);
+  parts.push(". ", "Değiştirip \"Hesabıma kaydet\" derseniz yeni bir kayıt olarak eklenir; eski kayıtlar silinmez.");
   if (res && res.legacy) parts.push(" Bu kayıt önceki sürümle yapılmıştı; yeni yönteme aktarıldı, sonuçlar biraz farklı olabilir (Metodoloji → Önceki sürümden farklar).");
   if (res && res.notes && res.notes.length) parts.push({ list: res.notes });
   T().notice(r.type === "agency" ? "agency" : "hotel", parts);
@@ -181,12 +185,12 @@ async function openRecords() {
     box.textContent = "";
     if (!recs.length) { box.append(el("p", { class: "mini", text: "Henüz kaydınız yok. Verilerinizi girip \"Hesabıma kaydet\" deyin." })); return; }
     recs.forEach((r) => {
-      const dt = r.createdAt && r.createdAt.toDate ? r.createdAt.toDate().toLocaleString("tr-TR") : "";
-      const meta = (r.type === "agency" ? "Acente" : "Otel / HCMI") + " · " + dt
-        + (r.cpor != null ? " · " + String(r.cpor).replace(".", ",") + " kg/oda-gece" : "")
-        + (r.inputs && r.inputs.schema ? "" : " · önceki sürüm");
+      const dt = r.createdAt && r.createdAt.toDate ? fmtDate(r.createdAt.toDate(), true) : "";
+      const meta = el("small", {}, [r.type === "agency" ? "Acente" : "Otel / HCMI", " · " + dt]);
+      if (r.cpor != null) meta.append(" · ", globalThis.NUM.format(+r.cpor, 1) + " kg/oda-gece");
+      if (!(r.inputs && r.inputs.schema)) meta.append(" · ", "önceki sürüm");
       const b = el("button", { type: "button", class: "rec" }, [
-        el("span", {}, [(r.company || "Tesis") + (r.year ? " · " + r.year : ""), el("small", { text: meta })]),
+        el("span", {}, [(r.company || "Tesis") + (r.year ? " · " + r.year : ""), meta]),
         el("b", { text: fmtKg(r.total || 0) })
       ]);
       b.addEventListener("click", () => { loadRecord(r); closeModal(); T().toast("Kayıt yüklendi"); });

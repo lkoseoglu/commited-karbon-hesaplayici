@@ -27,7 +27,7 @@
   var NS = root.TURIZM = root.TURIZM || {};
   var SCHEMA = 'commited.turizm.state/2';
   var SCHEMA_PREFIX = 'commited.turizm.state/';
-  var APP_VERSION = '6.3.0';
+  var APP_VERSION = '6.4.0';
 
   // ------------------------------------------------------------------ sabitler
   var SEGMENTS = ['resort5', 'lux', 's5', 's4', 's3', 'limited'];          // benchmarks.js kimlikleri
@@ -549,6 +549,12 @@
     a_transfer: '60000', a_gece: '7200', a_ofis: '18000', a_seg: 's4', a_cpor: '37.9',
     a_n_lux: '0', a_n_s5: '2400', a_n_s4: '3600', a_n_s3: '1200', a_n_limited: '0'
   };
+  // Örnek tesisin adı: Türkçe ekranda ve İngilizce ekranda (app.js örneği bu adlardan tanır)
+  var SAMPLE_NAMES = { tr: LEGACY_EXAMPLE.h_name, en: 'Sample Resort' };
+  function isSampleName(name) {
+    var n = String(name || '').trim();
+    return n === SAMPLE_NAMES.tr || n === SAMPLE_NAMES.en;
+  }
   function exampleState() {
     var s = fromLegacy(LEGACY_EXAMPLE).state;
     s.hotel.esg = clone(EXAMPLE_ESG);                                   // eski sayfada bu alanlar yoktu
@@ -558,6 +564,9 @@
   /** Yalnız bir sekmeyi örnekle doldur: which = 'otel' | 'acente'. Durumu değiştirir ve döndürür. */
   function applyExample(s, which) {
     var ex = exampleState();
+    // İngilizce ekranda örnek tesisin adı da İngilizce (alan değeri çevrilmediği için burada)
+    var I = NS.i18n;
+    if (I && I.lang() === 'en') { ex.hotel.name = SAMPLE_NAMES.en; }
     if (which === 'acente') { s.agency = ex.agency; } else { s.hotel = ex.hotel; }
     return s;
   }
@@ -713,7 +722,7 @@
     SEGMENTS: SEGMENTS, VERIFY: VERIFY, TAXONOMY: TAXONOMY, CONNECTIONS: CONNECTIONS,
     AGENCY_SEG_IDS: AGENCY_SEG_IDS, AGENCY_FIELDS: AGENCY_FIELDS,
     DEFAULT_ROWS: DEFAULT_ROWS, DEFAULT_PRICES: DEFAULT_PRICES, DEFAULT_PV_COST: DEFAULT_PV_COST,
-    LEGACY_EXAMPLE: LEGACY_EXAMPLE, ESG_FIELDS: ESG_FIELDS, EXAMPLE_ESG: EXAMPLE_ESG, LOGO_MAX_CHARS: LOGO_MAX_CHARS,
+    LEGACY_EXAMPLE: LEGACY_EXAMPLE, SAMPLE_NAMES: SAMPLE_NAMES, isSampleName: isSampleName, ESG_FIELDS: ESG_FIELDS, EXAMPLE_ESG: EXAMPLE_ESG, LOGO_MAX_CHARS: LOGO_MAX_CHARS,
     emptyState: emptyState, emptyHotel: emptyHotel, emptyAgency: emptyAgency, emptyEsg: emptyEsg, logoOf: logoOf,
     normalize: normalize, fromLegacy: fromLegacy, looksLegacy: looksLegacy, load: load,
     buildInput: buildInput, calcOptions: calcOptions, gridInfo: gridInfo, measuresBase: measuresBase,

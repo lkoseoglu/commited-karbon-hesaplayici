@@ -283,7 +283,7 @@ test('üyelik: kayıt ol, kaydet (yeni şema), çıkış, giriş → son kayıt 
   assert.equal(rec.type, 'hotel'); assert.equal(rec.company, 'Örnek Tatil Köyü'); assert.equal(rec.year, 2025);
   assert.equal(rec.total, Math.round(ex.totals.hcmiT * 1000)); assert.equal(rec.grade, 'B');
   assert.equal(rec.inputs.schema, 'commited.turizm.state/2'); assert.equal(rec.inputs.options, undefined, 'yerel tercih buluta gitmez');
-  assert.equal(rec.hcmi.schema, 'commited.hotel.hcmi/2'); assert.equal(rec.appVersion, '6.3.0');
+  assert.equal(rec.hcmi.schema, 'commited.hotel.hcmi/2'); assert.equal(rec.appVersion, '6.4.0');
   assert.equal(rec.sector, 'Turizm — Otel (HCMI v2.0)');
   assert.ok(!JSON.stringify(rec).includes('gizli123'), 'şifre kayda girmez');
   // çıkış, formu temizle, giriş → son kayıt otomatik yüklenir

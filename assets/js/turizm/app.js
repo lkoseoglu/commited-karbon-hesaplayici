@@ -278,11 +278,12 @@
       return;
     }
     flush();
-    if (b.id === 'btn-decl') { U.copy(R && R.usable && R.started ? X.declaration(state, R) : '', 'Beyan metni kopyalandı'); }
-    else if (b.id === 'btn-copy') { U.copy(R && R.usable && R.started ? X.executive(state, R) : '', 'Yönetici özeti kopyalandı'); }
+    var L = NS.i18n ? NS.i18n.tLines : function (x) { return x; };   // İngilizce seçiliyse metin de İngilizce
+    if (b.id === 'btn-decl') { U.copy(R && R.usable && R.started ? L(X.declaration(state, R)) : '', 'Beyan metni kopyalandı'); }
+    else if (b.id === 'btn-copy') { U.copy(R && R.usable && R.started ? L(X.executive(state, R)) : '', 'Yönetici özeti kopyalandı'); }
     else if (b.id === 'btn-json') { U.copy(R && R.started ? JSON.stringify(X.exportObject(state, R), null, 2) : '', 'JSON kopyalandı — yazılım ekibinize verebilirsiniz'); }
     else if (b.id === 'btn-mail') { U.copy('info@commited.app', 'E-posta adresi kopyalandı'); }
-    else if (b.id === 'btn-acopy') { U.copy(A && A.started ? X.agencySummary(state, A) : '', 'Özet kopyalandı'); }
+    else if (b.id === 'btn-acopy') { U.copy(A && A.started ? L(X.agencySummary(state, A)) : '', 'Özet kopyalandı'); }
     else if (b.id === 'btn-print') { printDeclaration(); }
     else if (b.id === 'btn-report') { openReport('report'); }
     else if (b.id === 'btn-summary') { openReport('summary'); }
@@ -305,6 +306,7 @@
     }
   }
   function isSample() {
+    if (M.isSampleName) { return M.isSampleName(state.hotel.name); }
     var ex = M.LEGACY_EXAMPLE && M.LEGACY_EXAMPLE.h_name;
     return !!ex && (state.hotel.name || '').trim() === ex;
   }
@@ -384,6 +386,11 @@
       U.toast('Yeni sekme engellendi'); return;
     }
     w.document.open(); w.document.write(html); w.document.close();
+    if (NS.i18n && NS.i18n.lang() === 'en') {                      // rapor sekmesi de İngilizce
+      NS.i18n.apply(w.document);
+      w.document.documentElement.lang = 'en';
+      if (w.__fitPages) { w.__fitPages(); }                         // çeviri sonrası sayfaları A4'e sığdır
+    }
     reportState.shown = 'opened'; reportState.snap = JSON.stringify(state.hotel);
     U.setText('report_msg', (summary ? 'Özet' : 'Rapor') + ' yeni sekmede açıldı. Oradaki "PDF olarak kaydet" düğmesiyle indirebilirsiniz.');
   }
@@ -461,6 +468,7 @@
     if (isSample()) {
       if (!sampleHist || sampleHist.year !== state.hotel.year) {
         var ex = M.exampleState(); ex.hotel.year = state.hotel.year;
+        ex.hotel.name = state.hotel.name;                       // Türkçe ya da İngilizce örnek adı
         sampleHist = { year: state.hotel.year, list: D.history(D.sampleRecords(ex), state, { sample: true }) };
       }
       return sampleHist.list;
@@ -549,6 +557,13 @@
     doc.body.classList.toggle('gated', gated());
     defaultNotice('otel'); defaultNotice('acente');
     (U.el('app') || doc.body).addEventListener('click', onAppClick);
+    // Dil değişince (i18n.js): sayıları yeni yazımla yeniden çiz; metinleri i18n katmanı çevirir
+    doc.addEventListener('turizm:lang', function () {
+      // Örnek tesisin adı da dile uyar (Örnek Tatil Köyü ⇄ Sample Resort); başka adlara dokunulmaz
+      if (isSample() && M.SAMPLE_NAMES) { state.hotel.name = M.SAMPLE_NAMES[NS.i18n && NS.i18n.lang() === 'en' ? 'en' : 'tr']; }
+      F.renderAll(); RN.methodology(); histCache.key = null; compute();
+      if (view === 'dash') { renderDash(); } else { dashDirty = true; }
+    });
     var resizeTimer = null;
     root.addEventListener('resize', function () { clearTimeout(resizeTimer); resizeTimer = setTimeout(function () { if (R) { NS.chart.draw(R.path, { svg: 'pathsvg', box: 'pathbox', tip: 'pathtip', empty: 'path_empty' }); } }, 150); });
     setMode(state.mode);

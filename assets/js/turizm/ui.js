@@ -48,8 +48,8 @@
     /** ton: 100'ün altında 1 ondalık, üstünde tam sayı */
     t: function (x) { return isNum(x) ? root.NUM.format(x, Math.abs(x) < 100 ? 1 : 0) : '—'; },
     tl: function (x) { return isNum(x) ? root.NUM.format(Math.round(x), 0) : '—'; },
-    pct01: function (x) { return isNum(x) ? '%' + root.NUM.format(x * 100, 0) : '—'; },
-    pct100: function (x) { return isNum(x) ? '%' + root.NUM.format(x, x > 0 && x < 1 ? 1 : 0) : '—'; },
+    pct01: function (x) { return isNum(x) ? root.NUM.pct(root.NUM.format(x * 100, 0)) : '—'; },
+    pct100: function (x) { return isNum(x) ? root.NUM.pct(root.NUM.format(x, x > 0 && x < 1 ? 1 : 0)) : '—'; },
     year: function (x) { return isNum(x) ? String(Math.round(x)) : '—'; }
   };
 
