@@ -237,6 +237,11 @@ test('tarayıcı belleği: kutu işaretliyse yeniden açılışta veriler gelir;
   await p.reload({ waitUntil: 'load' }); await p.waitForFunction(() => !!window.__tour); await settle(p);
   assert.equal(await text(p, '#s_total'), '1.060');
   assert.match(await text(p, '#h_notice'), /sakladığınız veriler yüklendi/);
+  // geri dönen kullanıcı panelde açılır; bir adıma tıklayınca adımlara dönülür
+  assert.equal(await p.isVisible('#panel-dash'), true);
+  assert.equal(await p.isVisible('#adim5'), false);
+  await p.click('.steps a[data-step="adim5"]'); await settle(p);
+  assert.equal(await p.isVisible('#adim5'), true);
   await p.uncheck('#opt_save'); await settle(p);
   await p.reload({ waitUntil: 'load' }); await p.waitForFunction(() => !!window.__tour); await settle(p);
   assert.equal(await text(p, '#s_total'), '—');
@@ -264,7 +269,7 @@ test('üyelik: kayıt ol, kaydet (yeni şema), çıkış, giriş → son kayıt 
   assert.equal(rec.type, 'hotel'); assert.equal(rec.company, 'Örnek Tatil Köyü'); assert.equal(rec.year, 2025);
   assert.equal(rec.total, Math.round(ex.totals.hcmiT * 1000)); assert.equal(rec.grade, 'B');
   assert.equal(rec.inputs.schema, 'commited.turizm.state/2'); assert.equal(rec.inputs.options, undefined, 'yerel tercih buluta gitmez');
-  assert.equal(rec.hcmi.schema, 'commited.hotel.hcmi/2'); assert.equal(rec.appVersion, '6.1.0');
+  assert.equal(rec.hcmi.schema, 'commited.hotel.hcmi/2'); assert.equal(rec.appVersion, '6.2.0');
   assert.equal(rec.sector, 'Turizm — Otel (HCMI v2.0)');
   assert.ok(!JSON.stringify(rec).includes('gizli123'), 'şifre kayda girmez');
   // çıkış, formu temizle, giriş → son kayıt otomatik yüklenir
@@ -424,6 +429,99 @@ test('rapor göstergeleri: kimyasal, tedarik ve çalışan alanları kişi baş�
   await p.context().close();
 });
 
+test('panel: boşken davet; örnekle tek ekranda sonuçlar, önlem ekle / çıkar, grafik seçimi, tablo, adımlara dönüş', async () => {
+  const p = await open();
+  await p.click('.steps a[data-view="dash"]'); await settle(p);
+  assert.equal(await p.isVisible('#panel-dash'), true);
+  assert.equal(await p.isVisible('#adim1'), false, 'panelde adımlar gizli');
+  assert.equal(await p.isVisible('.dash-empty'), true);
+  await p.click('.dash-empty [data-example="otel"]'); await settle(p);
+  // üst alan Node hesabıyla aynı (sayı açılışta sayarak gelir; ekran okuyucu metni hemen tam değer)
+  const cpor = node.NUM.format(ex.metrics.cpor, 1);
+  assert.equal(await text(p, '.dh-num .sr-only'), cpor + ' kg CO₂e satılan oda-gece başına');
+  await p.waitForFunction((v) => document.querySelector('.dh-val').textContent === v, cpor);
+  assert.equal(await text(p, '.dh-badge'), 'B');
+  assert.match(await text(p, '.dh-delta'), /^2024'e göre %[\d,]+ daha az$/);
+  assert.equal(await p.locator('.dh-chip').count(), 1, 'örnek etiketi');
+  assert.equal(await p.locator('.dash-tiles .tile').count(), 6);
+  assert.equal(await p.locator('[data-chart="trend"] g.colg').count(), 4, '3 örnek yıl + bu yıl');
+  assert.equal(await p.locator('.mstones li').count(), 4);
+  assert.ok(await p.locator('[data-chart="path"] svg').count());
+  assert.match(await text(p, '#dc-next + .dc-sub'), /^3 önlem: yılda [\d.,]+ t azaltım/);
+  // önlem ekle: durum, Adım 3 kutusu ve panel birlikte güncellenir
+  await p.click('.nexts [data-dash-act="add"][data-id="bms"]'); await settle(p);
+  assert.ok((await p.evaluate(() => window.__tour.state().hotel.measures)).includes('bms'));
+  assert.equal(await p.isChecked('[data-measure="bms"]'), true);
+  assert.match(await text(p, '#dc-next + .dc-sub'), /^4 önlem/);
+  await p.click('.plansel [data-dash-act="remove"][data-id="bms"]'); await settle(p);
+  assert.equal(await p.isChecked('[data-measure="bms"]'), false);
+  assert.match(await text(p, '#dc-next + .dc-sub'), /^3 önlem/);
+  // yıllar grafiğinde gösterge seçimi ve tablo
+  await p.click('[data-dash-metric="cpor"]'); await settle(p);
+  assert.equal(await p.getAttribute('[data-dash-metric="cpor"]', 'aria-pressed'), 'true');
+  assert.match(await text(p, '#dc-trend + .dc-sub'), /^2022'den bu yana %\d+ azaldı/);
+  await p.click('[data-dash-tbl="trend"]');
+  assert.equal(await p.isVisible('#dtbl-trend'), true);
+  assert.equal(await p.locator('#dtbl-trend tbody tr').count(), 4);
+  // sütun ipucu klavyeyle de açılır
+  await p.focus('[data-chart="trend"] g.colg >> nth=3');
+  assert.match(await text(p, '[data-chart="trend"] .dtip'), /^2025.*34,4 kg CO₂e/);
+  // bir adıma tıklanınca adımlara dönülür
+  await p.click('.steps a[data-step="adim3"]'); await settle(p);
+  assert.equal(await p.isVisible('#adim3'), true);
+  assert.equal(await p.isVisible('#panel-dash'), false);
+  assert.equal(await p.evaluate(() => window.__tour.view()), 'steps');
+  // örnek bildirimindeki düğme paneli açar
+  await p.click('#h_notice [data-view="dash"]'); await settle(p);
+  assert.equal(await p.isVisible('#panel-dash'), true);
+  // sayfada panel alanı yoksa (eski ya da yarım yüklenmiş HTML) panel açılmaz, adımlar gizlenmez
+  await p.evaluate(() => { document.getElementById('panel-dash').remove(); window.__tour.setView('dash'); });
+  assert.equal(await p.evaluate(() => window.__tour.view()), 'steps');
+  assert.equal(await p.isVisible('#adim1'), true);
+  assert.deepEqual(p.errors, []);
+  await p.context().close();
+  // telefonda yatay kaydırma yok
+  const m = await open({ width: 390, height: 844 });
+  await m.click('#h_notice [data-example="otel"]'); await settle(m);
+  await m.click('.steps a[data-view="dash"]'); await settle(m);
+  await noHScroll(m);
+  assert.deepEqual(m.errors, []);
+  await m.context().close();
+});
+
+test('panel: hesaba kaydedilen yıllar aynı yöntemle yan yana; çıkışta davet görünür', async () => {
+  const p = await open();
+  await p.click('#h_notice [data-example="otel"]'); await settle(p);
+  await p.fill('#h_name', 'Deniz Otel'); await settle(p);
+  const count = () => p.evaluate(() => Object.keys(window.__fbTest.db).filter((k) => k.startsWith('reports/')).length);
+  await p.click('#outputs [data-cloud-save]');
+  await p.fill('#r_name', 'Deniz Otel'); await p.fill('#r_email', 'deniz@example.com'); await p.fill('#r_pass', 'gizli123');
+  await p.check('#r_kvkk'); await p.click('#authSubmit');
+  await p.waitForFunction(() => Object.keys(window.__fbTest.db).some((k) => k.startsWith('reports/')));
+  // önceki yıl: 2024, daha çok elektrik
+  await p.fill('#h_year', '2024'); await p.fill('#ea-e1', '1.600.000'); await settle(p);
+  await p.click('#outputs [data-cloud-save]');
+  await p.waitForFunction(() => Object.keys(window.__fbTest.db).filter((k) => k.startsWith('reports/')).length === 2);
+  assert.equal(await count(), 2);
+  // ekranda yeniden 2025
+  await p.fill('#h_year', '2025'); await p.fill('#ea-e1', '1.480.000'); await settle(p);
+  await p.click('.steps a[data-view="dash"]'); await settle(p);
+  assert.equal(await p.locator('.dh-chip').count(), 0, 'gerçek kayıtlarda örnek etiketi yok');
+  assert.deepEqual(await p.locator('[data-chart="trend"] .dv-axis.cur').allTextContents(), ['2025']);
+  assert.equal(await p.locator('[data-chart="trend"] g.colg').count(), 2);
+  assert.match(await text(p, '.dh-delta'), /^2024'e göre %[\d,]+ daha az$/);
+  // 2024 kaydı bugünkü yöntemle yeniden hesaplanır: Node'daki hesapla aynı
+  const s24 = node.TURIZM.model.exampleState(); s24.hotel.name = 'Deniz Otel'; s24.hotel.year = 2024; s24.hotel.energy[0].total = 1600000;
+  const t24 = node.NUM.format(node.TURIZM.compute(s24).totals.hcmiT, 1);
+  assert.ok((await p.getAttribute('[data-chart="trend"] g.colg >> nth=0', 'aria-label')).startsWith('2024: ' + t24 + ' t CO₂e'));
+  // çıkış: geçmiş temizlenir, üyelik daveti görünür
+  await p.click('#acct [data-act="logout"]'); await settle(p);
+  assert.equal(await p.locator('[data-chart="trend"]').count(), 0);
+  assert.equal(await p.locator('.d-trend [data-auth="register"]').count(), 1);
+  assert.deepEqual(p.errors, []);
+  await p.context().close();
+});
+
 for (const scheme of ['light', 'dark']) {
   test(`erişilebilirlik (${scheme}): boş, dolu, hatalı, acente`, async () => {
     const p = await open({ colorScheme: scheme });
@@ -431,6 +529,11 @@ for (const scheme of ['light', 'dark']) {
     await p.click('#h_notice [data-example="otel"]'); await settle(p);
     await p.click('[data-row-more="e1"]');
     await axe(p, 'dolu');
+    await p.click('.steps a[data-view="dash"]'); await settle(p);
+    await axe(p, 'panel');
+    await p.click('[data-dash-tbl="path"]'); await settle(p);
+    await axe(p, 'panel tablosu');
+    await p.click('.steps a[data-step="adim1"]'); await settle(p);
     await p.fill('#h_roomnights', 'abc'); await p.selectOption('#add_type', 'chilled_water'); await p.keyboard.type('5'); await settle(p);
     await axe(p, 'hatalı');
     await p.click('#tab-acente'); await p.click('#a_notice [data-example="acente"]'); await settle(p);
