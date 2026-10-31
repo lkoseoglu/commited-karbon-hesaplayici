@@ -553,7 +553,7 @@
         : 'Tesisinizin 12 aylık enerji, su ve atık verilerini girin. Panel; kıyas notunuzu, emisyonlarınızın kaynağını, hedef yolunuzu ve sıradaki adımlarınızı tek ekranda gösterir.' }),
       h('div', { class: 'dacts' }, [
         h('button', { type: 'button', class: 'btn primary', 'data-dash-act': 'step', 'data-id': 'adim1', text: 'Verileri girin' }),
-        m.started ? null : h('button', { type: 'button', class: 'btn ghost', 'data-example': 'otel', text: 'Örnek otelle görün' })
+        m.started ? null : h('button', { type: 'button', class: 'btn shine', 'data-example': 'otel', text: 'Örnek otelle görün' })
       ])
     ]);
   }

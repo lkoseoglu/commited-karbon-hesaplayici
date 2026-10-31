@@ -4,6 +4,51 @@ commitedevents.app (Squarespace) sitesine iframe ile gömülen, sunucu gerektirm
 tarayıcıda yapan) karbon hesaplama modülleri. GitHub Pages üzerinden yayınlanır:
 `https://lkoseoglu.github.io/commited-karbon-hesaplayici/<dosya>.html`
 
+## 2026-10-31 — Üyelik şartı ve parlayan örnek düğmesi (v6.3)
+
+> **Durum:** onay bekliyor; `uyelik-sarti` dalında. Canlıya alınınca bu satır güncellenecek.
+
+**İstek (Levent Bey):** "Otel karbon modülünde kullanıcı giriş yapmadan ya da kaydı olmadan veri girişine
+başlayamasın." İki sekmede de (otel ve acente) geçerli; ziyaretçi örneği görebilir. Ayrıca canlıda gözden kaçan
+"120 odalı örnek" bağlantısı "daha görünür yap, parlat" isteğiyle düğmeye çevrildi.
+
+**Nasıl çalışır** (`assets/js/turizm/app.js`, "Üyelik şartı" bloğu):
+- Hesap durumu: `none` (yükleniyor), `guest`, `user`, `offline`. `none` ve `guest` kilitlidir (`gated()`).
+- `#app` üzerinde yakalama aşamasında dinleyiciler, yalnız `#panel-otel, #panel-acente` içinde:
+  fareyle alana basma (`pointerdown`), işaret kutusu ve düzenleme düğmeleri (`click`, liste `EDIT_BTN`),
+  klavyeyle yazma (`keydown`; Tab, Esc ve gezinme serbest) engellenir; `input/change` güvenlik ağı yapıştırma ve
+  otomatik doldurmayı geri alır. Engellenince `turizm:needauth` olayı gönderilir; `cloud.js` kayıt penceresini
+  `#authNote` açıklamasıyla açar. Pencere zaten açıksa yeniden açmaz.
+- Serbest olanlar: örnek, temizle, sonuçlar, panel (önlem ekle/çıkar hariç), rapor, gezinme.
+- Üyelik modülü (Firebase) yüklenemezse ya da 10 sn içinde yanıt gelmezse durum `offline` olur ve hesaplayıcı
+  üyeliksiz çalışır (hizmet kesintisinde hesaplayıcı kilitli kalmasın diye).
+- `body.gated` sınıfı durum için; bildirim şeritleri durum değişince yenilenir (`noticeKind`).
+
+**Örnek düğmesi:** `U.notice` artık `{ actions: [...] }` parçası alır ve şeridin altına gerçek düğmeler çizer
+(`.notice-acts`; tür `primary`, `ghost` ya da `shine`). Örnek düğmesi `btn shine`: altın (`--accent`), hafif hale
+(`--accent-glow`), birkaç saniyede bir üzerinden geçen ışık (`--shine`, `@keyframes btn-shine`; hareketi azaltan
+cihazda ışık geçmez). Panelin boş ekranındaki "Örnek otelle görün" de aynı sınıfı kullanır. `--shine` ve
+`--accent-glow` tema dosyasının üç bloğuna da eklendi.
+
+**Testler:** `tests/e2e/turizm-v6.test.mjs` içinde 2 yeni test (ziyaretçi veri giremez, örnek/panel serbest, üye olunca
+yazar; üyelik modülü yüklenemezse hesaplayıcı üyeliksiz çalışır). Diğer testler varsayılan olarak üye oturumuyla
+açılır (`open({ guest: true })` ziyaretçi). Toplam 268 birim + 31 uçtan uca test.
+
+## 2026-10-31 — Squarespace: hareketli deniz zemini (yalnız hesaplayıcı sayfaları)
+
+> **Durum:** onay bekliyor. Squarespace → Tasarım → Özel CSS'in **sonuna** eklenecek (1-7 numaralı "deniz" bloğu
+> aynen kalır). Geri almak için 8 numaralı bloğu silmek yeterli.
+
+**İstek:** "Arkadaki düz mavi duvar kağıdı daha alımlı olabilir mi? Hareket eden dalga vb." Zemin hesaplayıcının
+değil, Squarespace sayfasının gövdesidir (`body#collection-...` ile yalnız Turizm ve Kapsam 3 sayfaları).
+
+**Katmanlar** (hepsi `position:fixed; z-index:-1; pointer-events:none`, içerik ve hesaplayıcı penceresinin arkasında):
+`body::before` yukarıdan süzülen ışık hüzmeleri (yavaş salınım), `#siteWrapper::before/::after` ve `body::after` üç
+kat dalga (120 / 80 / 54 sn'de bir döşeme kayar, hafifçe kabarır). Dalgalar SVG veri adresi olarak gömülüdür;
+`tools/deniz-dalga-uret.mjs` üretir (`node tools/deniz-dalga-uret.mjs > docs/squarespace-deniz-dalgalari.css`).
+LESS uyumu için `calc()` kullanılmadı. "Hareketi azalt" açık cihazlarda animasyon durur. Yatay kaydırma oluşmaz
+(sabit konumlu öğeler sayfa genişliğine eklenmez; canlı sayfada denendi: `scrollWidth = clientWidth`).
+
 ## 2026-10-31 — Yönetim paneli (`turizm-admin.html`, yalnız Commited yöneticileri)
 
 > **Durum:** 2026-10-31'de onaylandı ve canlıya alındı (GitHub web arayüzünden klasör klasör yüklendi):
@@ -284,7 +329,7 @@ npm install                     # bir kez
 npm test                        # 268 birim testi: HCMI motoru (resmî Excel altın referansı), Türkiye faktörleri,
                                 #   kıyas, net sıfır, önlemler, Türkçe sayı, durum modeli, hesap katmanı, rapor, panel,
                                 #   yönetim paneli, göstergeler, tema
-npm run test:e2e                # 29 uçtan uca test: Turizm sayfası (17) + Turizm ve Kapsam 3 erişilebilirliği (4)
+npm run test:e2e                # 31 uçtan uca test: Turizm sayfası (19) + Turizm ve Kapsam 3 erişilebilirliği (4)
                                 #   + yönetim paneli (8)
 node tests/e2e/probe-v6.mjs /tmp/ekran   # açık/koyu/telefon tam sayfa ekran görüntüleri
 ```
@@ -293,6 +338,7 @@ Uçtan uca testler gerçek Chromium'da çalışır, Firebase ve CDN'i saplar (in
 denetler: boş açılış, örnek sonuçlarının Node hesabıyla aynı olması, Türkçe sayı ve hatalı giriş, enerji
 satırı ekle/sil/birim/elle faktör, HCMI seçenekleri, önlemler ve patika, acente, tarayıcı belleği ve eski
 anahtar aktarımı, üyelik (kayıt → kaydet → çıkış → giriş → son kayıt; eski kaydı "Kayıtlarım"dan açma),
+üyelik şartı (ziyaretçi veri giremez, örnek ve panel serbest; üyelik modülü yüklenemezse kilit açılır),
 kopyala/PDF, PDF sürdürülebilirlik raporu, axe (WCAG 2.1 AA) açık ve koyu modda, 390 px'te yatay kaydırma olmaması.
 GitHub Actions (`.github/workflows/ci.yml`, 2026-10-21'den beri etkin) `main`'e her yüklemede ve her pull
 request'te ikisini de çalıştırır; sonuç GitHub'da **Actions** sekmesinde görünür (elle: Actions → testler → Run workflow).
@@ -392,6 +438,8 @@ Kod, **Web Sitesi → Sayfalar → Özel Kod → Özel CSS** içinde, mevcut kod
 - Geri almak için: Özel CSS'teki bloğun tamamını silin.
 - Not: Squarespace Özel CSS derleyicisi LESS'tir; `~"…"` gibi LESS kaçışları normaldir. Kaydetmek için
   düzenleyicide **Kaydedin** düğmesine basın; Escape ile kapatmak değişikliği iptal eder.
+- 8 numaralı blok (hareketli deniz zemini, 2026-10-31): kaynak `docs/squarespace-deniz-dalgalari.css`, üretici
+  `tools/deniz-dalga-uret.mjs`. 1-7'nin **altına** eklenir; ayrıntı en üstteki "hareketli deniz zemini" bölümünde.
 
 ### Testler (tema turu; güncel komutlar için en üstteki v6 bölümüne bakın)
 
@@ -416,6 +464,7 @@ Kapsam 3 1.418.888 kg); tema ve görünüm değişiklikleri bu sayıları deği�
 | `assets/js/hcmi-data.js`, `hcmi-engine.js` | Resmî HCMI v2.0 Excel'inin verisi ve hesap motoru. Veri `tools/build-hcmi-data.py` ile üretilir; motor `tests/golden/hcmi-oracle.json` (LibreOffice ile hesaplatılmış resmî Excel çıktıları, `tools/hcmi-oracle.py` + `tools/hcmi_scenarios.py`) ile doğrulanır. |
 | `assets/js/tr-reference.js`, `benchmarks.js`, `pathway.js`, `measures.js`, `num-input.js` | Türkiye faktörleri ve kaynakları · CHSB 2026 kıyası · NZMFH net sıfır · azaltım önlemleri · Türkçe sayı. Her birinin başında kaynak ve kurallar yazılı. |
 | `assets/js/turizm/*.js`, `assets/css/turizm-app.css` | v6 sayfasının uygulama katmanı (yukarıdaki "Mimari"). |
+| `tools/deniz-dalga-uret.mjs`, `docs/squarespace-deniz-dalgalari.css` | Squarespace Özel CSS'ine eklenecek hareketli deniz zemini (8 numaralı blok) ve onu üreten betik. |
 | `tools/promote-v6.py` | v6 önizlemesini canlı adrese taşıdı (2026-10-21; v5 arşivlendi). Tekrar çalıştırılırsa hiçbir şey yapmaz. |
 | `tools/report-sample.mjs` | Örnek otel için sürdürülebilirlik raporu, tek sayfalık özet ve sayfa görüntüleri üretir; sayfa taşmalarını ölçer (en üstteki "Sürdürülebilirlik raporu v6.1" bölümü). `tests/fixtures/ornek-logo.*` kurgusal örnek logodur. |
 | `.github/workflows/ci.yml` | GitHub Actions: `main`'e her yüklemede ve her pull request'te birim + uçtan uca testler (2026-10-21'den beri etkin). |

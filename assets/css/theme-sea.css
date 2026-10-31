@@ -32,6 +32,8 @@
   --accent-ink:#5E4C0E;
   --on-brand:#FFFFFF;      /* --brand uzerindeki yazi */
   --on-accent:#0E2233;     /* --accent uzerindeki yazi */
+  --shine:rgba(255,255,255,.62);        /* parlayan dugmenin uzerinden gecen isik (ornek dugmesi) */
+  --accent-glow:rgba(232,197,71,.38);   /* altin dugmenin hafif halesi */
 
   /* --- koyu paneller (ozet seridi, toplam karti, ipucu, bildirim) --- */
   --deep:#05304D;
@@ -83,7 +85,7 @@
     --bg:#06131E; --surface:#0C2133; --surface2:#11304A; --chip:#10293F;
     --ink:#E6F2F8; --muted:#9CB7C8; --line:#1F3F58;
     --brand:#5BBDEB; --brand-deep:#A9DCF3; --brand-soft:#1D4F6E;
-    --accent:#E8C547; --accent-ink:#F0DE9C; --on-brand:#06131E; --on-accent:#0E2233;
+    --accent:#E8C547; --accent-ink:#F0DE9C; --on-brand:#06131E; --on-accent:#0E2233; --shine:rgba(255,255,255,.55); --accent-glow:rgba(232,197,71,.30);
     --deep:#0A3150; --deep-line:#1F3F58; --on-deep:#EAF5FB; --on-deep-soft:#B5D8EA; --on-deep-label:#8FD0EE;
     --hero-a:#02101C; --hero-b:#043A5C; --hero-c:#06577F;
     --hero-ink:#F2F9FC; --hero-soft:#CFE8F5; --hero-label:#8FD0EE;
@@ -112,7 +114,7 @@
   --bg:#06131E; --surface:#0C2133; --surface2:#11304A; --chip:#10293F;
   --ink:#E6F2F8; --muted:#9CB7C8; --line:#1F3F58;
   --brand:#5BBDEB; --brand-deep:#A9DCF3; --brand-soft:#1D4F6E;
-  --accent:#E8C547; --accent-ink:#F0DE9C; --on-brand:#06131E; --on-accent:#0E2233;
+  --accent:#E8C547; --accent-ink:#F0DE9C; --on-brand:#06131E; --on-accent:#0E2233; --shine:rgba(255,255,255,.55); --accent-glow:rgba(232,197,71,.30);
   --deep:#0A3150; --deep-line:#1F3F58; --on-deep:#EAF5FB; --on-deep-soft:#B5D8EA; --on-deep-label:#8FD0EE;
   --hero-a:#02101C; --hero-b:#043A5C; --hero-c:#06577F;
   --hero-ink:#F2F9FC; --hero-soft:#CFE8F5; --hero-label:#8FD0EE;

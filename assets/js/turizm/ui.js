@@ -126,7 +126,8 @@
       else if (p.button) { n.appendChild(h('button', Object.assign({ type: 'button', class: 'linkbtn', text: p.button.text }, p.button.attrs || {}))); }
       else if (p.actions) {   // şeridin altında gerçek düğme satırı (cümle içi bağlantı gözden kaçıyordu)
         n.appendChild(h('div', { class: 'notice-acts' }, p.actions.map(function (a) {
-          return h('button', Object.assign({ type: 'button', class: 'btn sm ' + (a.kind === 'primary' ? 'primary' : 'ghost'), text: a.text }, a.attrs || {}));
+          var kind = a.kind === 'primary' || a.kind === 'shine' ? a.kind : 'ghost';   // shine: altın, parlayan (örnek düğmesi)
+          return h('button', Object.assign({ type: 'button', class: 'btn sm ' + kind, text: a.text }, a.attrs || {}));
         })));
       }
       else if (p.list) { n.appendChild(h('ul', { class: 'notice-list' }, p.list.map(function (t) { return h('li', { text: t }); }))); }

@@ -540,7 +540,7 @@ test('üyelik şartı: giriş yapmamış ziyaretçi veri giremez (otel ve acente
   assert.match(await text(p, '#h_notice'), /^Verilerinizi girmek için üye olun ya da giriş yapın\. Üyelik ve hesaplama ücretsizdir/);
   // şeridin altında üç gerçek düğme: üye ol (öne çıkan), giriş yap, örnek tesis
   assert.deepEqual(await p.$$eval('#h_notice .notice-acts .btn', (bs) => bs.map((b) => [b.textContent, b.className])), [
-    ['Ücretsiz üye olun', 'btn sm primary'], ['Giriş yapın', 'btn sm ghost'], ['120 odalı örnek tatil köyüyle doldurun', 'btn sm ghost']]);
+    ['Ücretsiz üye olun', 'btn sm primary'], ['Giriş yapın', 'btn sm ghost'], ['120 odalı örnek tatil köyüyle doldurun', 'btn sm shine']]);
   const gate = async (label) => {
     await p.waitForSelector('#authModal:not([hidden])');
     assert.match(await text(p, '#authNote'), /^Verilerinizi girmek için ücretsiz üye olun ya da giriş yapın/, label);

@@ -393,8 +393,20 @@ table#macc tbody th{min-width:190px}
 .notice{font-size:14px; background:var(--chip); border:1px solid var(--brand-soft); border-radius:12px; padding:10px 14px; color:var(--ink); margin:0 0 14px}
 .notice.warn{background:var(--warn-bg); border-color:var(--warn-line); color:var(--warn-ink)}
 .notice .notice-list{margin:6px 0 0; padding-left:18px}
-.notice-acts{display:flex; flex-wrap:wrap; gap:8px; margin-top:10px}
+.notice-acts{display:flex; flex-wrap:wrap; gap:8px 10px; margin-top:10px; align-items:center}
 .notice-acts .btn.sm{align-self:auto}
+/* Örnek düğmesi (v6.3): altın renk, hafif hale ve ara sıra üzerinden geçen ışık.
+   Hareketi azaltan cihazlarda ışık geçmez, yalnız renk ve hale kalır. */
+.btn.shine{position:relative; overflow:hidden; isolation:isolate; background:var(--accent); color:var(--on-accent); border-color:var(--accent);
+  box-shadow:0 0 0 3px var(--accent-glow), 0 8px 20px -8px var(--accent-glow)}
+.btn.shine::before{content:""; position:absolute; top:-2px; bottom:-2px; left:0; width:40%; z-index:-1; pointer-events:none;
+  background:linear-gradient(100deg, transparent 0%, var(--shine) 50%, transparent 100%); transform:translateX(-130%) skewX(-20deg)}
+.btn.shine:hover{box-shadow:0 0 0 5px var(--accent-glow), 0 10px 24px -8px var(--accent-glow)}
+.btn.shine:focus-visible{outline:2px solid var(--ink); outline-offset:4px}
+@media (prefers-reduced-motion: no-preference){
+  .btn.shine::before{animation:btn-shine 4.5s ease-in-out 1.2s infinite}
+}
+@keyframes btn-shine{0%{transform:translateX(-130%) skewX(-20deg)} 34%{transform:translateX(320%) skewX(-20deg)} 100%{transform:translateX(320%) skewX(-20deg)}}
 .toast{position:fixed; left:50%; bottom:18px; transform:translateX(-50%); background:var(--deep); color:var(--on-deep); border:1px solid var(--deep-line); border-radius:999px; padding:10px 20px; font-size:14px; font-weight:600; opacity:0; transition:opacity .25s; pointer-events:none; z-index:60; max-width:calc(100vw - 32px); text-align:center}
 .toast.show{opacity:1}
 

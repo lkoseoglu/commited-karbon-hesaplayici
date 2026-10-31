@@ -184,8 +184,9 @@
   function defaultNotice(which) {
     var ag = which === 'acente';
     noticeKind[ag ? 'acente' : 'otel'] = 'default';
-    // Örnek düğmesi v6.3'ten beri cümle içi bağlantı değil, şeridin altında gerçek bir düğme (canlıda gözden kaçıyordu).
-    var example = { text: ag ? 'Örnek bir acenteyle doldurun' : '120 odalı örnek tatil köyüyle doldurun', attrs: { 'data-example': ag ? 'acente' : 'otel' } };
+    // Örnek düğmesi v6.3'ten beri cümle içi bağlantı değil, şeridin altında altın renkli, parlayan bir düğme
+    // (canlıda gözden kaçıyordu; Levent Bey "daha görünür yap, parlat" dedi).
+    var example = { text: ag ? 'Örnek bir acenteyle doldurun' : '120 odalı örnek tatil köyüyle doldurun', kind: 'shine', attrs: { 'data-example': ag ? 'acente' : 'otel' } };
     var parts, acts;
     if (gated()) {
       parts = [{ b: 'Verilerinizi girmek için üye olun ya da giriş yapın.' },
