@@ -4,6 +4,61 @@ commitedevents.app (Squarespace) sitesine iframe ile gömülen, sunucu gerektirm
 tarayıcıda yapan) karbon hesaplama modülleri. GitHub Pages üzerinden yayınlanır:
 `https://lkoseoglu.github.io/commited-karbon-hesaplayici/<dosya>.html`
 
+## 2026-10-29 — Otel paneli v6.2 (adım şeridinin başındaki "Panel")
+
+> **Durum:** 2026-10-29'da onaylandı, 2026-10-31'de canlıya alındı (GitHub web arayüzünden klasör klasör yüklendi;
+> Squarespace'te değişiklik gerekmedi). Geri dönüş: bu bölümden önceki sürümün dosyalarını GitHub geçmişinden geri yükleyin.
+>
+> **Birleştirme notu:** `assets/css/turizm-chat.css` başka bir çalışmanın ("Sohbetle doldurma", 2026-10-30) dört
+> parçalık yüklemesinin ilk parçasıdır; sayfa bu dosyayı henüz kullanmıyor. O çalışma tamamlanırken
+> `turizm-karbon-hesaplayici.html`, `assets/js/turizm/*.js`, bu kılavuz ve testler **bu paneli içeren güncel sürümün
+> üstüne** birleştirilmelidir; panelden önceki sürümle üzerine yazılırsa panel kaybolur. `setView()` sayfada
+> `#panel-dash` ya da çizici yoksa paneli açmaz, yani yarım bir birleştirmede de adımlar gizlenmez.
+
+**Ne yapar:** otel kullanıcısına tek ekranda gösterge paneli. Adım şeridinin başına **Panel** eklendi; panel
+açıkken beş adım gizlenir, bir adıma tıklanınca adımlara dönülür. Verisi tarayıcıda saklı olan ya da hesabına
+giriş yapınca son kaydı yüklenen kullanıcı doğrudan panelde açılır (`#panel` adresi de paneli açar).
+
+**İçerik** (diğer yazılımlar incelendi: otel tarafında Greenview Portal, Weeva, EarthCheck; genel karbon
+muhasebesinde Watershed, Persefoni, Greenly, Sami; gayrimenkulde CRREM "hedeften sapma yılı"):
+- Üst alan: tesisin kendi eş derinlik çizgileri (rapor kapağıyla aynı üretici) üstünde oda-gece başına karbon,
+  önceki yıla göre değişim, kıyas notu ve A–E kıyas şeridi (tesis, segment ortalaması, planla varılan değer).
+  Panel ilk açıldığında tek, düzenlenmiş bir an: çizgiler soldan taranır, işaret yerine iner, sonar halkası yayılır,
+  sayı sayarak gelir. `prefers-reduced-motion` ile hiçbiri olmaz.
+- Gösterge kartları (6): toplam, toplantı alanı, karbon/m², enerji/m², su/oda-gece, atık/dolu oda; her birinde
+  CHSB segment kıyası, önceki yıla göre değişim ve yıllar çizgisi.
+- Yıllara göre (sütun grafik; toplam, oda-gece, kişi başı, enerji/m², su), emisyonların kaynağı (kapsam şeridi,
+  ilk 6 kaynak + "Diğer", en büyük kaynağı azaltan önlem), net sıfır yolu (gerçekleşen yıllar + plan + NZMFH
+  sınırı, kilometre taşları, ilk açık yılı), eylem planı (önlem ekle / çıkar: hesap anında yenilenir, Adım 3'teki
+  kutular da işaretlenir; 2030 hedefinin karşılanma oranı), kaynaklar-tedarik-çalışanlar, hazırlık ve paylaşım
+  (veri tamlığı, taksonomi, doğrulama, AB 2024/825 notu, PDF rapor / özet / kaydet düğmeleri).
+- Her grafikte ipucu (fare ve klavye) ve "Tablo olarak göster" (erişilebilir tablo eşi).
+
+**Yıllar arası takip:** `cloud.js` oturum açılınca ve her kayıttan sonra otel kayıtlarını `__tour.setHistory()`
+ile verir. `dashboard.history()` her kaydın `inputs` alanını **bugünkü yöntemle yeniden hesaplar** (yıllar aynı
+faktörler ve aynı HCMI motoruyla karşılaştırılır), aynı tesisin (ad eşleşmesi) her yıl için en son kaydını alır,
+ekrandaki yılı dışarıda bırakır. Önceki yıl = ekrandaki yıldan önceki en son kayıt. Örnek otelde (ad "Örnek Tatil
+Köyü") gerçek geçmiş yoksa `sampleRecords()` ile 3 yıllık **örnek** geçmiş gösterilir ve "örnek" diye etiketlenir.
+Giriş yapılmamışsa yıllar kartında ücretsiz üyelik daveti, giriş yapılmışsa "Hesabıma kaydet" görünür.
+
+**Kod:**
+- `assets/js/turizm/dashboard.js` (saf, Node'da test edilir): `model(state, R, hist, {sample})`, `history()`,
+  `sampleRecords()`, `delta()` (önceki yıla göre metin ve yön), `sfx()` (Türkçe yıl ekleri: 2022'ye, 2025'te,
+  2023'ten), `lever()`, `nextSteps()` (YEK-G / I-REC verimlilik önlemlerinden sonra), `planInfo()`, `pathInfo()`.
+- `assets/js/turizm/dashboard-view.js`: DOM ve satır içi SVG çizimi (renkler yalnız CSS sınıflarından), ipuçları,
+  gösterge seçimi, tablo aç/kapa, açılış animasyonu, odak koruma (önlem eklenince odak kaybolmaz).
+- `app.js`: `setView('dash'|'steps')`, `renderDash()` (panel açıkken her hesaptan sonra), `toggleMeasure()`,
+  `dashAction()` (`data-dash-act`: add, remove, report, summary, field, claims, step), `__tour.setHistory /
+  setAccount / setView / view`. `cloud.js`: `refreshHistory()`.
+- CSS: `turizm-app.css` "PANEL" bölümü (yalnız tema değişkenleri); `theme-sea.css`'e koyu üst alanda durum renkleri
+  `--hero-good / --hero-bad / --hero-warn` eklendi (iki modda aynı). `appVersion` 6.2.0.
+
+**Testler:** `tests/unit/turizm-dashboard.test.mjs` (7): Türkçe ekler, değişim yönü, geçmişin seçimi ve yeniden
+hesabı (eski sürüm kaydı dahil), örnek geçmiş, modelin hesapla aynı olması, yıl sırası. `tests/e2e/turizm-v6.test.mjs`:
+"panel: …" (boş davet, örnek, önlem ekle/çıkar, grafik seçimi, tablo, klavye ipucu, adımlara dönüş, telefonda taşma
+yok) ve "panel: hesaba kaydedilen yıllar …" (iki yıl kaydedilir, 2024 aynı yöntemle yeniden hesaplanır, çıkışta
+davet); erişilebilirlik testleri paneli de açık ve koyu modda tarar.
+
 ## 2026-10-29 — Sürdürülebilirlik raporu v6.1 (Adım 5): PDF rapor, tek sayfalık özet, kapak logosu, karbon dışı göstergeler
 
 > **Durum:** 2026-10-29'da onaylandı ve canlıya alındı (GitHub web arayüzünden klasör klasör yüklendi; Squarespace'te
@@ -141,6 +196,8 @@ assets/js/turizm/agency.js  acente hesabı (v5 ile aynı)
 assets/js/turizm/texts.js   beyan, özet, JSON, WhatsApp metinleri
 assets/js/turizm/storage.js tarayıcı belleği (commited-turizm-v2; eski anahtarı okur)
 assets/js/turizm/report.js  sürdürülebilirlik raporu ve tek sayfalık özet: build() HTML metni üretir (DOM'a dokunmaz)
+assets/js/turizm/dashboard.js       otel paneli: model() ve history() (DOM'a dokunmaz)
+assets/js/turizm/dashboard-view.js  otel paneli çizimi (DOM + satır içi SVG)
 assets/js/turizm/ui.js · form.js · render.js · chart.js · app.js   arayüz (DOM)
 assets/js/turizm/cloud.js   Firebase üyelik ve kayıt (ES modülü; yüklenemezse sayfa üyeliksiz çalışır)
 assets/css/turizm-app.css   sayfa stilleri (yalnız theme-sea.css değişkenleri; sabit renk yok)
@@ -172,9 +229,9 @@ aktarımı da sınar).
 
 ```bash
 npm install                     # bir kez
-npm test                        # 247 birim testi: HCMI motoru (resmî Excel altın referansı), Türkiye faktörleri,
-                                #   kıyas, net sıfır, önlemler, Türkçe sayı, durum modeli, hesap katmanı, rapor, göstergeler, tema
-npm run test:e2e                # 19 uçtan uca test: Turizm sayfası (15) + Turizm ve Kapsam 3 erişilebilirliği (4)
+npm test                        # 254 birim testi: HCMI motoru (resmî Excel altın referansı), Türkiye faktörleri,
+                                #   kıyas, net sıfır, önlemler, Türkçe sayı, durum modeli, hesap katmanı, rapor, panel, göstergeler, tema
+npm run test:e2e                # 21 uçtan uca test: Turizm sayfası (17) + Turizm ve Kapsam 3 erişilebilirliği (4)
 node tests/e2e/probe-v6.mjs /tmp/ekran   # açık/koyu/telefon tam sayfa ekran görüntüleri
 ```
 

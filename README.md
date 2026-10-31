@@ -4,7 +4,7 @@ Commited turizm karbon hesaplayıcıları — GitHub Pages ile yayınlanır, com
 
 - `turizm-karbon-hesaplayici.html` — **Turizm Karbon Hesaplayıcı** v6 (otel + acente) — sitedeki sürüm: resmî HCMI v2.0
   motoru, Türkiye resmî elektrik faktörü, enerji defteri, Türkçe sayı girişi, veri kontrolü, NZMFH net sıfır patikası,
-  kapaklı sürdürülebilirlik raporu ve tek sayfalık özet (PDF), karbon dışı göstergeler
+  kapaklı sürdürülebilirlik raporu ve tek sayfalık özet (PDF), karbon dışı göstergeler, otel paneli (yıllar arası takip)
 - `turizm-karbon-hesaplayici-v5.html` — önceki sürüm (arşiv, geri dönüş için)
 - `kapsam3-karbon-hesaplayici.html` — **Kapsam 3 Karbon Hesaplayıcı** (turizm tedarik zinciri, 3.1 + 3.4)
 

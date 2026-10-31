@@ -66,6 +66,7 @@
         <div class="sb gr"><b id="s_grade">—</b><span><i class="lg">Segment kıyası</i><i class="sm">Kıyas</i></span></div>
       </div>
       <nav class="steps" aria-label="Adımlar">
+        <a href="#panel" data-view="dash" class="dash-link"><span class="n" aria-hidden="true"><svg viewBox="0 0 16 16" width="12" height="12" focusable="false"><path d="M2 2h5v5H2zM9 2h5v5H9zM2 9h5v5H2zM9 9h5v5H9z" fill="currentColor"/></svg></span>Panel</a>
         <a href="#adim1" data-step="adim1"><span class="n">1</span>Ölç<span class="st" id="st_adim1" aria-hidden="true"></span></a>
         <a href="#adim2" data-step="adim2"><span class="n">2</span>Kıyasla</a>
         <a href="#adim3" data-step="adim3"><span class="n">3</span>Azalt</a>
@@ -75,6 +76,9 @@
     </div>
 
     <div class="notice" id="h_notice" role="status">Alanlar boş — tesisinizin 12 aylık verilerini girdikçe beş adımın tamamı anında güncellenir. Önce nasıl çalıştığını görmek isterseniz <button class="linkbtn" type="button" data-example="otel">120 odalı örnek bir tatil köyüyle doldurun</button>.</div>
+
+    <!-- ---------- PANEL: otel kullanıcısının gösterge paneli (dashboard.js + dashboard-view.js çizer) ---------- -->
+    <section class="dash" id="panel-dash" aria-labelledby="dash-h" hidden></section>
 
     <!-- ---------- ADIM 1: ÖLÇ ---------- -->
     <section class="sect" id="adim1" aria-labelledby="h-adim1">
@@ -835,11 +839,13 @@
 <script src="assets/js/turizm/texts.js"></script>
 <script src="assets/js/turizm/storage.js"></script>
 <script src="assets/js/turizm/report.js"></script>
+<script src="assets/js/turizm/dashboard.js"></script>
 <!-- Arayüz -->
 <script src="assets/js/turizm/ui.js"></script>
 <script src="assets/js/turizm/form.js"></script>
 <script src="assets/js/turizm/chart.js"></script>
 <script src="assets/js/turizm/render.js"></script>
+<script src="assets/js/turizm/dashboard-view.js"></script>
 <script src="assets/js/turizm/app.js"></script>
 <!-- Üyelik ve bulut kaydı (Firebase; yüklenemezse hesaplayıcı üyeliksiz çalışır) -->
 <script type="module" src="assets/js/turizm/cloud.js"></script>
