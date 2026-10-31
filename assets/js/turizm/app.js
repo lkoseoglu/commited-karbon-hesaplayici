@@ -6,6 +6,9 @@
      • "Bu tarayıcıda saklansın" işaretliyse her hesaptan sonra kaydeder (storage.js).
      • Sekmeler (Otel / Acente), örnekle doldur, formu temizle, kopyala / yazdır.
      • "PDF raporu oluştur" / "Tek sayfalık özet": report.js'in ürettiği belgeyi yeni sekmede açar.
+     • Panel (adım şeridinin başındaki "Panel"): dashboard.js + dashboard-view.js. Panel açıkken adım
+       bölümleri gizlenir; bir adıma tıklanınca adımlara dönülür. Önceki yıllar cloud.js'ten
+       (setHistory) gelir; örnek otelde etiketli örnek geçmiş gösterilir.
        Kapak logosu: seçilen görsel tarayıcıda en çok 600 × 240 piksele küçültülür (PNG/JPEG data URL,
        state.hotel.logo); sunucuya yalnız kullanıcı "Hesabıma kaydet" derse kayıtla birlikte gider.
      • window.__tour: üyelik modülünün (cloud.js) kullandığı arayüz — eski sayfayla
@@ -19,6 +22,8 @@
   var doc = root.document;
   var U, M, F, RN, S, X;
   var state = null, R = null, A = null, timer = null, pending = false;
+  var view = 'steps', dashDirty = true, account = 'none', records = [], recVer = 0, histCache = { key: null, list: [] }, sampleHist = null;
+  var STEP_IDS = ['adim1', 'adim2', 'adim3', 'adim4', 'adim5'];
 
   function isNum(x) { return typeof x === 'number' && isFinite(x); }
 
@@ -30,6 +35,7 @@
       A = NS.agency.compute(state.agency);
       RN.all(state, R, A);
       reportState();
+      if (view === 'dash') { renderDash(); } else { dashDirty = true; }
     } catch (e) {
       if (root.console) { root.console.error(e); }
       U.notice('h_notice', [{ b: 'Hesaplamada beklenmeyen bir hata oluştu.' }, ' Sayfayı yenileyin; sorun sürerse info@commited.app adresine yazın.'], 'warn');
@@ -103,8 +109,11 @@
     }
   }
   function exampleNotice(which) {
-    U.notice(which === 'acente' ? 'a_notice' : 'h_notice', [{ b: 'Örnek veriler yüklendi — bunlar sizin verileriniz değildir.' },
-      ' Kendi rakamlarınızı yazdıkça sonuçlar güncellenir. ', { button: { text: 'Örneği temizle', attrs: { 'data-clear': which } } }]);
+    var parts = [{ b: 'Örnek veriler yüklendi — bunlar sizin verileriniz değildir.' },
+      ' Kendi rakamlarınızı yazdıkça sonuçlar güncellenir. '];
+    if (which !== 'acente') { parts.push({ button: { text: 'Sonuçları panelde görün', attrs: { 'data-view': 'dash' } } }, ' · '); }
+    parts.push({ button: { text: 'Örneği temizle', attrs: { 'data-clear': which } } });
+    U.notice(which === 'acente' ? 'a_notice' : 'h_notice', parts);
   }
 
   // ------------------------------------------------------------------ örnek / temizle (iletişim kutusu yok; iki adımlı onay)
@@ -151,8 +160,12 @@
       }
       return;
     }
+    if (b.hasAttribute('data-view')) { ev.preventDefault(); setView(b.getAttribute('data-view'), { focus: true }); return; }
+    if (b.hasAttribute('data-step') && view === 'dash') { setView('steps', { scroll: false }); return; }   // bağlantı kendi adımına kaydırır
+    if (b.hasAttribute('data-dash-act')) { dashAction(b.getAttribute('data-dash-act'), b.getAttribute('data-id')); return; }
     if (b.hasAttribute('data-goto')) { goTo(b.getAttribute('data-goto')); return; }
     if (b.hasAttribute('data-goto-id')) {
+      if (view === 'dash') { setView('steps', { scroll: false }); }
       var t = U.el(b.getAttribute('data-goto-id'));
       if (t) { t.scrollIntoView({ block: 'center' }); try { t.focus({ preventScroll: true }); } catch (e) { t.focus(); } }
       return;
@@ -285,6 +298,7 @@
 
   /** Veri kontrolündeki "Alana git": yolu ilgili alana çevirip odakla */
   function goTo(path) {
+    if (view === 'dash') { setView('steps', { scroll: false }); }
     var target = null, m = /^hotel\.energy\.(\d+)\.(\w+)$/.exec(path);
     if (m) {
       var row = state.hotel.energy[+m[1]];
@@ -311,6 +325,76 @@
     var fold = target.closest('details'); if (fold) { fold.open = true; }
     target.scrollIntoView({ block: 'center', behavior: root.matchMedia && root.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
     try { target.focus({ preventScroll: true }); } catch (e) { target.focus(); }
+  }
+
+  // ------------------------------------------------------------------ panel (gösterge paneli)
+  /** v: 'dash' | 'steps'. opts.scroll: false ise kaydırma yok; opts.focus: panel başlığına odaklan */
+  function setView(v, opts) {
+    opts = opts || {};
+    var dash = U.el('panel-dash');
+    // Panel yalnız sayfada panel alanı ve çizici varsa açılır: eski ya da yarım yüklenmiş bir HTML ile
+    // bu dosya birlikte yayında kalırsa adımlar gizlenmez, hesaplayıcı adımlarla çalışmaya devam eder.
+    view = (v === 'dash' && dash && NS.dashboard && NS.dashView) ? 'dash' : 'steps';
+    if (dash) { dash.hidden = view !== 'dash'; }
+    STEP_IDS.forEach(function (id) { var sct = U.el(id); if (sct) { sct.hidden = view === 'dash'; } });
+    var link = doc.querySelector('.steps a[data-view="dash"]');
+    if (link) {
+      link.classList.toggle('on', view === 'dash');
+      if (view === 'dash') { link.setAttribute('aria-current', 'page'); } else { link.removeAttribute('aria-current'); }
+    }
+    if (view === 'dash') {
+      Array.prototype.forEach.call(doc.querySelectorAll('.steps a[data-step]'), function (a) { a.classList.remove('on'); a.removeAttribute('aria-current'); });
+      flush(); renderDash();
+      if (opts.scroll !== false && dash) {
+        var top = dash.getBoundingClientRect().top + (root.pageYOffset || 0) - 130;
+        try { root.scrollTo({ top: Math.max(top, 0), behavior: 'auto' }); } catch (e) { root.scrollTo(0, Math.max(top, 0)); }
+      }
+      if (opts.focus) { var hd = U.el('dash-h'); if (hd) { hd.setAttribute('tabindex', '-1'); try { hd.focus({ preventScroll: true }); } catch (e2) { hd.focus(); } } }
+    }
+  }
+  function pastYears() {
+    var D = NS.dashboard; if (!D) { return []; }
+    var key = recVer + '|' + (state.hotel.name || '').trim().toLocaleLowerCase('tr') + '|' + state.hotel.year;
+    if (histCache.key !== key) { histCache = { key: key, list: records.length ? D.history(records, state) : [] }; }
+    if (histCache.list.length) { return histCache.list; }
+    if (isSample()) {
+      if (!sampleHist || sampleHist.year !== state.hotel.year) {
+        var ex = M.exampleState(); ex.hotel.year = state.hotel.year;
+        sampleHist = { year: state.hotel.year, list: D.history(D.sampleRecords(ex), state, { sample: true }) };
+      }
+      return sampleHist.list;
+    }
+    return [];
+  }
+  function renderDash() {
+    var host = U.el('panel-dash');
+    if (!host || !NS.dashboard || !NS.dashView || !R) { return; }
+    dashDirty = false;
+    NS.dashView.render(host, NS.dashboard.model(state, R, pastYears(), { sample: isSample() }), { account: account });
+  }
+  function toggleMeasure(id, on) {
+    var order = root.MEASURES.order, set = {};
+    if (order.indexOf(id) < 0) { return; }
+    state.hotel.measures.forEach(function (k) { set[k] = true; });
+    if (on) { set[id] = true; } else { delete set[id]; }
+    state.hotel.measures = order.filter(function (k) { return set[k]; });
+    F.fill(); compute();
+    U.toast(on ? 'Plana eklendi' : 'Plandan çıkarıldı');
+  }
+  function dashAction(act, id) {
+    if (act === 'add' || act === 'remove') { toggleMeasure(id, act === 'add'); return; }
+    if (act === 'report') { openReport('report'); return; }
+    if (act === 'summary') { openReport('summary'); return; }
+    if (act === 'field') { goTo(id); return; }
+    if (act === 'claims') {
+      setView('steps', { scroll: false });
+      var c = U.el('claims_note'); if (c) { c.scrollIntoView({ block: 'center' }); c.setAttribute('tabindex', '-1'); try { c.focus({ preventScroll: true }); } catch (e) { c.focus(); } }
+      return;
+    }
+    if (act === 'step') {
+      setView('steps', { scroll: false });
+      var t = U.el(id); if (t) { t.scrollIntoView({ block: 'start' }); var hh = t.querySelector('h2'); if (hh) { hh.setAttribute('tabindex', '-1'); try { hh.focus({ preventScroll: true }); } catch (e3) { hh.focus(); } } }
+    }
   }
 
   // ------------------------------------------------------------------ adım şeridi
@@ -366,6 +450,8 @@
     root.addEventListener('resize', function () { clearTimeout(resizeTimer); resizeTimer = setTimeout(function () { if (R) { NS.chart.draw(R.path, { svg: 'pathsvg', box: 'pathbox', tip: 'pathtip', empty: 'path_empty' }); } }, 150); });
     setMode(state.mode);
     compute();
+    var hash = (root.location && root.location.hash) || '';
+    if (hash === '#panel' || (saved && R && R.started && R.usable && !/^#adim/.test(hash))) { setView('dash', { scroll: false }); }
     if (saved) {
       var parts = [{ b: 'Bu tarayıcıda sakladığınız veriler yüklendi.' }];
       if (saved.from === 'v1') { parts.push(' Önceki sürümden yeni yönteme aktarıldı.'); }
@@ -384,7 +470,12 @@
       toast: function (msg) { U.toast(msg); },
       notice: function (which, parts, tone) { U.notice(which === 'agency' || which === 'acente' ? 'a_notice' : 'h_notice', parts, tone); },
       state: function () { return state; },
-      result: function () { flush(); return R; }
+      result: function () { flush(); return R; },
+      // panel: hesaba kayıtlı kayıtlar (cloud.js) ve hesap durumu
+      setHistory: function (list) { records = Array.isArray(list) ? list : []; recVer++; histCache.key = null; if (view === 'dash') { renderDash(); } else { dashDirty = true; } },
+      setAccount: function (a) { account = a === 'user' || a === 'guest' ? a : 'none'; if (view === 'dash') { renderDash(); } },
+      setView: function (v) { setView(v, { scroll: false }); },
+      view: function () { return view; }
     };
     try { root.dispatchEvent(new root.CustomEvent('turizm:ready')); } catch (e) { /* yok */ }
   }

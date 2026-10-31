@@ -27,7 +27,7 @@
   var NS = root.TURIZM = root.TURIZM || {};
   var SCHEMA = 'commited.turizm.state/2';
   var SCHEMA_PREFIX = 'commited.turizm.state/';
-  var APP_VERSION = '6.1.0';
+  var APP_VERSION = '6.2.0';
 
   // ------------------------------------------------------------------ sabitler
   var SEGMENTS = ['resort5', 'lux', 's5', 's4', 's3', 'limited'];          // benchmarks.js kimlikleri

@@ -10,6 +10,8 @@
    - inputs alanı: v6'da yeni şema ('commited.turizm.state/2'); eski sayfanın
      kayıtları (alan kimliği haritası) açılırken model.js ile otomatik aktarılır.
    Sayfayla iletişim yalnız window.__tour üzerinden (app.js).
+   - Panel: oturum açılınca ve her kayıttan sonra otel kayıtları setHistory ile panele verilir
+     (önceki yıllar aynı yöntemle yeniden hesaplanır); setAccount panelin davet metnini seçer.
    ===================================================================== */
 const firebaseConfig = {
   apiKey: "AIzaSyA908koeADcOLR2ROU6R7fARAqjC1v-inc",
@@ -141,6 +143,17 @@ async function listRecords() {
   snap.forEach((d) => { const r = d.data(); if (r.type === "hotel" || r.type === "agency") out.push(Object.assign({ id: d.id }, r)); });
   return out;
 }
+/* Panel için: otel kayıtları (inputs ile) — her yılın en son kaydını dashboard.js seçer */
+async function refreshHistory() {
+  if (!user || !T() || !T().setHistory) return;
+  try {
+    const recs = await listRecords();
+    T().setHistory(recs.filter((r) => r.type === "hotel" && r.inputs).map((r) => ({
+      id: r.id, year: r.year || null, company: r.company || "", inputs: r.inputs,
+      createdAt: r.createdAt && r.createdAt.toMillis ? r.createdAt.toMillis() : (r.createdAt && typeof r.createdAt.seconds === "number" ? r.createdAt.seconds * 1000 : 0)
+    })));
+  } catch (e) { /* panel geçmişsiz çalışır */ }
+}
 function loadRecord(r) {
   if (!r || !r.inputs) return;
   const res = T().apply(r.inputs);
@@ -200,6 +213,7 @@ async function saveRecord() {
     F.setDoc(F.doc(db, "firms", user.uid), { lastSavedAt: F.serverTimestamp(), lastTotalKg: Math.round(sm.total) }, { merge: true }).catch(() => {});
     say("✓ Hesabınıza kaydedildi (" + fmtKg(sm.total) + "). \"Kayıtlarım\"dan istediğiniz zaman açabilirsiniz.");
     T().toast("Hesabınıza kaydedildi");
+    refreshHistory();
   } catch (e) { say("Kaydedilemedi: " + errText(e)); }
 }
 
@@ -238,6 +252,7 @@ function bind() {
         registering = false;
         A.sendEmailVerification(user).catch(() => {});
         renderBar();
+        if (T().setAccount) T().setAccount("user");
         const again = pendingSave; closeModal();
         T().toast("Üyeliğiniz oluşturuldu");
         if (again) saveRecord();
@@ -281,15 +296,25 @@ async function onUser(u) {
   if (u) {
     await loadProfile();
     renderBar();
+    if (T().setAccount) T().setAccount("user");
     if (!profile || !profile.name) { openModal("profForm"); return; }
     const again = pendingSave;
     if (!$("authModal").hidden && !$("authForms").hidden) closeModal();
     if (again) { saveRecord(); return; }
     if (T().isEmpty()) {
-      try { const recs = await listRecords(); if (recs.length) { loadRecord(recs[0]); T().toast("Son kaydınız yüklendi"); } } catch (e) { /* sessiz */ }
+      try {
+        const recs = await listRecords();
+        if (recs.length) {
+          loadRecord(recs[0]); T().toast("Son kaydınız yüklendi");
+          if (recs[0].type !== "agency" && T().setView) T().setView("dash");
+        }
+      } catch (e) { /* sessiz */ }
     }
+    refreshHistory();
   } else {
     renderBar();
+    if (T().setAccount) T().setAccount("guest");
+    if (T().setHistory) T().setHistory([]);
   }
 }
 
