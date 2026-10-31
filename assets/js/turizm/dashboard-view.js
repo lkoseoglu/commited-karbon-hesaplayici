@@ -11,6 +11,8 @@
    Renkler yalnız CSS sınıflarından gelir (turizm-app.css + theme-sea.css): koyu mod
    kendiliğinden çalışır. Kullanıcı metni her zaman textContent ile yazılır.
    Önlem ekleme / çıkarma, rapor ve gezinme düğmeleri data-dash-act ile app.js'e gider.
+   ctx.readOnly (yönetim paneli, turizm-admin.html): aynı panel düğmesiz çizilir; önlem ekle / çıkar,
+   kaydet, rapor ve "veri girin" bağlantıları yerine yalnız bilgi kalır.
    Dışa: globalThis.TURIZM.dashView = { render(host, model, ctx), redraw() }
    ========================================================================= */
 (function (root) {
@@ -22,6 +24,7 @@
   var ui = { metric: 'total', tables: {}, introDone: false };
   var last = null;           // { host, model, ctx }
   var resizeTimer = null;
+  var ro = false;            // salt okunur çizim (ctx.readOnly): render() başında ayarlanır
 
   function isNum(x) { return typeof x === 'number' && isFinite(x); }
   function U() { return NS.ui; }
@@ -233,7 +236,9 @@
     var tr = T.byId[cur];
     if (T.years < 2) {
       var acc = ctx && ctx.account, msg, btn = null;
-      if (acc === 'user') {
+      if (ro) {
+        msg = 'Bu tesis yalnız ' + (m.year || 'bu yılın') + ' verisini kaydetmiş; diğer yıllar kaydedildikçe gelişimi burada görünür.';
+      } else if (acc === 'user') {
         msg = 'Bu yılın sonuçlarını hesabınıza kaydedin. Önceki yılları da girip kaydettiğinizde gelişiminiz burada yıl yıl görünür; tüm yıllar aynı yöntemle yeniden hesaplanır.';
         btn = h('button', { type: 'button', class: 'btn primary sm', 'data-cloud-save': '', text: 'Hesabıma kaydet' });
       } else if (acc === 'guest') {
@@ -319,7 +324,7 @@
       var parts = [h('b', { text: L.source.label }), ' tek başına ayak izinin ' + pct(L.source.share * 100, 0) + ' kadarı. '];
       if (L.measure) {
         parts.push('Bu kalemi en çok azaltacak önlem: ' + L.measure.tr + ' (yılda ' + n1(L.measure.reductionT) + ' t). ');
-        parts.push(h('button', { type: 'button', class: 'linkbtn', 'data-dash-act': 'add', 'data-id': L.measure.id, 'data-fkey': 'lever-' + L.measure.id, text: 'Plana ekleyin' }));
+        if (!ro) { parts.push(h('button', { type: 'button', class: 'linkbtn', 'data-dash-act': 'add', 'data-id': L.measure.id, 'data-fkey': 'lever-' + L.measure.id, text: 'Plana ekleyin' })); }
       } else if (L.planned.length) {
         parts.push('Planınızda bu kalemi azaltan önlemler var: ' + L.planned.join(', ') + '.');
       }
@@ -431,7 +436,7 @@
     var sub = PL.any
       ? PL.selected.length + ' önlem: yılda ' + n1(PL.savedT) + ' t azaltım (' + pct(PL.savedPct, 0) + '), yatırım ' + money(PL.capexTl)
         + (isNum(PL.paybackYears) && PL.paybackYears > 0 ? ', geri ödeme ' + n1(PL.paybackYears) + ' yıl' : '')
-      : 'Henüz önlem seçilmedi. Aşağıdan ekleyin; panel anında güncellenir.';
+      : (ro ? 'Henüz önlem seçilmedi.' : 'Henüz önlem seçilmedi. Aşağıdan ekleyin; panel anında güncellenir.');
     if (PL.target) {
       var cov = Math.min(PL.target.coverage, 1) * 100, met = PL.target.met;
       kids.push(h('div', { class: 'dmeter' + (met ? ' ok' : '') }, [
@@ -444,11 +449,11 @@
     if (PL.selected.length) {
       kids.push(h('ul', { class: 'plansel', 'aria-label': 'Planınızdaki önlemler' }, PL.selected.map(function (x) {
         return h('li', {}, [h('span', { text: x.label + (isNum(x.reductionT) ? ' (' + n1(x.reductionT) + ' t)' : '') }),
-          h('button', { type: 'button', 'data-dash-act': 'remove', 'data-id': x.id, 'data-fkey': 'rm-' + x.id, 'aria-label': 'Plandan çıkarın: ' + x.label, title: 'Plandan çıkarın' }, [icon('x')])]);
+          ro ? null : h('button', { type: 'button', 'data-dash-act': 'remove', 'data-id': x.id, 'data-fkey': 'rm-' + x.id, 'aria-label': 'Plandan çıkarın: ' + x.label, title: 'Plandan çıkarın' }, [icon('x')])]);
       })));
     }
     if (m.next.length) {
-      kids.push(h('h4', { class: 'dc-h4', text: 'Sıradaki adımlar' }));
+      kids.push(h('h4', { class: 'dc-h4', text: ro ? 'Önerilen önlemler' : 'Sıradaki adımlar' }));
       kids.push(h('ul', { class: 'nexts' }, m.next.map(function (x) {
         var det = 'Yılda ' + n1(x.reductionT) + ' t azaltım';
         if (x.afterOthers) { det += ', yıllık belge maliyeti; verimlilik önlemlerinden sonra'; }
@@ -456,12 +461,13 @@
         else if (isNum(x.capexTl) && x.capexTl > 0) { det += ', yatırım ' + money(x.capexTl); }
         return h('li', {}, [
           h('div', {}, [h('b', { text: x.label }), h('small', { text: det })]),
-          h('button', { type: 'button', class: 'btn-add', 'data-dash-act': 'add', 'data-id': x.id, 'data-fkey': 'add-' + x.id, 'aria-label': 'Ekle: ' + x.label }, [icon('plus'), h('span', { text: 'Ekle' })])
+          ro ? null : h('button', { type: 'button', class: 'btn-add', 'data-dash-act': 'add', 'data-id': x.id, 'data-fkey': 'add-' + x.id, 'aria-label': 'Ekle: ' + x.label }, [icon('plus'), h('span', { text: 'Ekle' })])
         ]);
       })));
     }
-    kids.push(h('p', { class: 'dc-note' }, ['Önlem katsayıları ve yatırım tutarları gösterge değerdir. ',
-      h('button', { type: 'button', class: 'linkbtn', 'data-dash-act': 'step', 'data-id': 'adim3', text: 'Ayrıntılar Adım 3\'te' }), '.']));
+    kids.push(ro ? h('p', { class: 'dc-note', text: 'Önlem katsayıları ve yatırım tutarları gösterge değerdir.' })
+      : h('p', { class: 'dc-note' }, ['Önlem katsayıları ve yatırım tutarları gösterge değerdir. ',
+        h('button', { type: 'button', class: 'linkbtn', 'data-dash-act': 'step', 'data-id': 'adim3', text: 'Ayrıntılar Adım 3\'te' }), '.']));
     return card('d-next', 'dc-next', 'Eylem planı', sub, kids);
   }
 
@@ -474,10 +480,12 @@
       ['Atık', pg.wasteKg, 2, 'kg', 'hotel.extras.wasteLandfillT'],
       ['Kimyasal', pg.chemKg, 2, 'kg', 'hotel.esg.chemicalsKg']
     ];
+    var noData = function (path) {
+      return ro ? h('span', { class: 'pna', text: 'Veri yok' }) : h('button', { type: 'button', class: 'linkbtn', 'data-dash-act': 'field', 'data-id': path, text: 'Veri girin' });
+    };
     var grid = h('div', { class: 'pgrid' }, figs.map(function (f) {
       return h('div', { class: 'pfig' }, [h('span', { class: 'pl', text: f[0] }),
-        isNum(f[1]) ? h('p', {}, [h('b', { text: n(f[1], f[2]) }), h('small', { text: f[3] })])
-                    : h('button', { type: 'button', class: 'linkbtn', 'data-dash-act': 'field', 'data-id': f[4], text: 'Veri girin' })]);
+        isNum(f[1]) ? h('p', {}, [h('b', { text: n(f[1], f[2]) }), h('small', { text: f[3] })]) : noData(f[4])]);
     }));
     var meters = [
       ['Yenilenebilir elektrik', P.renew, 'Yerinde üretim (GES) ve YEK-G / I-REC', 'hotel.market'],
@@ -490,7 +498,7 @@
       return h('div', { class: 'pmeter' }, [
         h('p', { class: 'pm-h' }, [h('span', { text: x[0] }), has ? h('b', { text: pct(x[1], x[1] > 0 && x[1] < 10 ? 1 : 0) }) : null]),
         has ? h('div', { class: 'meter', 'aria-hidden': 'true' }, [h('span', { style: 'width:' + Math.min(Math.max(x[1], 0), 100).toFixed(1) + '%' })]) : null,
-        has ? h('small', { text: x[2] }) : h('button', { type: 'button', class: 'linkbtn', 'data-dash-act': 'field', 'data-id': x[3], text: 'Veri girin' })
+        has ? h('small', { text: x[2] }) : noData(x[3])
       ]);
     }));
     return card('d-people', 'dc-people', 'Kaynaklar, tedarik ve çalışanlar', 'Misafir gecelemesi başına; karbon hesabına girmez', [grid, mlist]);
@@ -519,7 +527,8 @@
     ]));
     var hint = h('div', { class: 'dcallout soft' }, [icon('info'), h('p', {}, [
       'Misafirlere anlatırken ölçülen değeri yöntemi ve yılıyla verin; karbon kredisine dayanarak "karbon nötr" demeyin (AB 2024/825). ',
-      h('button', { type: 'button', class: 'linkbtn', 'data-dash-act': 'claims', text: 'Nasıl anlatılır?' })])]);
+      ro ? null : h('button', { type: 'button', class: 'linkbtn', 'data-dash-act': 'claims', text: 'Nasıl anlatılır?' })])]);
+    if (ro) { return card('d-ready', 'dc-ready', 'Hazırlık', null, [h('div', { class: 'rrows' }, rows), hint]); }
     var acts = h('div', { class: 'dacts' }, [
       h('button', { type: 'button', class: 'btn primary', 'data-dash-act': 'report', 'data-fkey': 'act-report', text: 'PDF raporu' }),
       h('button', { type: 'button', class: 'btn ghost', 'data-dash-act': 'summary', 'data-fkey': 'act-summary', text: 'Tek sayfalık özet' }),
@@ -531,6 +540,12 @@
 
   // ------------------------------------------------------------------ boş durum
   function emptyView(m) {
+    if (ro) {
+      return h('div', { class: 'dash-empty' }, [
+        h('h2', { id: 'dash-h', text: m.name || 'Tesis' }),
+        h('p', { text: 'Bu kaydın hesabı tamamlanmamış; tesis eksik verileri girip yeniden kaydettiğinde panel dolar.' })
+      ]);
+    }
     return h('div', { class: 'dash-empty' }, [
       h('h2', { id: 'dash-h', text: 'Paneliniz verilerinizle dolar' }),
       h('p', { text: m.started
@@ -570,11 +585,13 @@
     root.requestAnimationFrame(step);
   }
 
-  /** Paneli baştan çizer. ctx: { account: 'user' | 'guest' | 'none' } */
+  /** Paneli baştan çizer. ctx: { account: 'user' | 'guest' | 'none', readOnly: true (yönetim paneli) } */
   function render(host, m, ctx) {
     if (!host) { return; }
     var ae = doc.activeElement, fkey = ae && host.contains(ae) && ae.getAttribute ? ae.getAttribute('data-fkey') : null;
     last = { host: host, model: m, ctx: ctx || {} };
+    ro = !!(ctx && ctx.readOnly);
+    host.classList.toggle('ro', ro);
     var root2 = h('div', { class: 'dash-in' });
     if (!m.ok) {
       root2.appendChild(emptyView(m));
