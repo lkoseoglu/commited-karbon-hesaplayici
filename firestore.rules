@@ -43,10 +43,16 @@ service cloud.firestore {
 
     // --- Firma raporları ---
     // Her firma yalnızca kendi raporlarını okur/yazar. Admin hepsini okur.
-    // Admin panelindeki "tüm firma raporları" görünümü collectionGroup('items')
-    // sorgusu kullanır; bu kural onu da kapsar.
     match /reports/{uid}/items/{reportId} {
       allow read, write: if isSignedIn() && request.auth.uid == uid;
+      allow read: if isAdmin();
+    }
+    // Yönetici panellerindeki "bütün kayıtlar" görünümü (karbon-admin.html → Firma Raporları,
+    // turizm-admin.html) collectionGroup('items') sorgusu kullanır. Koleksiyon grubu sorgusu
+    // yukarıdaki yola bağlı kuralla DEĞİL, yalnız özyinelemeli joker kuralla izin alır (2026-10-31).
+    // Firebase konsolunda yayınlanmadıysa turizm-admin.html kayıtları üye profilleri (firms)
+    // üzerinden tek tek okur.
+    match /{path=**}/items/{reportId} {
       allow read: if isAdmin();
     }
 

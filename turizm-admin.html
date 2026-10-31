@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Commited Yönetim Paneli</title>
+<meta name="description" content="Turizm Karbon Hesaplayıcısı yönetim paneli: üyeler, otellerin sonuçları ve satış fırsatları. Yalnız Commited yöneticileri içindir.">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300..800&display=swap">
+<link rel="stylesheet" href="assets/css/theme-sea.css">
+<link rel="stylesheet" href="assets/css/turizm-app.css">
+<link rel="stylesheet" href="assets/css/turizm-admin.css">
+</head>
+<body class="adm-body">
+<!-- =====================================================================
+     Commited Yönetim Paneli — Turizm Karbon Hesaplayıcısı (sürüm 1)
+     Yalnız yöneticiler: giriş Firebase ile (karbon-admin.html ile aynı oturum),
+     veriye erişimi firestore.rules → isAdmin() korur. Herkese açık sayfalara bağlanmaz.
+     Yapı: bu dosya yalnız işaretlemedir. Veri assets/js/turizm/admin.js (saf),
+     çizim admin-view.js, giriş ve okuma admin-cloud.js. Otel ayrıntısı otelin kendi
+     panelidir (dashboard.js + dashboard-view.js, salt okunur). Ayrıntı: README-yazilim-ekibi.md
+     ===================================================================== -->
+
+<section class="adm-gate" id="adm-gate" aria-labelledby="gate-h">
+  <div class="gate-box">
+    <p class="gate-brand"><b>cOmmited</b> Yönetim paneli</p>
+    <h1 id="gate-h">Turizm hesaplayıcısı</h1>
+    <p class="gate-sub" id="gate-msg">Bağlanıyor…</p>
+    <form id="gate-form" hidden novalidate>
+      <button class="btn ghost wide gbtn" type="button" id="g_google"><span class="g" aria-hidden="true">G</span>Google ile giriş yapın</button>
+      <p class="gate-or">ya da e-posta ve şifreyle</p>
+      <label for="g_email">E-posta</label><input id="g_email" class="mi" type="email" autocomplete="username" required>
+      <label for="g_pass">Şifre</label><input id="g_pass" class="mi" type="password" autocomplete="current-password" required>
+      <button class="btn primary wide" type="submit" id="g_login">Giriş yapın</button>
+    </form>
+    <div id="gate-denied" hidden>
+      <button class="btn ghost wide" type="button" id="g_out">Başka bir hesapla giriş yapın</button>
+    </div>
+    <p class="merr" id="g_err" role="alert"></p>
+    <p class="gate-foot">Bu sayfa yalnız Commited yöneticileri içindir.</p>
+  </div>
+</section>
+
+<div class="adm-app" id="adm-app" hidden>
+  <header class="adm-bar">
+    <div class="adm-bar-in">
+      <p class="adm-brand"><b>cOmmited</b> Yönetim paneli</p>
+      <nav class="adm-nav" aria-label="Yönetici sayfaları">
+        <a href="turizm-admin.html" aria-current="page">Turizm</a>
+        <a href="karbon-admin.html">Faktör ayarları (Kapsam 3)</a>
+      </nav>
+      <div class="adm-who">
+        <span id="adm-who"></span>
+        <button class="btn ghost sm" type="button" id="adm-refresh">Yenile</button>
+        <button class="btn ghost sm" type="button" id="adm-logout">Çıkış</button>
+      </div>
+    </div>
+  </header>
+  <main class="wrap adm-main" id="adm-main">
+    <p class="adm-loading">Kayıtlar yükleniyor…</p>
+  </main>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<!-- Hesap katmanı (hesaplayıcıyla aynı dosyalar, aynı sıra) -->
+<script src="assets/js/hcmi-data.js"></script>
+<script src="assets/js/hcmi-engine.js"></script>
+<script src="assets/js/tr-reference.js"></script>
+<script src="assets/js/benchmarks.js"></script>
+<script src="assets/js/pathway.js"></script>
+<script src="assets/js/measures.js"></script>
+<script src="assets/js/num-input.js"></script>
+<script src="assets/js/turizm/model.js"></script>
+<script src="assets/js/turizm/compute.js"></script>
+<script src="assets/js/turizm/agency.js"></script>
+<script src="assets/js/turizm/texts.js"></script>
+<script src="assets/js/turizm/report.js"></script>
+<script src="assets/js/turizm/dashboard.js"></script>
+<script src="assets/js/turizm/admin.js"></script>
+<!-- Arayüz -->
+<script src="assets/js/turizm/ui.js"></script>
+<script src="assets/js/turizm/dashboard-view.js"></script>
+<script src="assets/js/turizm/admin-view.js"></script>
+<!-- Giriş ve okuma (Firebase; yönetici değilse veri okunmaz) -->
+<script type="module" src="assets/js/turizm/admin-cloud.js"></script>
+</body>
+</html>

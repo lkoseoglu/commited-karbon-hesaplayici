@@ -7,6 +7,8 @@ Commited turizm karbon hesaplayıcıları — GitHub Pages ile yayınlanır, com
   kapaklı sürdürülebilirlik raporu ve tek sayfalık özet (PDF), karbon dışı göstergeler, otel paneli (yıllar arası takip)
 - `turizm-karbon-hesaplayici-v5.html` — önceki sürüm (arşiv, geri dönüş için)
 - `kapsam3-karbon-hesaplayici.html` — **Kapsam 3 Karbon Hesaplayıcı** (turizm tedarik zinciri, 3.1 + 3.4)
+- `turizm-admin.html` — **Yönetim paneli** (yalnız Commited yöneticileri): üyeler, otellerin sonuçları, satış fırsatları, Excel
+- `karbon-admin.html` — Kapsam 3 faktör ayarları (yalnız yöneticiler)
 
 Testler: `npm install && npm test && npm run test:e2e`
 

@@ -4,6 +4,57 @@ commitedevents.app (Squarespace) sitesine iframe ile gömülen, sunucu gerektirm
 tarayıcıda yapan) karbon hesaplama modülleri. GitHub Pages üzerinden yayınlanır:
 `https://lkoseoglu.github.io/commited-karbon-hesaplayici/<dosya>.html`
 
+## 2026-10-31 — Yönetim paneli (`turizm-admin.html`, yalnız Commited yöneticileri)
+
+> **Durum:** 2026-10-31'de onaylandı ve canlıya alındı (GitHub web arayüzünden klasör klasör yüklendi):
+> `https://lkoseoglu.github.io/commited-karbon-hesaplayici/turizm-admin.html`. Herkese açık sayfalara bağlanmaz;
+> `karbon-admin.html`'in araç çubuğunda "Turizm yönetim paneli" bağlantısı var. `firestore.rules`'taki yeni okuma
+> kuralı Firebase konsolunda ayrıca yayınlanmalıdır (aşağıda).
+
+**Ne yapar:** turizm hesaplayıcısının kullanımını tek ekranda gösterir.
+- Üst alan: üye, otel, acente, kaydedilen hesap sayıları, son kayıtların toplam emisyonu; bütün oteller A–E kıyas
+  şeridinde birer nokta (otel panelindeki şeritle aynı ölçek; noktaya tıklayınca otelin ayrıntısı açılır).
+- Haftalara göre (son 12 hafta): yeni üye ya da kaydedilen hesap; ipucu, klavye ve tablo eşi.
+- Satış fırsatları: doğrulamaya hazır (veri tamlığı 90+, bağımsız doğrulaması yok), kıyasın üstünde (D ve E),
+  güncelleme bekliyor (geçen takvim yılının verisi yok), hesap kaydetmemiş üye; planlardan sonra kalan emisyon
+  ve VER 400 TL/t (`model.DEFAULT_PRICES`) ile dengeleme potansiyeli. "Listede gösterin" listeyi o süzgeçle açar.
+- Liste: oteller / acenteler / üyeler; arama (ad, şehir, e-posta), süzgeç, sütuna göre sıralama, e-posta bağlantısı,
+  **Excel'e aktarın** (üç sayfa: Oteller, Acenteler, Üyeler; SheetJS, kapsam3 sayfasıyla aynı CDN sürümü).
+- Otel ayrıntısı: otelin kendi paneli **salt okunur** (`dashView.render(..., { readOnly: true })`: önlem ekle/çıkar,
+  kaydet, rapor ve "veri girin" düğmeleri çıkmaz), önceki yılları aynı yöntemle; PDF raporu ve tek sayfalık özet
+  yeni sekmede. Tarayıcının geri düğmesi listeye döner.
+
+**Veri:** her otelin son kaydı (en yeni yıl, aynı yılda en son kaydedilen) `model.load` + `compute` ile **bugünkü
+yöntemle** yeniden hesaplanır; listedeki sayılar otelin kendi panelinde gördüğüyle aynıdır, eski sürüm kayıtları da
+aktarılır. Aynı otel = aynı hesap (uid) + aynı ad. Üye = profil kaynağı `turizm-karbon-hesaplayici` olan ya da turizm
+kaydı bulunan hesap; Kapsam 3 kayıtları sayılmaz (onlar `karbon-admin.html` → Firma Raporları'nda).
+
+**Giriş ve okuma** (`admin-cloud.js`): Firebase varsayılan uygulama adı `karbon-admin.html` ile aynı, yani orada
+açılan yönetici oturumu burada da geçerli. Yönetici listesi `admin.js` → `ADMIN_EMAILS` (karbon-admin.html ile aynı
+üç adres); yönetici olmayan hesapla hiçbir kayıt okunmaz. Asıl koruma `firestore.rules` → `isAdmin()`
+(e-posta listede **ve doğrulanmış** olmalı; e-posta/şifre hesabı doğrulanmamışsa Google ile girin).
+Okuma: `firms` (üye profilleri) + `collectionGroup('items')` (tek sorgu, sıralama yok, dizin gerekmez).
+Kurallar toplu okumaya izin vermezse panel kayıtları üye profilleri üzerinden tek tek okur ve bunu bir notla
+söyler (profili olmayan eski hesapların kayıtları o durumda görünmez). Tam liste için `firestore.rules`'a eklenen
+şu blok **Firebase konsolunda yayınlanmalı** (Firestore → Kurallar → Yayınla); `karbon-admin.html`'in Firma
+Raporları sekmesi de bunu ister:
+
+```
+match /{path=**}/items/{reportId} {
+  allow read: if isAdmin();
+}
+```
+
+**Kod:** `assets/js/turizm/admin.js` (saf; `build()`, `detail()`, `query()`, `sheets()`, `isAdmin()`, `ms()`),
+`admin-view.js` (çizim, `window.__admin`), `admin-cloud.js` (ES modülü), `assets/css/turizm-admin.css`
+(yalnız tema değişkenleri), `turizm-admin.html` (yalnız işaretleme, `noindex`). `dashboard-view.js`'e `ctx.readOnly`.
+
+**Testler:** `tests/unit/turizm-admin.test.mjs` (12: yönetici kontrolü, zaman damgaları, sayıların hesapla aynı olması,
+gruplama, eski kayıt, etiketler ve beklenen yıl, haftalar, arama-süzme-sıralama, ayrıntı, Excel, bozuk veri),
+`tests/e2e/turizm-admin.test.mjs` (8: giriş ve ret, özet, liste ve Excel indirme, salt okunur ayrıntı ve PDF, yedek
+okuma yolu, boş veri ve çıkış, axe açık/koyu, 390 px). Örnek veri: `tests/helpers/admin-fixture.mjs`; Firestore
+saplamasına `collectionGroup` ve `denyGroup` eklendi. Tema testi yönetim sayfasını da denetler.
+
 ## 2026-10-29 — Otel paneli v6.2 (adım şeridinin başındaki "Panel")
 
 > **Durum:** 2026-10-29'da onaylandı, 2026-10-31'de canlıya alındı (GitHub web arayüzünden klasör klasör yüklendi;
@@ -197,7 +248,8 @@ assets/js/turizm/texts.js   beyan, özet, JSON, WhatsApp metinleri
 assets/js/turizm/storage.js tarayıcı belleği (commited-turizm-v2; eski anahtarı okur)
 assets/js/turizm/report.js  sürdürülebilirlik raporu ve tek sayfalık özet: build() HTML metni üretir (DOM'a dokunmaz)
 assets/js/turizm/dashboard.js       otel paneli: model() ve history() (DOM'a dokunmaz)
-assets/js/turizm/dashboard-view.js  otel paneli çizimi (DOM + satır içi SVG)
+assets/js/turizm/dashboard-view.js  otel paneli çizimi (DOM + satır içi SVG; readOnly: yönetim paneli)
+assets/js/turizm/admin.js · admin-view.js · admin-cloud.js   yönetim paneli (turizm-admin.html): veri (saf) · çizim · giriş/okuma
 assets/js/turizm/ui.js · form.js · render.js · chart.js · app.js   arayüz (DOM)
 assets/js/turizm/cloud.js   Firebase üyelik ve kayıt (ES modülü; yüklenemezse sayfa üyeliksiz çalışır)
 assets/css/turizm-app.css   sayfa stilleri (yalnız theme-sea.css değişkenleri; sabit renk yok)
@@ -229,9 +281,11 @@ aktarımı da sınar).
 
 ```bash
 npm install                     # bir kez
-npm test                        # 254 birim testi: HCMI motoru (resmî Excel altın referansı), Türkiye faktörleri,
-                                #   kıyas, net sıfır, önlemler, Türkçe sayı, durum modeli, hesap katmanı, rapor, panel, göstergeler, tema
-npm run test:e2e                # 21 uçtan uca test: Turizm sayfası (17) + Turizm ve Kapsam 3 erişilebilirliği (4)
+npm test                        # 268 birim testi: HCMI motoru (resmî Excel altın referansı), Türkiye faktörleri,
+                                #   kıyas, net sıfır, önlemler, Türkçe sayı, durum modeli, hesap katmanı, rapor, panel,
+                                #   yönetim paneli, göstergeler, tema
+npm run test:e2e                # 29 uçtan uca test: Turizm sayfası (17) + Turizm ve Kapsam 3 erişilebilirliği (4)
+                                #   + yönetim paneli (8)
 node tests/e2e/probe-v6.mjs /tmp/ekran   # açık/koyu/telefon tam sayfa ekran görüntüleri
 ```
 
@@ -366,7 +420,8 @@ Kapsam 3 1.418.888 kg); tema ve görünüm değişiklikleri bu sayıları deği�
 | `tools/report-sample.mjs` | Örnek otel için sürdürülebilirlik raporu, tek sayfalık özet ve sayfa görüntüleri üretir; sayfa taşmalarını ölçer (en üstteki "Sürdürülebilirlik raporu v6.1" bölümü). `tests/fixtures/ornek-logo.*` kurgusal örnek logodur. |
 | `.github/workflows/ci.yml` | GitHub Actions: `main`'e her yüklemede ve her pull request'te birim + uçtan uca testler (2026-10-21'den beri etkin). |
 | `kapsam3-karbon-hesaplayici.html` | Kapsam 3 Karbon Hesaplayıcı (turizm tedarik zinciri). Firebase (giriş/kayıt), SheetJS (Excel), jsPDF (PDF) CDN'den yüklenir. |
-| `karbon-admin.html` | Kapsam 3 hesaplayıcısının yönetici paneli: emisyon ve harcama faktörlerini düzenler, Firestore'a (`config/current`) yazar. Herkese açık sayfaya konmaz. |
+| `karbon-admin.html` | Kapsam 3 hesaplayıcısının yönetici paneli: emisyon ve harcama faktörlerini düzenler, Firestore'a (`config/current`) yazar. Herkese açık sayfaya konmaz. Araç çubuğunda turizm yönetim paneline bağlantı var. |
+| `turizm-admin.html` | Turizm yönetim paneli (2026-10-31): üyeler, otellerin sonuçları, satış fırsatları, Excel, otel ayrıntısı. Yalnız yöneticiler; herkese açık sayfaya konmaz. Ayrıntı en üstteki bölümde. |
 | `config.default.json` | Kapsam 3 hesaplayıcısının tüm parametreleri (v4.0). Tek doğru kaynak. |
 | `tools/inject-config.py` | `config.default.json`'u kapsam3 ve admin dosyalarındaki gömülü `DEFAULT_CONFIG`'e yazar. |
 | `karbon-hesaplayici.html` | Eski adres → `kapsam3-karbon-hesaplayici.html` yönlendirmesi. |
