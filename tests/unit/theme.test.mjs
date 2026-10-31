@@ -100,3 +100,25 @@ test('turizm-app.css yuklu ve sabit renk icermiyor (yazdirma icin yalniz renk ad
 test('dalga animasyonu hareket azaltma tercihine saygi gosterir', () => {
   assert.match(THEME, /prefers-reduced-motion: reduce\)\{\.sea-waves svg\{animation:none/);
 });
+
+// Yönetim paneli (turizm-admin.html): dalgalı hero'su yok ama aynı tema kurallarına uyar
+const ADMIN_PAGE = 'turizm-admin.html';
+if (fs.existsSync(path.join(ROOT, ADMIN_PAGE))) {
+  const page = rd(ADMIN_PAGE), linked = linkedCss(page);
+  const css = stripComments([...page.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/g)].map((m) => m[1]).join('\n') + '\n' + linked);
+  const all = page + '\n' + linked;
+  const localDefs = Object.fromEntries([...all.matchAll(/(--[a-z0-9-]+)\s*:/gi)].map((m) => [m[1], 1]));
+  test(ADMIN_PAGE + ': tema dosyasini ve turizm stillerini yukler; sabit renk yok; her var(--x) tanimli', () => {
+    assert.match(page, /<link rel="stylesheet" href="assets\/css\/theme-sea\.css">/);
+    assert.match(page, /<link rel="stylesheet" href="assets\/css\/turizm-admin\.css">/);
+    const hex = [...css.matchAll(/#[0-9a-fA-F]{6}\b|#[0-9a-fA-F]{3}\b/g)].map((m) => m[0].toUpperCase()).filter((h) => h !== '#4285F4');
+    assert.deepEqual(hex, [], 'sabit renkler: ' + hex.join(', '));
+    const used = new Set([...all.matchAll(/var\((--[a-z0-9-]+)/gi)].map((m) => m[1]));
+    const missing = [...used].filter((k) => !(k in LIGHT) && !(k in localDefs));
+    assert.deepEqual(missing, [], 'tanimsiz degiskenler: ' + missing.join(', '));
+  });
+  test('turizm-admin.css: rgb()/rgba() yok; sayfa arama motorlarina kapali', () => {
+    assert.ok(!/rgba?\(/.test(stripComments(rd('assets/css/turizm-admin.css'))), 'rgb()/rgba() yerine tema degiskeni kullanin');
+    assert.match(page, /<meta name="robots" content="noindex,nofollow">/);
+  });
+}
