@@ -11,6 +11,10 @@
        (setHistory) gelir; örnek otelde etiketli örnek geçmiş gösterilir.
        Kapak logosu: seçilen görsel tarayıcıda en çok 600 × 240 piksele küçültülür (PNG/JPEG data URL,
        state.hotel.logo); sunucuya yalnız kullanıcı "Hesabıma kaydet" derse kayıtla birlikte gider.
+     • Üyelik şartı (v6.3): giriş yapmamış ziyaretçi otel ve acente formlarına veri giremez. Bir alana
+       tıklayınca ya da yazınca üyelik penceresi açılır (cloud.js, "turizm:needauth"), değer değişmez.
+       Örnek veriler, sonuçlar, panel, rapor, gezinme ve formu temizleme serbesttir. Üyelik modülü
+       yüklenemezse (account 'offline') hesaplayıcı eskisi gibi üyeliksiz çalışır.
      • window.__tour: üyelik modülünün (cloud.js) kullandığı arayüz — eski sayfayla
        aynı adlar: collect, apply, isEmpty, summary, mode, setMode, toast.
    Dışa: globalThis.TURIZM.app
@@ -99,18 +103,112 @@
     });
   }
 
+  // ------------------------------------------------------------------ üyelik şartı (veri girişi)
+  // 'none': üyelik bilgisi henüz gelmedi · 'guest': giriş yok · 'user': giriş var · 'offline': üyelik modülü yok
+  var GATE_SCOPE = '#panel-otel, #panel-acente';
+  var EDIT_BTN = '[data-row-del],[data-quick],#add_market,[data-del-market],#add_ref,[data-del-ref],#add_laundry,[data-del-laundry],'
+    + '#logo_pick,#logo_remove,[data-dash-act="add"],[data-dash-act="remove"]';
+  var noticeKind = { otel: 'default', acente: 'default' };
+  function gated() { return account === 'guest' || account === 'none'; }
+  function editable(t) {
+    if (!t || !t.closest || !t.closest(GATE_SCOPE)) { return null; }
+    if (t.matches('input, select, textarea')) {
+      var ty = (t.getAttribute('type') || '').toLowerCase();
+      if (ty === 'button' || ty === 'submit' || ty === 'reset' || ty === 'hidden') { return null; }
+      return (ty === 'checkbox' || ty === 'radio' || ty === 'file') ? 'toggle' : 'field';
+    }
+    return t.closest(EDIT_BTN) ? 'button' : null;
+  }
+  function askAccount() {
+    if (account === 'none') { U.toast('Üyelik bilgisi yükleniyor; birkaç saniye sonra yeniden deneyin'); return; }
+    // pencere zaten açıksa cloud.js yeniden açmaz
+    try { doc.dispatchEvent(new root.CustomEvent('turizm:needauth', { detail: { mode: state.mode } })); } catch (e) { /* eski tarayıcı */ }
+  }
+  /** Yazma tuşu mu? (gezinme, Tab, Esc, kopyalama serbest) */
+  function editKey(ev, kind) {
+    var k = ev.key || '';
+    if (k === 'Tab' || k === 'Escape' || k === 'Shift' || k === 'Control' || k === 'Alt' || k === 'Meta') { return false; }
+    if (ev.ctrlKey || ev.metaKey) { return /^[vxzy]$/i.test(k); }
+    if (kind === 'toggle') { return k === ' ' || k === 'Enter' || /^Arrow/.test(k); }
+    if (k.length === 1 || k === 'Backspace' || k === 'Delete' || k === 'Enter') { return true; }
+    return /^Arrow(Up|Down)$/.test(k) && ev.target.matches('select');
+  }
+  function bindGate() {
+    var app = U.el('app') || doc.body;
+    app.addEventListener('pointerdown', function (ev) {
+      if (!gated() || editable(ev.target) !== 'field') { return; }
+      ev.preventDefault();                                           // odak ve açılır liste yok
+      askAccount();
+    }, true);
+    app.addEventListener('click', function (ev) {
+      if (!gated()) { return; }
+      var kind = editable(ev.target);
+      if (kind !== 'toggle' && kind !== 'button') { return; }
+      ev.preventDefault(); ev.stopPropagation();                      // işaret değişmez, form.js / app.js çalışmaz
+      askAccount();
+    }, true);
+    app.addEventListener('keydown', function (ev) {
+      if (!gated()) { return; }
+      var kind = editable(ev.target);
+      if ((kind === 'field' || kind === 'toggle') && editKey(ev, kind)) { ev.preventDefault(); ev.stopPropagation(); askAccount(); }
+      else if (kind === 'button' && (ev.key === 'Enter' || ev.key === ' ')) { ev.preventDefault(); ev.stopPropagation(); askAccount(); }
+    }, true);
+    // son güvence: yapıştırma, sürükleme, tarayıcının otomatik doldurması → değer geri alınır
+    ['input', 'change'].forEach(function (type) {
+      app.addEventListener(type, function (ev) {
+        if (!gated() || !editable(ev.target)) { return; }
+        ev.stopPropagation();
+        if (ev.target.type === 'file') { try { ev.target.value = ''; } catch (e) { /* yok */ } }
+        F.renderAll();
+        askAccount();
+      }, true);
+    });
+    // üyelik bilgisi hiç gelmezse (betik engellendi, ağ yok) hesaplayıcı kilitli kalmasın
+    setTimeout(function () { if (account === 'none') { setAccount('offline'); } }, 10000);
+  }
+  function setAccount(a) {
+    var prev = account;
+    account = a === 'user' || a === 'guest' || a === 'offline' ? a : 'none';
+    doc.body.classList.toggle('gated', gated());
+    if (prev !== account) {
+      ['otel', 'acente'].forEach(function (w) {
+        var empty = w === 'acente' ? M.agencyIsEmpty(state.agency) : M.hotelIsEmpty(state.hotel);
+        if (noticeKind[w] === 'default' && empty) { defaultNotice(w); }
+        else if (noticeKind[w] === 'example') { exampleNotice(w); }
+      });
+    }
+    if (view === 'dash') { renderDash(); }
+  }
+
   // ------------------------------------------------------------------ bildirimler
   function defaultNotice(which) {
-    if (which === 'acente') {
-      U.notice('a_notice', ['Alanlar boş — acentenizin yıllık verilerini girin. Örnek görmek isterseniz ', { button: { text: 'örnek bir acenteyle doldurun', attrs: { 'data-example': 'acente' } } }, '.']);
+    var ag = which === 'acente';
+    noticeKind[ag ? 'acente' : 'otel'] = 'default';
+    // Örnek düğmesi v6.3'ten beri cümle içi bağlantı değil, şeridin altında gerçek bir düğme (canlıda gözden kaçıyordu).
+    var example = { text: ag ? 'Örnek bir acenteyle doldurun' : '120 odalı örnek tatil köyüyle doldurun', attrs: { 'data-example': ag ? 'acente' : 'otel' } };
+    var parts, acts;
+    if (gated()) {
+      parts = [{ b: 'Verilerinizi girmek için üye olun ya da giriş yapın.' },
+        ag ? ' Üyelik ve hesaplama ücretsizdir; verileriniz hesabınızda saklanır. Nasıl çalıştığını önce örnekle görebilirsiniz.'
+           : ' Üyelik ve hesaplama ücretsizdir; verileriniz hesabınızda saklanır, her yıl yeni ölçümünüzü eklersiniz. Nasıl çalıştığını önce örnekle görebilirsiniz.'];
+      acts = [{ text: 'Ücretsiz üye olun', kind: 'primary', attrs: { 'data-auth': 'register' } },
+        { text: 'Giriş yapın', attrs: { 'data-auth': 'login' } }, example];
     } else {
-      U.notice('h_notice', ['Alanlar boş — tesisinizin 12 aylık verilerini girdikçe beş adımın tamamı anında güncellenir. Önce nasıl çalıştığını görmek isterseniz ',
-        { button: { text: '120 odalı örnek bir tatil köyüyle doldurun', attrs: { 'data-example': 'otel' } } }, '.']);
+      parts = [ag ? 'Alanlar boş. Acentenizin yıllık verilerini girdikçe sonuçlar anında güncellenir. Nasıl çalıştığını önce örnekle görebilirsiniz.'
+                  : 'Alanlar boş. Tesisinizin 12 aylık verilerini girdikçe beş adımın tamamı anında güncellenir. Nasıl çalıştığını önce örnekle görebilirsiniz.'];
+      acts = [example];
     }
+    U.notice(ag ? 'a_notice' : 'h_notice', parts.concat([{ actions: acts }]));
   }
   function exampleNotice(which) {
-    var parts = [{ b: 'Örnek veriler yüklendi — bunlar sizin verileriniz değildir.' },
-      ' Kendi rakamlarınızı yazdıkça sonuçlar güncellenir. '];
+    noticeKind[which === 'acente' ? 'acente' : 'otel'] = 'example';
+    var parts = [{ b: 'Örnek veriler yüklendi — bunlar sizin verileriniz değildir.' }];
+    if (gated()) {
+      parts.push(' Kendi verilerinizi girmek için ', { button: { text: 'ücretsiz üye olun', attrs: { 'data-auth': 'register' } } }, ' ya da ',
+        { button: { text: 'giriş yapın', attrs: { 'data-auth': 'login' } } }, '. ');
+    } else {
+      parts.push(' Kendi rakamlarınızı yazdıkça sonuçlar güncellenir. ');
+    }
     if (which !== 'acente') { parts.push({ button: { text: 'Sonuçları panelde görün', attrs: { 'data-view': 'dash' } } }, ' · '); }
     parts.push({ button: { text: 'Örneği temizle', attrs: { 'data-clear': which } } });
     U.notice(which === 'acente' ? 'a_notice' : 'h_notice', parts);
@@ -119,6 +217,7 @@
   // ------------------------------------------------------------------ örnek / temizle (iletişim kutusu yok; iki adımlı onay)
   function askInNotice(which, question, yesText, onYes) {
     var id = which === 'acente' ? 'a_notice' : 'h_notice';
+    noticeKind[which === 'acente' ? 'acente' : 'otel'] = 'other';
     U.notice(id, [{ b: question }, ' ', { button: { text: yesText, attrs: { 'data-confirm': which } } }, ' · ', { button: { text: 'Vazgeç', attrs: { 'data-cancel': which } } }], 'warn');
     askInNotice.pending = { which: which, run: onYes };
     var b = U.el(id).querySelector('[data-confirm]'); if (b) { b.focus(); }
@@ -155,6 +254,7 @@
       var w = b.getAttribute('data-cancel');
       if (w === 'acente' ? M.agencyIsEmpty(state.agency) : M.hotelIsEmpty(state.hotel)) { defaultNotice(w); }
       else {
+        noticeKind[w === 'acente' ? 'acente' : 'otel'] = 'other';
         U.notice(w === 'acente' ? 'a_notice' : 'h_notice', ['Verileriniz değişmedi. ',
           { button: { text: 'Örnek verileri göster', attrs: { 'data-example': w } } }, ' (girdiklerinizin yerine geçer; önce sorulur)']);
       }
@@ -444,7 +544,9 @@
     state = saved ? saved.state : M.emptyState();
     F.init({ state: function () { return state; }, changed: changed });
     RN.methodology();
-    bindTabs(); bindSteps(); bindLogo();
+    bindTabs(); bindSteps(); bindLogo(); bindGate();
+    doc.body.classList.toggle('gated', gated());
+    defaultNotice('otel'); defaultNotice('acente');
     (U.el('app') || doc.body).addEventListener('click', onAppClick);
     var resizeTimer = null;
     root.addEventListener('resize', function () { clearTimeout(resizeTimer); resizeTimer = setTimeout(function () { if (R) { NS.chart.draw(R.path, { svg: 'pathsvg', box: 'pathbox', tip: 'pathtip', empty: 'path_empty' }); } }, 150); });
@@ -457,7 +559,7 @@
       if (saved.from === 'v1') { parts.push(' Önceki sürümden yeni yönteme aktarıldı.'); }
       parts.push(' Saklamayı kapatmak için Adım 5\'teki kutunun işaretini kaldırın.');
       if (saved.notes && saved.notes.length) { parts.push({ list: saved.notes }); }
-      U.notice('h_notice', parts);
+      U.notice('h_notice', parts); noticeKind.otel = 'other';
     }
     root.__tour = {
       version: M.APP_VERSION,
@@ -468,12 +570,16 @@
       mode: function () { return state.mode; },
       setMode: function (m) { setMode(m); },
       toast: function (msg) { U.toast(msg); },
-      notice: function (which, parts, tone) { U.notice(which === 'agency' || which === 'acente' ? 'a_notice' : 'h_notice', parts, tone); },
+      notice: function (which, parts, tone) {
+        var ag = which === 'agency' || which === 'acente'; noticeKind[ag ? 'acente' : 'otel'] = 'other';
+        U.notice(ag ? 'a_notice' : 'h_notice', parts, tone);
+      },
       state: function () { return state; },
       result: function () { flush(); return R; },
       // panel: hesaba kayıtlı kayıtlar (cloud.js) ve hesap durumu
       setHistory: function (list) { records = Array.isArray(list) ? list : []; recVer++; histCache.key = null; if (view === 'dash') { renderDash(); } else { dashDirty = true; } },
-      setAccount: function (a) { account = a === 'user' || a === 'guest' ? a : 'none'; if (view === 'dash') { renderDash(); } },
+      setAccount: setAccount,                                   // 'user' | 'guest' | 'offline' (üyelik modülü yok)
+      account: function () { return account; },
       setView: function (v) { setView(v, { scroll: false }); },
       view: function () { return view; }
     };

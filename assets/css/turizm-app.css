@@ -393,6 +393,8 @@ table#macc tbody th{min-width:190px}
 .notice{font-size:14px; background:var(--chip); border:1px solid var(--brand-soft); border-radius:12px; padding:10px 14px; color:var(--ink); margin:0 0 14px}
 .notice.warn{background:var(--warn-bg); border-color:var(--warn-line); color:var(--warn-ink)}
 .notice .notice-list{margin:6px 0 0; padding-left:18px}
+.notice-acts{display:flex; flex-wrap:wrap; gap:8px; margin-top:10px}
+.notice-acts .btn.sm{align-self:auto}
 .toast{position:fixed; left:50%; bottom:18px; transform:translateX(-50%); background:var(--deep); color:var(--on-deep); border:1px solid var(--deep-line); border-radius:999px; padding:10px 20px; font-size:14px; font-weight:600; opacity:0; transition:opacity .25s; pointer-events:none; z-index:60; max-width:calc(100vw - 32px); text-align:center}
 .toast.show{opacity:1}
 
@@ -429,6 +431,7 @@ table.meth-t td:nth-child(2),table.meth-t td:nth-child(3){text-align:left; font-
 .gbtn b{color:#4285F4}
 .msep{text-align:center; font-size:13px; color:var(--muted); margin:10px 0 0}
 .merr{color:var(--danger-ink); font-size:13.5px; margin:10px 0 0; min-height:1em}
+.mnote{margin:-4px 0 12px; font-size:14px; line-height:1.45; color:var(--info-ink); background:var(--info-bg); border:1px solid var(--info-line); border-radius:10px; padding:9px 12px}   /* üyelik şartı notu */
 .mbox.login .reg-only{display:none}
 .mbox:not(.login) .login-only{display:none}
 #authReset{margin-top:8px}

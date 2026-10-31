@@ -37,7 +37,7 @@
     <div class="acct" id="acct">
       <button class="btn acct-cta" type="button" data-auth="register">Ücretsiz üye olun</button>
       <button class="btn acct-ghost" type="button" data-auth="login">Giriş yapın</button>
-      <span class="acct-note">Tesisinizi kaydedin; verileriniz her cihazda hazır olsun, her yıl yeni ölçümünüzü ekleyin.</span>
+      <span class="acct-note">Veri girmek için ücretsiz üye olun; verileriniz her cihazda hazır olsun, her yıl yeni ölçümünüzü ekleyin.</span>
     </div>
   </div>
   <div class="sea-waves" aria-hidden="true">
@@ -633,7 +633,7 @@
           </div>
           <p class="mini cloud-msg" data-cloud-msg role="status"></p>
           <p class="addr">Detaylı rapor, bağımsız doğrulama, sertifika ve dengeleme için: <b>info@commited.app</b> — konu satırına "Otel HCMI raporu" yazın. <button class="btn ghost xs" id="btn-mail" type="button">E-posta adresini kopyala</button></p>
-          <label class="chk"><input type="checkbox" id="opt_save" data-bind="options.saveLocal" data-type="bool"><span>Girdiğim veriler bu tarayıcıda saklansın <small class="mini">Üye olmadan; yalnız bu cihazda.</small></span></label>
+          <label class="chk"><input type="checkbox" id="opt_save" data-bind="options.saveLocal" data-type="bool"><span>Girdiğim veriler bu tarayıcıda da saklansın <small class="mini">Yalnız bu cihazda; hesabınıza kaydetmek için "Hesabıma kaydet".</small></span></label>
           <div class="reset-row"><button class="linkbtn danger" type="button" id="btn-reset">Formu temizle</button></div>
         </div>
       </div>
@@ -789,6 +789,7 @@
     <button class="mclose" type="button" data-auth-close aria-label="Kapat">×</button>
     <div id="authForms">
       <h3 id="authTitle">Tesisinizi kaydedin</h3>
+      <p class="mnote" id="authNote" hidden></p>
       <div class="mtabs"><button type="button" data-tab="register" class="on">Üye ol</button><button type="button" data-tab="login">Giriş yap</button></div>
       <button class="gbtn" type="button" id="authGoogle"><b>G</b> Google ile devam et</button>
       <div class="msep">veya e-posta ile</div>

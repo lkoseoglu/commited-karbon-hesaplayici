@@ -12,6 +12,9 @@
    Sayfayla iletişim yalnız window.__tour üzerinden (app.js).
    - Panel: oturum açılınca ve her kayıttan sonra otel kayıtları setHistory ile panele verilir
      (önceki yıllar aynı yöntemle yeniden hesaplanır); setAccount panelin davet metnini seçer.
+   - Üyelik şartı (v6.3): app.js giriş yapmamış ziyaretçinin veri girme denemesinde "turizm:needauth"
+     olayını yayar; burada üyelik penceresi açıklama notuyla açılır. setAccount('guest' | 'user') veri
+     girişini kilitler / açar; Firebase yüklenemezse setAccount('offline') ile hesaplayıcı üyeliksiz çalışır.
    ===================================================================== */
 const firebaseConfig = {
   apiKey: "AIzaSyA908koeADcOLR2ROU6R7fARAqjC1v-inc",
@@ -54,11 +57,14 @@ const whenReady = () => new Promise((res) => { if (window.__tour) res(); else wi
 
 /* ---------- modal ---------- */
 let lastFocus = null;
-function openModal(view, mode) {
+const GATE_NOTE = "Verilerinizi girmek için ücretsiz üye olun ya da giriş yapın. Kayıt bir dakika sürer; verileriniz hesabınızda saklanır, her cihazdan devam edersiniz.";
+function openModal(view, mode, note) {
   if ($("authModal").hidden) lastFocus = document.activeElement;
   $("authModal").hidden = false;
   ["authForms", "profForm", "recList"].forEach((id) => { $(id).hidden = id !== view; });
   showErr("");
+  const n = $("authNote");
+  if (n) { n.textContent = note || ""; n.hidden = !note; }
   if (view === "authForms") setAuthMode(mode || authMode);
   if (view === "profForm") {
     const st = T() && T().state ? T().state() : null;
@@ -100,7 +106,7 @@ function renderBar() {
     bar.append(
       el("button", { class: "btn acct-cta", type: "button", "data-auth": "register", text: "Ücretsiz üye olun" }),
       el("button", { class: "btn acct-ghost", type: "button", "data-auth": "login", text: "Giriş yapın" }),
-      el("span", { class: "acct-note", text: "Tesisinizi kaydedin; verileriniz her cihazda hazır olsun, her yıl yeni ölçümünüzü ekleyin." })
+      el("span", { class: "acct-note", text: "Veri girmek için ücretsiz üye olun; verileriniz her cihazda hazır olsun, her yıl yeni ölçümünüzü ekleyin." })
     );
   } else {
     const nm = (profile && profile.name) || user.displayName || "Hesabım";
@@ -233,6 +239,12 @@ function bind() {
     if (ev.key === "Escape" && !$("authModal").hidden) closeModal();
     trapFocus(ev);
   });
+  // app.js: giriş yapmamış ziyaretçi veri girmeye çalıştı
+  document.addEventListener("turizm:needauth", () => {
+    if (user) return;
+    if (!$("authModal").hidden && !$("authForms").hidden) return;     // pencere zaten açık
+    openModal("authForms", "register", GATE_NOTE);
+  });
 
   $("authSubmit").addEventListener("click", async () => {
     const email = $("r_email").value.trim(), pass = $("r_pass").value;
@@ -336,5 +348,6 @@ async function onUser(u) {
     console.warn("Üyelik modülü yüklenemedi; hesaplayıcı üyeliksiz çalışıyor.", e);
     const bar = $("acct"); if (bar) bar.hidden = true;
     document.querySelectorAll("[data-cloud-save]").forEach((b) => { b.hidden = true; });
+    if (T() && T().setAccount) T().setAccount("offline");          // veri girişi kilitli kalmasın
   }
 })();

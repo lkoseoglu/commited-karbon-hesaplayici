@@ -18,10 +18,20 @@ test.after(async () => { await browser.close(); srv.close(); });
 const node = loadApp();                                   // aynı hesap Node'da: ekranla karşılaştırmak için
 const ex = node.TURIZM.compute(node.TURIZM.model.exampleState());
 
+// Veri girişi üyelik ister (v6.3): testler varsayılan olarak profili olan bir üyeyle açılır;
+// { guest: true } giriş yapmamış ziyaretçiyle açar.
+const MEMBER = { uid: 'u_uye', email: 'uye@otel.test', emailVerified: true };
 async function open(opts = {}) {
-  const p = await newPage(browser, { width: 1280, height: 900, ...opts });
+  const { guest, ...vp } = opts;
+  const p = await newPage(browser, { width: 1280, height: 900, ...vp });
+  if (!guest) {
+    await p.addInitScript((m) => {
+      window.__fbTest = { users: { [m.email]: 'gizli123' }, current: m, listeners: [], calls: [],
+        db: { ['firms/' + m.uid]: { name: 'Test Oteli', type: 'otel', city: 'Muğla', email: m.email, source: 'turizm-karbon-hesaplayici' } } };
+    }, MEMBER);
+  }
   await p.goto(base + PAGE, { waitUntil: 'load' });
-  await p.waitForFunction(() => !!window.__tour);
+  await p.waitForFunction(() => !!window.__tour && window.__tour.account() !== 'none');
   return p;
 }
 const settle = (p) => p.waitForTimeout(260);           // yazma gecikmesi (140 ms) + çizim
@@ -47,7 +57,7 @@ test('boş açılış: hata yok, sonuçlar boş, örnek düğmesi var, telefonda
     assert.equal(await text(p, '#s_grade'), '—');
     assert.equal(await p.evaluate(() => window.__tour.isEmpty()), true);
     assert.equal(await p.locator('#ledger_rows .lrow').count(), 7);
-    assert.ok(await p.locator('#h_notice [data-example="otel"]').count());
+    assert.equal(await p.isVisible('#h_notice .notice-acts .btn[data-example="otel"]'), true, 'örnek düğmesi cümle içinde değil, görünür bir düğme');
     assert.equal(await p.locator('#msgs li').count(), 0, 'boş formda uyarı yağmuru yok');
     await noHScroll(p);
     assert.deepEqual(p.errors, []);
@@ -262,7 +272,7 @@ test('tarayıcı belleği: kutu işaretliyse yeniden açılışta veriler gelir;
 });
 
 test('üyelik: kayıt ol, kaydet (yeni şema), çıkış, giriş → son kayıt yüklenir; eski kayıt açılır', async () => {
-  const p = await open();
+  const p = await open({ guest: true });
   await p.click('#h_notice [data-example="otel"]'); await settle(p);
   await p.click('#outputs [data-cloud-save]');
   assert.equal(await p.isVisible('#authModal'), true);
@@ -273,7 +283,7 @@ test('üyelik: kayıt ol, kaydet (yeni şema), çıkış, giriş → son kayıt 
   assert.equal(rec.type, 'hotel'); assert.equal(rec.company, 'Örnek Tatil Köyü'); assert.equal(rec.year, 2025);
   assert.equal(rec.total, Math.round(ex.totals.hcmiT * 1000)); assert.equal(rec.grade, 'B');
   assert.equal(rec.inputs.schema, 'commited.turizm.state/2'); assert.equal(rec.inputs.options, undefined, 'yerel tercih buluta gitmez');
-  assert.equal(rec.hcmi.schema, 'commited.hotel.hcmi/2'); assert.equal(rec.appVersion, '6.2.0');
+  assert.equal(rec.hcmi.schema, 'commited.hotel.hcmi/2'); assert.equal(rec.appVersion, '6.3.0');
   assert.equal(rec.sector, 'Turizm — Otel (HCMI v2.0)');
   assert.ok(!JSON.stringify(rec).includes('gizli123'), 'şifre kayda girmez');
   // çıkış, formu temizle, giriş → son kayıt otomatik yüklenir
@@ -494,13 +504,11 @@ test('panel: boşken davet; örnekle tek ekranda sonuçlar, önlem ekle / çıka
 });
 
 test('panel: hesaba kaydedilen yıllar aynı yöntemle yan yana; çıkışta davet görünür', async () => {
-  const p = await open();
+  const p = await open();                                   // profili olan üye
   await p.click('#h_notice [data-example="otel"]'); await settle(p);
   await p.fill('#h_name', 'Deniz Otel'); await settle(p);
   const count = () => p.evaluate(() => Object.keys(window.__fbTest.db).filter((k) => k.startsWith('reports/')).length);
   await p.click('#outputs [data-cloud-save]');
-  await p.fill('#r_name', 'Deniz Otel'); await p.fill('#r_email', 'deniz@example.com'); await p.fill('#r_pass', 'gizli123');
-  await p.check('#r_kvkk'); await p.click('#authSubmit');
   await p.waitForFunction(() => Object.keys(window.__fbTest.db).some((k) => k.startsWith('reports/')));
   // önceki yıl: 2024, daha çok elektrik
   await p.fill('#h_year', '2024'); await p.fill('#ea-e1', '1.600.000'); await settle(p);
@@ -523,6 +531,81 @@ test('panel: hesaba kaydedilen yıllar aynı yöntemle yan yana; çıkışta dav
   assert.equal(await p.locator('[data-chart="trend"]').count(), 0);
   assert.equal(await p.locator('.d-trend [data-auth="register"]').count(), 1);
   assert.deepEqual(p.errors, []);
+  await p.context().close();
+});
+
+test('üyelik şartı: giriş yapmamış ziyaretçi veri giremez (otel ve acente); örnek, sonuçlar ve panel serbest; üye olunca yazar', async () => {
+  const p = await open({ guest: true });
+  assert.equal(await p.evaluate(() => window.__tour.account()), 'guest');
+  assert.match(await text(p, '#h_notice'), /^Verilerinizi girmek için üye olun ya da giriş yapın\. Üyelik ve hesaplama ücretsizdir/);
+  // şeridin altında üç gerçek düğme: üye ol (öne çıkan), giriş yap, örnek tesis
+  assert.deepEqual(await p.$$eval('#h_notice .notice-acts .btn', (bs) => bs.map((b) => [b.textContent, b.className])), [
+    ['Ücretsiz üye olun', 'btn sm primary'], ['Giriş yapın', 'btn sm ghost'], ['120 odalı örnek tatil köyüyle doldurun', 'btn sm ghost']]);
+  const gate = async (label) => {
+    await p.waitForSelector('#authModal:not([hidden])');
+    assert.match(await text(p, '#authNote'), /^Verilerinizi girmek için ücretsiz üye olun ya da giriş yapın/, label);
+    await p.keyboard.press('Escape');
+    await p.waitForSelector('#authModal', { state: 'hidden' });
+  };
+  // fareyle alana tıklamak: pencere açılır, alan boş kalır
+  await p.click('#h_name');
+  await p.waitForSelector('#authModal:not([hidden])');
+  await axe(p, 'üyelik penceresi');
+  await gate('ad alanı');
+  assert.equal(await p.inputValue('#h_name'), '');
+  // klavye: alana gelinir (gezinme serbest) ama yazılamaz
+  await p.focus('#h_roomnights'); await p.keyboard.press('5'); await gate('klavye');
+  assert.equal(await p.inputValue('#h_roomnights'), '');
+  // işaret kutusu ve satır ekleme düğmesi
+  await p.click('#m_led'); await gate('önlem kutusu');
+  assert.equal(await p.isChecked('#m_led'), false);
+  await p.click('#quick_add [data-quick] >> nth=0'); await gate('hızlı ekle');
+  assert.equal(await p.locator('#ledger_rows .lrow').count(), 7);
+  // yapıştırma ya da otomatik doldurma: değer geri alınır
+  await p.evaluate(() => { const i = document.getElementById('h_name'); i.value = 'Yapıştırılan'; i.dispatchEvent(new Event('input', { bubbles: true })); });
+  await gate('yapıştırma');
+  assert.equal(await p.inputValue('#h_name'), '');
+  assert.equal(await p.evaluate(() => window.__tour.state().hotel.name), '');
+  // örnek serbest: sonuçlar ve panel görülür; düzenleme yine üyelik ister
+  await p.click('#h_notice [data-example="otel"]'); await settle(p);
+  assert.equal(await text(p, '#s_total'), '1.060');
+  assert.match(await text(p, '#h_notice'), /Kendi verilerinizi girmek için ücretsiz üye olun ya da giriş yapın/);
+  await p.click('.steps a[data-view="dash"]'); await settle(p);
+  assert.equal(await p.isVisible('#panel-dash .dhero'), true);
+  const measures = await p.evaluate(() => window.__tour.state().hotel.measures.length);
+  await p.click('.nexts .btn-add >> nth=0'); await gate('panelde önlem ekle');
+  assert.equal(await p.evaluate(() => window.__tour.state().hotel.measures.length), measures);
+  await p.click('.steps a[data-step="adim1"]'); await settle(p);
+  // acente sekmesi de üyelik ister
+  await p.click('#tab-acente');
+  assert.match(await text(p, '#a_notice'), /^Verilerinizi girmek için üye olun ya da giriş yapın\./);
+  assert.equal(await p.isVisible('#a_notice .notice-acts .btn[data-example="acente"]'), true);
+  await p.click('#a_cpor'); await gate('acente');
+  await p.click('#tab-otel');
+  // pencereden üye olunca yazılabilir; örnek bildirimi üye metnine döner
+  await p.click('#h_name'); await p.waitForSelector('#authModal:not([hidden])');
+  await p.fill('#r_name', 'Kayıtlı Otel'); await p.fill('#r_email', 'yeni@example.com'); await p.fill('#r_pass', 'gizli123');
+  await p.check('#r_kvkk'); await p.click('#authSubmit');
+  await p.waitForFunction(() => window.__tour.account() === 'user');
+  await p.waitForSelector('#authModal', { state: 'hidden' });
+  await p.fill('#h_name', 'Kayıtlı Otel'); await settle(p);
+  assert.equal(await p.evaluate(() => window.__tour.state().hotel.name), 'Kayıtlı Otel');
+  assert.match(await text(p, '#h_notice'), /Kendi rakamlarınızı yazdıkça sonuçlar güncellenir/);
+  assert.deepEqual(p.errors, []);
+  await p.context().close();
+});
+
+test('üyelik modülü yüklenemezse hesaplayıcı üyeliksiz çalışır (veri girişi kilitlenmez)', async () => {
+  const p = await newPage(browser, { width: 1280, height: 900 });
+  await p.route('https://www.gstatic.com/firebasejs/**', (r) => r.fulfill({ status: 404, body: '' }));
+  await p.goto(base + PAGE, { waitUntil: 'load' });
+  await p.waitForFunction(() => !!window.__tour && window.__tour.account() === 'offline');
+  assert.equal(await p.isVisible('#acct'), false);
+  assert.match(await text(p, '#h_notice'), /^Alanlar boş/);
+  await p.fill('#h_name', 'Bağlantısız Otel'); await settle(p);
+  assert.equal(await p.evaluate(() => window.__tour.state().hotel.name), 'Bağlantısız Otel');
+  assert.equal(await p.isVisible('#authModal'), false);
+  assert.deepEqual(p.errors.filter((e) => e.startsWith('pageerror')), []);
   await p.context().close();
 });
 
