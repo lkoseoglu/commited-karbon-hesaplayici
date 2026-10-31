@@ -26,7 +26,8 @@ export function loadHCMI(extra = []) {
 // Turizm sayfasinin (v6) hesap katmani: sayfadaki <script> sirasiyla AYNI olmali.
 export const APP_SCRIPTS = ['assets/js/hcmi-data.js', 'assets/js/hcmi-engine.js', 'assets/js/tr-reference.js', 'assets/js/benchmarks.js',
   'assets/js/pathway.js', 'assets/js/measures.js', 'assets/js/num-input.js', 'assets/js/turizm/model.js', 'assets/js/turizm/compute.js',
-  'assets/js/turizm/agency.js', 'assets/js/turizm/texts.js', 'assets/js/turizm/storage.js', 'assets/js/turizm/report.js'];
+  'assets/js/turizm/agency.js', 'assets/js/turizm/texts.js', 'assets/js/turizm/storage.js', 'assets/js/turizm/report.js',
+  'assets/js/turizm/dashboard.js'];
 
 export function loadApp(extraGlobals = {}) {
   const ctx = loadScripts(APP_SCRIPTS);
