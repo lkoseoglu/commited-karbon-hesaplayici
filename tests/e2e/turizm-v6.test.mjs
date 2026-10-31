@@ -31,6 +31,10 @@ async function noHScroll(p) {
   assert.ok(w[0] <= w[1], `yatay kaydırma var: ${w[0]} > ${w[1]}`);
 }
 async function axe(p, label) {
+  // Bildirim (toast) solarken taranırsa yarı saydam yazı yanlışlıkla düşük kontrast sayılır (yavaş makinede
+  // GitHub Actions'ta görüldü); taramadan önce bildirimin tamamen kaybolması beklenir.
+  await p.waitForFunction(() => { const t = document.getElementById('toast');
+    return !t || (!t.classList.contains('show') && getComputedStyle(t).opacity === '0'); }, null, { timeout: 5000 });
   const r = await new AxeBuilder({ page: p }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
   const out = r.violations.map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 3).map((n) => n.target.join(' ') + ' -> ' + ((n.any[0] && n.any[0].message) || '')).join(' | ')}`);
   assert.deepEqual(out, [], label + ' ihlalleri:\n' + out.join('\n'));
