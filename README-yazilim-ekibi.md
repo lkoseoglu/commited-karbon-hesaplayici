@@ -6,9 +6,9 @@ tarayıcıda yapan) karbon hesaplama modülleri. GitHub Pages üzerinden yayınl
 
 ## 2026-10-31 — İngilizce sürüm (v6.4): Turizm hesaplayıcısı Türkçe | English
 
-> **Durum:** `ingilizce` dalında hazır, testler yeşil; **canlıya alınmadı** (Levent Bey'in onayı bekleniyor).
-> Canlıya alınca: `git checkout main && git merge ingilizce && git push`. Squarespace'te değişiklik gerekmez
-> (dil düğmesi hesaplayıcının içinde).
+> **Durum:** 2026-11-01'de onaylandı ve canlıya alındı (`main` = `38d0dfa`; GitHub Actions testleri ve Pages yayını
+> başarılı). Squarespace'e dokunulmadı: dil düğmesi hesaplayıcının içinde. Sitenin sağ üstündeki eski Weglot dil menüsü
+> (yalnız "Türkçe" gösteriyor) Levent Bey'in kararıyla olduğu gibi bırakıldı.
 
 **İstek (Levent Bey):** Sitenin sağ üstündeki dil menüsünde yalnız Türkçe var; İngilizce (Almanca, Rusça) istendi.
 O menü Weglot ile çalışıyor; Weglot projesi silinmiş, üç dil için Business planı (aylık 29 €) gerekiyor. Karar:
