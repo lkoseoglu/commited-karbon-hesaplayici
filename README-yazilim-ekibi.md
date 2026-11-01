@@ -8,7 +8,10 @@ tarayıcıda yapan) karbon hesaplama modülleri. GitHub Pages üzerinden yayınl
 
 > **Durum:** 2026-11-01'de onaylandı ve canlıya alındı (`main` = `38d0dfa`; GitHub Actions testleri ve Pages yayını
 > başarılı). Squarespace'e dokunulmadı: dil düğmesi hesaplayıcının içinde. Sitenin sağ üstündeki eski Weglot dil menüsü
-> (yalnız "Türkçe" gösteriyor) Levent Bey'in kararıyla olduğu gibi bırakıldı.
+> (yalnız "Türkçe" gösteriyor) Levent Bey'in kararıyla olduğu gibi bırakıldı. Canlıda denendi (ofis MacBook, Chrome):
+> `?lang=en` İngilizce açılıyor, 23 betiğin hepsi `?v=6.4.0` ile yükleniyor; örnekle 1,060 / 26,280 / Sample Resort,
+> Türkçeye dönünce 1.060 / 26.280 / Örnek Tatil Köyü; rapor sekmesi "Sample Resort - 2025 Sustainability Report".
+> commitedevents.app'teki gömülü hesaplayıcıda (üye oturumu açıkken) düğme görünüyor ve iki yönde çalışıyor.
 
 **İstek (Levent Bey):** Sitenin sağ üstündeki dil menüsünde yalnız Türkçe var; İngilizce (Almanca, Rusça) istendi.
 O menü Weglot ile çalışıyor; Weglot projesi silinmiş, üç dil için Business planı (aylık 29 €) gerekiyor. Karar:
